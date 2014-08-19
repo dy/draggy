@@ -1,0 +1,61 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Movy tests</title>
+<link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
+
+<style>
+	/* Painter layer */
+	canvas{
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 999;
+		pointer-events: none;
+	}
+
+	.movy-container{
+		/*position: relative;*/
+		padding:2vh 2vw;
+		background: #f3f3f3;
+		/*min-height: 300px;*/
+		margin: 2vh 0;
+		position: relative;
+	}
+
+	.movy-container > .movy{
+		background: rgba(120,130,140,1);
+		width: 10vh;
+		height: 10vh;
+		color: white;
+		font-size: 13px;
+		padding: 1vh 1vw;
+		text-align: center;
+		position: relative;
+		cursor: move;
+	}
+</style>
+
+<div id="mocha"></div>
+
+<!--<script src="../node_modules/jquery/dist/jquery.min.js"></script>-->
+
+<script src="../node_modules/mocha/mocha.js"></script>
+<script src="../node_modules/chai/chai.js"></script>
+
+
+<script src="../src/polyfill.js"></script>
+
+<script src="../node_modules/require_stub/index.js"></script>
+<script src="../index.js"></script>
+
+<script>
+	mocha.setup('bdd');
+	assert = chai.assert;
+</script>
+
+<script src="index.js"></script>
+
+<script>
+	mocha.checkLeaks();
+	mocha.run();
+</script>

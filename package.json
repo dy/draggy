@@ -1,0 +1,28 @@
+{
+  "name": "draggy",
+  "version": "0.0.0",
+  "description": "Draggable component provider",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dfcreative/draggy"
+  },
+  "keywords": [
+    "draggable"
+  ],
+  "author": "Deema Eevanov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dfcreative/draggy/issues"
+  },
+  "homepage": "https://github.com/dfcreative/draggy",
+  "dependencies": {
+    "mod-constructor": "~0.2.9"
+  },
+  "devDependencies": {
+    "mocha": "~1.21.4"
+  }
+}
