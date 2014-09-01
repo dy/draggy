@@ -1,4 +1,4 @@
-describe("Movy", function(){
+describe("Draggy", function(){
 
 	var canvas = document.createElement("canvas");
 	document.body.appendChild(canvas)
@@ -8,7 +8,7 @@ describe("Movy", function(){
 
 
 	it("plain", function(){
-		var a = createDraggyCase("plain")
+		var a = createDraggyCase("plain");
 	})
 
 	it("within", function(){
@@ -92,12 +92,10 @@ describe("Movy", function(){
 
 
 	function createDraggyCase(name, opts){
-		//TODO: wrapper
-		//TODO: thumb
-
+		//create container
 		var el = document.createElement("div");
 		el.title = name;
-		el.className = "draggable-container";
+		el.className = "draggy-case";
 		document.body.appendChild(el);
 
 		//create mover
@@ -105,17 +103,24 @@ describe("Movy", function(){
 		drEl.innerHTML = name;
 		el.appendChild(drEl);
 
-		for( var name in opts){
+		for(var name in opts){
 			drEl[name] = opts[name];
 		}
 
-		new Movy(drEl);
+		new Draggy(drEl);
 
-		on(drEl, 'threshold', paintThreshold);
-		on(drEl, 'dragstart', renderHelpers);
-		on(drEl, 'drag', renderHelpers);
-		on(drEl, 'dragend', clear);
-		on(drEl, 'idle', clear);
+		//create direction arrow
+		var arr = document.createElement('div');
+		arr.className = 'draggy-arrow';
+		drEl.appendChild(arr);
+
+		//bind listeners
+		drEl.on('threshold', paintThreshold);
+		drEl.on('dragstart', renderHelpers);
+		drEl.on('drag', renderHelpers);
+		drEl.on('dragend', clear);
+		drEl.on('idle', clear);
+		drEl.on('track', renderDirection);
 
 		return drEl;
 	}
@@ -209,6 +214,13 @@ describe("Movy", function(){
 		ctx.lineTo(pos.left + pin[0], pos.top + pin[3]);
 		ctx.lineTo(pos.left + pin[0], pos.top + pin[1]);
 		ctx.stroke();
+	}
+
+	function renderDirection(e){
+		var $el = e.target;
+		var $arr = $el.querySelector('.draggy-arrow');
+		$arr.style.transform = 'rotate(' + $el.dragparams.angle + 'rad)';
+		$arr.style.width = $el.dragparams.velocity * 10 + 'px';
 	}
 
 
