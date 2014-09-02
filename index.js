@@ -150,11 +150,10 @@ var Draggy = module.exports = Mod({
 
 				//get speec (prevent div by zero)
 				var v = this.velocity * delta / (1 + elapsed);
-				params.velocity = 0.7 * v + 0.3 * params.velocity;
+				params.velocity = 0.6 * v + 0.4 * params.velocity;
 
 				//get angle
-				//TODO: smooth
-				params.angle = Math.atan2(deltaY, deltaX);
+				params.angle = 0.8 * Math.atan2(deltaY, deltaX) + 0.2 * params.angle;
 
 				this.emit('track:after(20)');
 			},
@@ -196,7 +195,6 @@ var Draggy = module.exports = Mod({
 			},
 
 			after: function(){
-				console.log('after')
 				css(this, {
 					'transition': null
 				});
@@ -207,6 +205,7 @@ var Draggy = module.exports = Mod({
 		}
 	}
 });
+
 
 //SO THE TODOs
 //TODO: make enot unbind planned asyncs: enot.emit('click:after(1000)'), enot.off('click')
