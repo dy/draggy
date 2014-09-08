@@ -9,13 +9,19 @@ describe("Draggy", function(){
 
 	it("plain", function(){
 		var a = createDraggyCase("plain");
-	})
+	});
 
 	it("within", function(){
 		var a = createDraggyCase("within parent", {
 			within: 'parent'
 		})
-	})
+	});
+
+	it("release", function(){
+		var a = createDraggyCase("release", {
+			release: 800
+		})
+	});
 
 	it("pin area", function(){
 		var a = createDraggyCase("pin area", {
