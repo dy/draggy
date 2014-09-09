@@ -70,16 +70,12 @@ var Draggy = module.exports = Mod({
 	pin: {
 		set: function(value){
 			// console.log("pin changed", value)
-			try {
+			if (isArray(value)){
 				if (value.length === 2){
 					return [value[0], value[1], value[0], value[1]];
 				} else if (value.length === 4){
 					return value;
-				} else {
-					throw Error;
 				}
-			} catch (e){
-				return [0,0,this.offsetWidth, this.offsetHeight];
 			}
 
 			return value;
@@ -243,7 +239,7 @@ var Draggy = module.exports = Mod({
 
 
 
-	/* ---------------------- 3. WORK -------------------- */
+	/* ------------------------ W O R K -------------------- */
 
 
 	/**
@@ -304,11 +300,12 @@ var Draggy = module.exports = Mod({
 			return {top:0, bottom:0, left: 0, right:0};
 		},
 
-		/** Set limits based on element */
+		/** Set limits based on passed element */
 		set: function(limitEl){
 			if (!type.isElement(limitEl)) return limitEl;
 
 			var paddings = css.paddings(limitEl);
+			var pin = this.pin;
 
 			//TODO: calc moving limits based on restriction area & viewport
 			//TODO: set this area before drag, not in get
@@ -320,14 +317,13 @@ var Draggy = module.exports = Mod({
 			var initY = selfOffsets.top - this.y;
 
 			//calc offsets limitEl restriction container, including translation
-
+			var height = this.offsetHeight,
+				width = this.offsetWidth;
 			return {
-				//min y displacement
-				top: 0,
-				//max y displacement
-				bottom: limitEl.offsetHeight - this.offsetHeight - paddings.top - paddings.bottom,
-				left: 0,
-				right: limitEl.offsetWidth - this.offsetWidth - paddings.left - paddings.right
+				left: -pin[0],
+				top: -pin[1],
+				right: limitEl.offsetWidth - width - paddings.left - paddings.right + (width - pin[2]),
+				bottom: limitEl.offsetHeight - height - paddings.top - paddings.bottom + (height - pin[3])
 			};
 		}
 	},
@@ -342,6 +338,7 @@ var Draggy = module.exports = Mod({
 	dragstate: {
 		_: {
 			before: function(){
+				this.emit('idle');
 			},
 			'touchstart, mousedown': function(e){
 				e.preventDefault();
@@ -366,6 +363,9 @@ var Draggy = module.exports = Mod({
 			},
 
 			after: function(){
+				//set pin once the first drag happens
+				if (!this.pin) this.pin = [0,0,this.offsetWidth, this.offsetHeight];
+
 				//prepare limits for drag session
 				this.limits = this.within;
 
@@ -402,11 +402,16 @@ var Draggy = module.exports = Mod({
 
 		threshold: {
 			before: function(){
+				this.emit('threshold');
 				return 'drag';
 			}
 		},
 
 		drag: {
+			before: function(){
+				this.emit('dragstart');
+			},
+
 			//update position onmove
 			'document touchmove, document mousemove': function(e){
 				e.preventDefault();
@@ -427,6 +432,8 @@ var Draggy = module.exports = Mod({
 				this.dragparams.x = x;
 				this.dragparams.y = y;
 
+				//emit drag
+				this.emit('drag');
 			},
 
 			//stop drag onleave
@@ -441,6 +448,10 @@ var Draggy = module.exports = Mod({
 				}
 
 				this.dragstate = 'idle';
+			},
+
+			after: function(){
+				this.emit('dragend');
 			}
 		},
 

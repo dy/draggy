@@ -1,10 +1,8 @@
 describe("Draggy", function(){
-
-	var canvas = document.createElement("canvas");
-	document.body.appendChild(canvas)
+	var canvas = document.querySelector('.painter-canvas');
 	var ctx = canvas.getContext("2d");
 	canvas.width  = window.innerWidth;
-	canvas.height = 10000;
+	canvas.height = window.innerHeight;
 
 
 	it("plain", function(){
@@ -145,8 +143,8 @@ describe("Draggy", function(){
 
 	function paintRestrictionArea($el){
 		var $within = $el.within;
-		var pos = offsets($within),
-			pads = paddings($within);
+		var pos = css.offsets($within),
+			pads = css.paddings($within);
 
 		ctx.strokeStyle = 'rgba(60,60,60,1)';
 		ctx.lineWidth = 1;
@@ -167,9 +165,9 @@ describe("Draggy", function(){
 		clear();
 
 		var rect = $el.threshold,
-			d = $el._dragparams,
-			offsetX = d.offsetX,
-			offsetY = d.offsetY;
+			d = $el.dragparams,
+			offsetX = d.x,
+			offsetY = d.x;
 
 		if (typeof rect === "number"){
 			//number
@@ -188,7 +186,7 @@ describe("Draggy", function(){
 		rect[2] += 1
 		rect[3] += 1
 
-		var pos = offsets($el);
+		var pos = css.offsets($el);
 
 		ctx.strokeStyle = 'rgba(60,180,250,1)';
 		ctx.lineWidth = 2;
@@ -208,7 +206,7 @@ describe("Draggy", function(){
 		pin[2] += 1
 		pin[3] += 1
 
-		var pos = offsets($el);
+		var pos = css.offsets($el);
 
 		ctx.strokeStyle = 'rgba(60,250,60,1)';
 		ctx.lineWidth = 2;
