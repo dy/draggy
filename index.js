@@ -46,8 +46,8 @@ var Draggy = module.exports = Mod({
 	 */
 
 	within: {
-		init: function(){
-			return this.parentNode || win;
+		init: function(init){
+			return init || this.parentNode || win;
 		},
 		set: function(within){
 			if (type.isElement(within)){
@@ -150,6 +150,7 @@ var Draggy = module.exports = Mod({
 			}
 		}
 	},
+
 
 	/** Autoscroll on reaching the border of the screen */
 	autoscroll: false,
@@ -313,17 +314,17 @@ var Draggy = module.exports = Mod({
 			var selfOffsets = css.offsets(this);
 
 			//initial offsets from the `limitEl`, 0-translation:
-			var initX = selfOffsets.left - this.x;
-			var initY = selfOffsets.top - this.y;
+			var initX = selfOffsets.left - containerOffsets.left - this.x;
+			var initY = selfOffsets.top - containerOffsets.top - this.y;
 
 			//calc offsets limitEl restriction container, including translation
 			var height = this.offsetHeight,
 				width = this.offsetWidth;
 			return {
-				left: -pin[0],
-				top: -pin[1],
-				right: limitEl.offsetWidth - width - paddings.left - paddings.right + (width - pin[2]),
-				bottom: limitEl.offsetHeight - height - paddings.top - paddings.bottom + (height - pin[3])
+				left: -pin[0] - initX + paddings.left,
+				top: -pin[1] - initY + paddings.top,
+				right: - initX + limitEl.offsetWidth - width - paddings.right + (width - pin[2]),
+				bottom: - initY + limitEl.offsetHeight - height - paddings.bottom + (height - pin[3])
 			};
 		}
 	},
@@ -345,8 +346,8 @@ var Draggy = module.exports = Mod({
 				e.stopPropagation();
 
 				//set initial position
-				this.dragparams.x = clientX(e);
-				this.dragparams.y = clientY(e);
+				this.dragparams.prevClientX = clientX(e);
+				this.dragparams.prevClientY = clientY(e);
 
 				this.dragstate = 'threshold';
 			},
@@ -357,7 +358,7 @@ var Draggy = module.exports = Mod({
 				this.dragparams.velocity = 0;
 				this.dragparams.amplitude = 0;
 				this.dragparams.angle = 0;
-				this.dragparams.frame = [this.dragparams.x, this.dragparams.y];
+				this.dragparams.frame = [this.dragparams.prevClientX, this.dragparams.prevClientY];
 				this.dragparams.timestamp = +new Date();
 				this.emit('track:defer');
 			},
@@ -383,10 +384,10 @@ var Draggy = module.exports = Mod({
 				var elapsed = now - params.timestamp;
 
 				//get delta movement since the last track
-				var deltaX = params.x - params.frame[0];
-				var deltaY = params.y - params.frame[1];
-				params.frame[0] = params.x;
-				params.frame[1] = params.y;
+				var deltaX = params.prevClientX - params.frame[0];
+				var deltaY = params.prevClientY - params.frame[1];
+				params.frame[0] = params.prevClientX;
+				params.frame[1] = params.prevClientY;
 
 				var delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
@@ -419,8 +420,8 @@ var Draggy = module.exports = Mod({
 
 				var x = clientX(e),
 					y = clientY(e),
-					deltaX = x - this.dragparams.x,
-					deltaY = y - this.dragparams.y;
+					deltaX = x - this.dragparams.prevClientX,
+					deltaY = y - this.dragparams.prevClientY;
 
 				//set new position avoiding jittering
 				// if (!isBetween(deltaX, -2, 2)) this.x += deltaX;
@@ -429,8 +430,8 @@ var Draggy = module.exports = Mod({
 				this.y += deltaY;
 
 				//save dragparams for the next drag call
-				this.dragparams.x = x;
-				this.dragparams.y = y;
+				this.dragparams.prevClientX = x;
+				this.dragparams.prevClientY = y;
 
 				//emit drag
 				this.emit('drag');

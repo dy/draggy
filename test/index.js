@@ -10,8 +10,8 @@ describe("Draggy", function(){
 	});
 
 	it("within", function(){
-		var a = createDraggyCase("within parent", {
-			within: 'parent'
+		var a = createDraggyCase("within doc", {
+			within: document
 		})
 	});
 
@@ -23,14 +23,12 @@ describe("Draggy", function(){
 
 	it("pin area", function(){
 		var a = createDraggyCase("pin area", {
-			within: 'parent',
 			pin: [20,20,40,40]
 		})
 	})
 
 	it("point picker", function(){
 		var a = createDraggyCase("point picker", {
-			within: 'parent',
 			pin: [40,40],
 			threshold: 0
 		})
@@ -38,12 +36,14 @@ describe("Draggy", function(){
 
 	it("x", function(){
 		createDraggyCase("x", {
+			within: document,
 			axis: 'x'
 		})
 	})
 
 	it("y", function(){
 		createDraggyCase("y", {
+			within: document,
 			axis: 'y'
 		})
 	})
@@ -143,6 +143,7 @@ describe("Draggy", function(){
 
 	function paintRestrictionArea($el){
 		var $within = $el.within;
+
 		var pos = css.offsets($within),
 			pads = css.paddings($within);
 
