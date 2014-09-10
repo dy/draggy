@@ -21,7 +21,7 @@ var Draggy = module.exports = Mod({
 
 
 
-	/* ----------------------- I N I T -------------------- */
+/* ------------------------------------ I N I T -------------------------------------- */
 
 
 	init: function(){
@@ -36,7 +36,7 @@ var Draggy = module.exports = Mod({
 
 
 
-	/* --------------------- O P T I O N S ------------------ */
+/* ---------------------------------- O P T I O N S ---------------------------------- */
 
 
 	/**
@@ -50,6 +50,7 @@ var Draggy = module.exports = Mod({
 			return init || this.parentNode || win;
 		},
 		set: function(within){
+			//TODO: think of utilizing parseTarget there (expose enot’s parsing utils)
 			if (type.isElement(within)){
 				return within;
 			} else if (isString(within)){
@@ -240,12 +241,12 @@ var Draggy = module.exports = Mod({
 
 
 
-	/* ------------------------ W O R K -------------------- */
+/* ------------------------------------- W O R K ------------------------------------- */
 
 
 	/**
-	* Position
-	*/
+	 * Position
+	 */
 
 	x: {
 		init: 0,
@@ -290,6 +291,35 @@ var Draggy = module.exports = Mod({
 
 
 	/**
+	 * Main drag properties holder
+	 */
+	dragparams: {
+		init: function(){
+			return {
+				//initial offset from the `within` in 0-position
+				initOffsetX: 0,
+				initOffsetY: 0,
+
+				//click offsets
+				innerOffsetX: 0,
+				innerOffsetY: 0,
+
+				//previous position on the screen
+				prevClientX: 0,
+				prevClientY: 0,
+
+				//tracking params
+				velocity: 0,
+				angle: 0,
+				//[clientX, clientY] for the last track
+				frame: undefined,
+				timestamp: undefined,
+			};
+		}
+	},
+
+
+	/**
 	 * Limits representing current drag area
 	 *
 	 * @type {Object}
@@ -314,17 +344,17 @@ var Draggy = module.exports = Mod({
 			var selfOffsets = css.offsets(this);
 
 			//initial offsets from the `limitEl`, 0-translation:
-			var initX = selfOffsets.left - containerOffsets.left - this.x;
-			var initY = selfOffsets.top - containerOffsets.top - this.y;
+			var initOffsetX = this.dragparams.initOffsetX = selfOffsets.left - containerOffsets.left - this.x;
+			var initOffsetY = this.dragparams.initOffsetY = selfOffsets.top - containerOffsets.top - this.y;
 
 			//calc offsets limitEl restriction container, including translation
 			var height = this.offsetHeight,
 				width = this.offsetWidth;
 			return {
-				left: -pin[0] - initX + paddings.left,
-				top: -pin[1] - initY + paddings.top,
-				right: - initX + limitEl.offsetWidth - width - paddings.right + (width - pin[2]),
-				bottom: - initY + limitEl.offsetHeight - height - paddings.bottom + (height - pin[3])
+				left: -pin[0] - initOffsetX + paddings.left,
+				top: -pin[1] - initOffsetY + paddings.top,
+				right: - initOffsetX + limitEl.offsetWidth - width - paddings.right + (width - pin[2]),
+				bottom: - initOffsetY + limitEl.offsetHeight - height - paddings.bottom + (height - pin[3])
 			};
 		}
 	},
@@ -333,10 +363,11 @@ var Draggy = module.exports = Mod({
 	/**
 	* State of drag.
 	* @enum {string}
-	* @default  'idle'
+	* @default is 'idle'
 	*/
 
 	dragstate: {
+		/** idle state */
 		_: {
 			before: function(){
 				this.emit('idle');
@@ -345,31 +376,39 @@ var Draggy = module.exports = Mod({
 				e.preventDefault();
 				e.stopPropagation();
 
-				//set initial position
-				this.dragparams.prevClientX = clientX(e);
-				this.dragparams.prevClientY = clientY(e);
-
-				this.dragstate = 'threshold';
-			},
-
-			/** Track kinetic movement */
-			track: function(){
-				//set initial kinetic props
-				this.dragparams.velocity = 0;
-				this.dragparams.amplitude = 0;
-				this.dragparams.angle = 0;
-				this.dragparams.frame = [this.dragparams.prevClientX, this.dragparams.prevClientY];
-				this.dragparams.timestamp = +new Date();
-				this.emit('track:defer');
-			},
-
-			after: function(){
 				//set pin once the first drag happens
 				if (!this.pin) this.pin = [0,0,this.offsetWidth, this.offsetHeight];
 
 				//prepare limits for drag session
 				this.limits = this.within;
 
+				var params = this.dragparams;
+
+				//set initial position - have to go after updating limits
+				params.prevClientX = clientX(e);
+				params.prevClientY = clientY(e);
+
+				//measure initial inner offset
+				params.innerOffsetX = e.pageX - params.initOffsetX - this.x;
+				params.innerOffsetY = e.pageY - params.initOffsetY - this.y;
+
+				this.dragstate = 'threshold';
+			},
+
+			/** Track kinetic movement */
+			track: function(){
+				var params = this.dragparams;
+
+				//set initial kinetic props
+				params.velocity = 0;
+				params.amplitude = 0;
+				params.angle = 0;
+				params.frame = [params.prevClientX, params.prevClientY];
+				params.timestamp = +new Date();
+				this.emit('track:defer');
+			},
+
+			after: function(){
 				//init tracking, if release defined
 				this.release && this.track();
 			}
@@ -418,20 +457,26 @@ var Draggy = module.exports = Mod({
 				e.preventDefault();
 				e.stopPropagation();
 
+				var params = this.dragparams;
+
 				var x = clientX(e),
 					y = clientY(e),
-					deltaX = x - this.dragparams.prevClientX,
-					deltaY = y - this.dragparams.prevClientY;
+					deltaX = x - params.prevClientX,
+					deltaY = y - params.prevClientY;
 
 				//set new position avoiding jittering
 				// if (!isBetween(deltaX, -2, 2)) this.x += deltaX;
 				// if (!isBetween(deltaX, -2, 2)) this.y += deltaY;
-				this.x += deltaX;
-				this.y += deltaY;
+				//TODO: calc this statically, ignore difs (only for sniper mode)
+				// this.x += deltaX;
+				// this.y += deltaY;
+				this.x = x + win.pageXOffset - params.initOffsetX - params.innerOffsetX;
+				this.y = y + win.pageYOffset - params.initOffsetY - params.innerOffsetY;
+
 
 				//save dragparams for the next drag call
-				this.dragparams.prevClientX = x;
-				this.dragparams.prevClientY = y;
+				params.prevClientX = x;
+				params.prevClientY = y;
 
 				//emit drag
 				this.emit('drag');
@@ -495,7 +540,7 @@ var Draggy = module.exports = Mod({
 
 
 
-/* -------------------------- H E L P E R S ----------------------- */
+/* ---------------------------------- H E L P E R S ---------------------------------- */
 
 
 /**
