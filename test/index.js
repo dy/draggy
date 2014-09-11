@@ -48,14 +48,11 @@ describe("Draggy", function(){
 		})
 	})
 
-	it("kinetic", function(){
-		createDraggyCase("kinetic", {
-
-		})
-	})
-
-	it("inner elements", function(){
-		xxx
+	it("inner elements (carousel drag)", function(){
+		var d = createDraggyCase("carousel", {
+			axis: 'x'
+		});
+		d.classList.add('carousel');
 	})
 
 	it("handle", function(){
