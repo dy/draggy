@@ -39,12 +39,10 @@ var Draggy = module.exports = Mod({
 /* ---------------------------------- O P T I O N S ---------------------------------- */
 
 
-	/**
-	 * Restricting container
+	/** Restricting container
 	 * @type {Element|object}
 	 * @default this.parentNode
 	 */
-
 	within: {
 		init: function(init){
 			return init || this.parentNode || win;
@@ -62,12 +60,10 @@ var Draggy = module.exports = Mod({
 	},
 
 
-	/**
-	 * Which area of draggable should not be outside the restriction area
+	/** Which area of draggable should not be outside the restriction area
 	 *
 	 * @default this
 	 */
-
 	pin: {
 		set: function(value){
 			// console.log("pin changed", value)
@@ -84,44 +80,33 @@ var Draggy = module.exports = Mod({
 	},
 
 
-	/**
-	 * Draggable/droppable match identifier
-	 */
-
+	/** Draggable/droppable match identifier */
 	group: null,
 
 
-	/**
-	 * Clone object for dragging
-	 */
-
+	/** Clone object for dragging */
 	ghost: false,
 
 
-	/**
-	 * How fast to move when released
+	/** How fast to move when released
 	 */
-
 	velocity: 2000,
 	maxVelocity: 100,
 
 
-	/**
-	 * For how long to release movement
+	/** For how long to release movement
+	 *
 	 * @type {(number|false)}
 	 * @default false
 	 * @todo
 	 */
-
 	release: false,
 
 
-	/**
-	 * Initial drag ignore area
+	/** Initial drag ignore area
 	 *
 	 * @type {(Array(4)|Array(2)|Function|number)}
 	 */
-
 	threshold: {
 		init: 12,
 
@@ -169,15 +154,19 @@ var Draggy = module.exports = Mod({
 	sniperSpeed: .15,
 
 
-	/**
-	 * Restrict movement by axis
+	/** Restrict movement by axis
 	 *
 	 * @default undefined
 	 * @enum {string}
 	 */
-
 	axis: {
 		x: {
+			//ignore setting y
+			y: {
+				set: function(){
+					return 0;
+				}
+			}
 			// threshold: {
 			// 	get: function(val){
 			// 		val = Draggable.fn.threshold.get(val);
@@ -188,6 +177,12 @@ var Draggy = module.exports = Mod({
 			// }
 		},
 		y: {
+			x: {
+				//ignore setting x
+				set: function(){
+					return 0;
+				}
+			}
 			// threshold: {
 			// 	get: function(val){
 			// 		val = Draggable.fn.threshold.get(val);
@@ -203,12 +198,10 @@ var Draggy = module.exports = Mod({
 	},
 
 
-	/**
-	 * Repeat position by one of axis
+	/** Repeat position by one of axis
 	 * @enum {string}
 	 * @default undefined
 	 */
-
 	repeat: {
 		undefined: null,
 		both: null,
@@ -236,9 +229,11 @@ var Draggy = module.exports = Mod({
 				return undefined;
 			}
 		}
-
 	},
 
+
+	/** Hide cursor on drag (reduce clutter) */
+	hideCursor: false,
 
 
 /* ------------------------------------- W O R K ------------------------------------- */
@@ -392,6 +387,10 @@ var Draggy = module.exports = Mod({
 				params.innerOffsetX = e.pageX - params.initOffsetX - this.x;
 				params.innerOffsetY = e.pageY - params.initOffsetY - this.y;
 
+				//set initial client x & y
+				params.initClientX = params.prevClientX;
+				params.initClientY = params.prevClientY;
+
 				this.dragstate = 'threshold';
 			},
 
@@ -435,7 +434,7 @@ var Draggy = module.exports = Mod({
 				params.velocity = 0.6 * v + 0.4 * params.velocity;
 
 				//get angle
-				params.angle = 0.8 * Math.atan2(deltaY, deltaX) + 0.2 * params.angle;
+				params.angle = 0.7 * Math.atan2(deltaY, deltaX) + 0.2 * params.angle + 0.1 * Math.atan2(params.frame[0] - params.initClientX, params.frame[1] - params.initClientY);
 				this.emit('track:after(20)');
 			}
 		},
