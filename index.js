@@ -24,6 +24,10 @@ var Draggy = module.exports = Mod({
 /* ------------------------------------ I N I T -------------------------------------- */
 
 
+	/** Ensure element is an HTMLElement */
+	extends: 'div',
+
+
 	init: function(){
 		//holder for params while drag
 		this.dragparams = {};

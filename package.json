@@ -1,7 +1,7 @@
 {
   "name": "draggy",
   "version": "0.0.1",
-  "description": "Draggable component provider",
+  "description": "Draggable behaviour provider",
   "main": "index.js",
   "scripts": {
     "test": "test"
@@ -26,6 +26,6 @@
     "mutypes": "*"
   },
   "devDependencies": {
-    "mocha": "~1.21.4"
+    "mocha": "*"
   }
 }
