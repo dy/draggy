@@ -29,7 +29,7 @@ describe("Draggy", function(){
 
 	it("point picker", function(){
 		var a = createDraggyCase("point picker", {
-			pin: [40,40],
+			pin: false,
 			threshold: 0
 		})
 	})

@@ -64,8 +64,9 @@ var Draggy = module.exports = Mod({
 	},
 
 
-	/** Which area of draggable should not be outside the restriction area
-	 *
+	/** Which area of draggable should not be outside the restriction area.
+	 * False value means center by the self rect
+	 * @type {(Array|number|false)}
 	 * @default this
 	 */
 	pin: {
@@ -77,6 +78,10 @@ var Draggy = module.exports = Mod({
 				} else if (value.length === 4){
 					return value;
 				}
+			}
+
+			else if (isNumber(value)){
+				return [value, value, value, value];
 			}
 
 			return value;
@@ -378,7 +383,14 @@ var Draggy = module.exports = Mod({
 				e.stopPropagation();
 
 				//set pin once the first drag happens
-				if (!this.pin) this.pin = [0,0,this.offsetWidth, this.offsetHeight];
+				//set pin centered, if it is definitely set false
+				if (this.pin === false){
+					this.pin = [this.offsetWidth*.5, this.offsetHeight*.5];
+				}
+				//else set it the whole area
+				else if (!this.pin) {
+					this.pin = [0,0,this.offsetWidth, this.offsetHeight];
+				}
 
 				//prepare limits for drag session
 				this.limits = this.within;
