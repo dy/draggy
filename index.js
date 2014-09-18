@@ -320,7 +320,6 @@ var Draggy = module.exports = Mod({
 	 * @type {Object}
 	 * @todo  make it work
 	 */
-
 	limits: {
 		init: function(){
 			return {top:0, bottom:0, left: 0, right:0};
@@ -360,12 +359,15 @@ var Draggy = module.exports = Mod({
 	* @enum {string}
 	* @default is 'idle'
 	*/
-
 	dragstate: {
 		/** idle state */
 		_: {
 			before: function(){
 				this.emit('idle');
+
+				//enable document interavtivity
+				css.disableSelection(root);
+				if (this.hideCursor) css(root, {"cursor": null});
 			},
 			'touchstart, mousedown': function(e){
 				e.preventDefault();
@@ -443,6 +445,12 @@ var Draggy = module.exports = Mod({
 			before: function(){
 				this.emit('threshold');
 				return 'drag';
+			},
+
+			after: function(){
+				//reduce dragging clutter
+				css.enableSelection(root);
+				if (this.hideCursor) css(root, {"cursor": "none"});
 			}
 		},
 
