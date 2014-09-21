@@ -141,7 +141,7 @@ describe("Draggy", function(){
 	function paintRestrictionArea($el){
 		var $within = $el.within;
 
-		var pos = css.offsets($within),
+		var pos = $within.getBoundingClientRect(),
 			pads = css.paddings($within);
 
 		ctx.strokeStyle = 'rgba(60,60,60,1)';
@@ -184,7 +184,7 @@ describe("Draggy", function(){
 		rect[2] += 1
 		rect[3] += 1
 
-		var pos = css.offsets($el);
+		var pos = $el.getBoundingClientRect();
 
 		ctx.strokeStyle = 'rgba(60,180,250,1)';
 		ctx.lineWidth = 2;
@@ -201,10 +201,10 @@ describe("Draggy", function(){
 
 	function paintPinRect($el){
 		var pin = $el.pin.slice();
-		pin[2] += 1
-		pin[3] += 1
+		pin[2] += 1;
+		pin[3] += 1;
 
-		var pos = css.offsets($el);
+		var pos = $el.getBoundingClientRect();
 
 		ctx.strokeStyle = 'rgba(60,250,60,1)';
 		ctx.lineWidth = 2;
