@@ -71,7 +71,6 @@ var Draggy = module.exports = Mod({
 	 */
 	pin: {
 		set: function(value){
-			// console.log("pin changed", value)
 			if (isArray(value)){
 				if (value.length === 2){
 					return [value[0], value[1], value[0], value[1]];
@@ -82,6 +81,23 @@ var Draggy = module.exports = Mod({
 
 			else if (isNumber(value)){
 				return [value, value, value, value];
+			}
+			//set pin centered, if it is definitely set false
+			else if (!value){
+				var self = this;
+				//FIXME: add :one method
+				//plan updating pin on the first touchstart
+				this.on('touchstart:one, mousedown:one', function(){
+					self.pin = value;
+				});
+
+				if (value === false){
+					return [this.offsetWidth*.5, this.offsetHeight*.5,this.offsetWidth*.5, this.offsetHeight*.5]
+				}
+				//else set it the whole area
+				else {
+					return [0,0,this.offsetWidth, this.offsetHeight];
+				}
 			}
 
 			return value;
@@ -337,16 +353,6 @@ var Draggy = module.exports = Mod({
 		/** Set limits based on passed element */
 		set: function(limitEl){
 			if (!type.isElement(limitEl)) return limitEl;
-
-			//set pin once the first drag happens
-			//set pin centered, if it is definitely set false
-			if (this.pin === false){
-				this.pin = [this.offsetWidth*.5, this.offsetHeight*.5];
-			}
-			//else set it the whole area
-			else if (!this.pin) {
-				this.pin = [0,0,this.offsetWidth, this.offsetHeight];
-			}
 
 			var paddings = css.paddings(limitEl);
 			var pin = this.pin;
