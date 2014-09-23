@@ -267,7 +267,6 @@ var Draggy = module.exports = Mod({
 	/**
 	 * Position
 	 */
-
 	x: {
 		init: 0,
 		set: function(value){
@@ -478,7 +477,7 @@ var Draggy = module.exports = Mod({
 
 		drag: {
 			before: function(){
-				this.emit('dragstart');
+				this.emit('dragstart').emit('drag');
 			},
 
 			//update position onmove
@@ -508,7 +507,7 @@ var Draggy = module.exports = Mod({
 				params.prevClientY = y;
 
 				//emit drag
-				this.emit('drag');
+				this.emit('drag', true, true);
 			},
 
 			//stop drag onleave
@@ -594,10 +593,3 @@ function clientX(e){
 	// mouse event
 	return e.clientX;
 }
-
-
-/**
- * The most complicated function in the JS
- */
-
-function noop(){}
