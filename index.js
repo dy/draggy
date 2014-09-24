@@ -105,10 +105,6 @@ var Draggy = module.exports = Mod({
 	},
 
 
-	/** Draggable/droppable match identifier */
-	group: null,
-
-
 	/** Clone object for dragging */
 	ghost: false,
 
