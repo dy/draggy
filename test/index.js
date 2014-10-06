@@ -104,7 +104,7 @@ describe("Draggy", function(){
 		drEl.innerHTML = name;
 		el.appendChild(drEl);
 
-		new Draggy(drEl, opts);
+		var draggy = new Draggy(drEl, opts);
 
 		//create direction arrow
 		var arr = document.createElement('div');
@@ -112,12 +112,12 @@ describe("Draggy", function(){
 		drEl.appendChild(arr);
 
 		//bind listeners
-		drEl.addEventListener('threshold', paintThreshold);
-		drEl.addEventListener('dragstart', renderHelpers);
-		drEl.addEventListener('drag', renderHelpers);
-		drEl.addEventListener('dragend', clear);
-		drEl.addEventListener('idle', clear);
-		drEl.addEventListener('track', renderDirection);
+		draggy.on('threshold', paintThreshold);
+		draggy.on('dragstart', renderHelpers);
+		draggy.on('drag', renderHelpers);
+		draggy.on('dragend', clear);
+		draggy.on('idle', clear);
+		draggy.on('track', renderDirection);
 
 		return drEl;
 	}
@@ -154,7 +154,7 @@ describe("Draggy", function(){
 
 
 	function paintThreshold(e){
-		var $el = e.currentTarget;
+		var $el = this;
 
 		clear();
 
@@ -180,7 +180,7 @@ describe("Draggy", function(){
 		rect[2] += 1
 		rect[3] += 1
 
-		var pos = $el.getBoundingClientRect();
+		var pos = $el.element.getBoundingClientRect();
 
 		ctx.strokeStyle = 'rgba(60,180,250,1)';
 		ctx.lineWidth = 2;
@@ -200,7 +200,7 @@ describe("Draggy", function(){
 		pin[2] += 1;
 		pin[3] += 1;
 
-		var pos = $el.getBoundingClientRect();
+		var pos = $el.element.getBoundingClientRect();
 
 		ctx.strokeStyle = 'rgba(60,250,60,1)';
 		ctx.lineWidth = 2;
@@ -215,10 +215,10 @@ describe("Draggy", function(){
 	}
 
 	function renderDirection(e){
-		var $el = e.target;
-		var $arr = $el.querySelector('.draggy-arrow');
-		$arr.style.transform = 'rotate(' + $el.dragparams.angle + 'rad)';
-		$arr.style.width = $el.dragparams.velocity * 10 + 'px';
+		// var $el = e.target;
+		// var $arr = $el.querySelector('.draggy-arrow');
+		// $arr.style.transform = 'rotate(' + $el.dragparams.angle + 'rad)';
+		// $arr.style.width = $el.dragparams.velocity * 10 + 'px';
 	}
 
 

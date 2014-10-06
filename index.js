@@ -68,7 +68,7 @@ Draggy.options = {
 	 */
 	within: {
 		init: function(init){
-			return init || this.parentNode || win;
+			return init || this.element.parentNode || win;
 		},
 		set: function(within){
 			//TODO: think of utilizing parseTarget there (expose enot’s parsing utils)
