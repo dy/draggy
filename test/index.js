@@ -104,11 +104,7 @@ describe("Draggy", function(){
 		drEl.innerHTML = name;
 		el.appendChild(drEl);
 
-		for(var name in opts){
-			drEl[name] = opts[name];
-		}
-
-		new Draggy(drEl);
+		new Draggy(drEl, opts);
 
 		//create direction arrow
 		var arr = document.createElement('div');

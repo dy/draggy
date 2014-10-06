@@ -29,20 +29,22 @@ function Draggy(target, options){
 	this.element = target;
 	options = options || {};
 
-
 	//holder for params while drag
 	this.dragparams = {};
 
 	//parse attributes of targret
 	var prop, parseResult;
 	for (var propName in Draggy.options){
-		if (!options[propName]) {
+		//parse attribute, if no option passed
+		if (options[propName] === undefined){
 			prop = Draggy.options[propName];
 			options[propName] = parse.attribute(target, propName, prop.init !== undefined ? prop.init : prop);
 		}
 
 		//declare initial value
-		this[propName] = options[propName];
+		if (options[propName] !== undefined) {
+			this[propName] = options[propName];
+		}
 	}
 
 	//apply params
@@ -445,7 +447,7 @@ Draggy.options = {
 			}
 		},
 
-		'@element threshold, @element drag': {
+		'threshold, drag': {
 			//track velocity
 			track: function(){
 				var params = this.dragparams;
@@ -541,7 +543,7 @@ Draggy.options = {
 		//inertional moving
 		release: {
 			before: function(){
-				css(this, {
+				css(this.element, {
 					'transition': this.release + 'ms ease-out transform'
 				});
 				var params = this.dragparams;
@@ -560,7 +562,7 @@ Draggy.options = {
 			},
 
 			after: function(){
-				css(this, {
+				css(this.element, {
 					'transition': null
 				});
 
