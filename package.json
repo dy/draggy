@@ -20,10 +20,11 @@
   },
   "homepage": "https://github.com/dfcreative/draggy",
   "dependencies": {
-    "mod-constructor": "*",
     "mucss": "*",
     "mustring": "*",
-    "mutypes": "*"
+    "mutypes": "*",
+    "muparse": "*",
+    "st8": "*"
   },
   "devDependencies": {
     "mocha": "*"

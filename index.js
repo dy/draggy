@@ -1,10 +1,11 @@
-var Mod = window['Mod'] || require('mod-constructor');
 var type = require('mutypes');
 var css = require('mucss');
 var m = require('mumath');
+var state = require('st8');
+var parse = require('muparse');
+var Enot = require('enot');
 
-var name = 'draggy',
-	win = window,
+var win = window,
 	doc = document,
 	root = doc.documentElement;
 
@@ -17,32 +18,48 @@ var name = 'draggy',
  *
  * @return {Element} Target element
  */
-var Draggy = module.exports = Mod({
+module.exports = Draggy;
 
 
 
 /* ------------------------------------ I N I T -------------------------------------- */
 
 
-	/** Ensure element is an HTMLElement */
-	extends: 'div',
+function Draggy(target, options){
+	this.element = target;
+	options = options || {};
 
 
-	init: function(){
-		//holder for params while drag
-		this.dragparams = {};
-	},
+	//holder for params while drag
+	this.dragparams = {};
+
+	//parse attributes of targret
+	var prop, parseResult;
+	for (var propName in Draggy.options){
+		if (!options[propName]) {
+			prop = Draggy.options[propName];
+			options[propName] = parse.attribute(target, propName, prop.init !== undefined ? prop.init : prop);
+		}
+
+		//declare initial value
+		this[propName] = options[propName];
+	}
+
+	//apply params
+	state(this, Draggy.options);
+
+	this.element.classList.add('draggy');
+}
 
 
-	created: function(){
-		this.classList.add(name);
-	},
 
+Draggy.prototype = Object.create(Enot.prototype);
 
 
 /* ---------------------------------- O P T I O N S ---------------------------------- */
 
 
+Draggy.options = {
 	/** Restricting container
 	 * @type {Element|object}
 	 * @default this.parentNode
@@ -85,9 +102,8 @@ var Draggy = module.exports = Mod({
 			//set pin centered, if it is definitely set false
 			else if (!value){
 				var self = this;
-				//FIXME: add :one method
-				//plan updating pin on the first touchstart
-				this.on('touchstart:one, mousedown:one', function(){
+				//plan updating pin on the first touchstart or mousedown
+				Enot.one(this.element, 'touchstart, mousedown', function(){
 					self.pin = value;
 				});
 
@@ -257,9 +273,6 @@ var Draggy = module.exports = Mod({
 	hideCursor: false,
 
 
-/* ------------------------------------- W O R K ------------------------------------- */
-
-
 	/**
 	 * Position
 	 */
@@ -276,7 +289,7 @@ var Draggy = module.exports = Mod({
 		changed: function(value){
 			if (this.freeze) return;
 
-			css(this,
+			css(this.element,
 				'transform',
 				['translate3d(', value, 'px,', this.y, 'px, 0)'].join(''));
 		}
@@ -294,7 +307,7 @@ var Draggy = module.exports = Mod({
 		changed: function(value){
 			if (this.freeze) return;
 
-			css(this,
+			css(this.element,
 				'transform',
 				['translate3d(', this.x, 'px,', value, 'px, 0)'].join(''));
 		}
@@ -355,7 +368,7 @@ var Draggy = module.exports = Mod({
 			//TODO: calc moving limits based on restriction area & viewport
 			//TODO: set this area before drag, not in get
 			var containerOffsets = css.offsets(limitEl);
-			var selfOffsets = css.offsets(this);
+			var selfOffsets = css.offsets(this.element);
 
 			//initial offsets from the `limitEl`, 0-translation:
 			var initOffsetX = this.dragparams.initOffsetX = selfOffsets.left - containerOffsets.left - this.x;
@@ -364,6 +377,7 @@ var Draggy = module.exports = Mod({
 			//calc offsets limitEl restriction container, including translation
 			var height = this.offsetHeight,
 				width = this.offsetWidth;
+
 			return {
 				left: -pin[0] - initOffsetX + paddings.left,
 				top: -pin[1] - initOffsetY + paddings.top,
@@ -389,7 +403,7 @@ var Draggy = module.exports = Mod({
 				css.disableSelection(root);
 				if (this.hideCursor) css(root, {"cursor": null});
 			},
-			'touchstart, mousedown': function(e){
+			'@element touchstart, @element mousedown': function(e){
 				e.preventDefault();
 				e.stopPropagation();
 
@@ -432,7 +446,7 @@ var Draggy = module.exports = Mod({
 			}
 		},
 
-		'threshold, drag': {
+		'@element threshold, @element drag': {
 			//track velocity
 			track: function(){
 				var params = this.dragparams;
@@ -556,7 +570,7 @@ var Draggy = module.exports = Mod({
 			}
 		}
 	}
-});
+};
 
 
 

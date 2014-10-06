@@ -116,12 +116,12 @@ describe("Draggy", function(){
 		drEl.appendChild(arr);
 
 		//bind listeners
-		drEl.on('threshold', paintThreshold);
-		drEl.on('dragstart', renderHelpers);
-		drEl.on('drag', renderHelpers);
-		drEl.on('dragend', clear);
-		drEl.on('idle', clear);
-		drEl.on('track', renderDirection);
+		drEl.addEventListener('threshold', paintThreshold);
+		drEl.addEventListener('dragstart', renderHelpers);
+		drEl.addEventListener('drag', renderHelpers);
+		drEl.addEventListener('dragend', clear);
+		drEl.addEventListener('idle', clear);
+		drEl.addEventListener('track', renderDirection);
 
 		return drEl;
 	}
