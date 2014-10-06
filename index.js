@@ -29,9 +29,6 @@ function Draggy(target, options){
 	this.element = target;
 	options = options || {};
 
-	//holder for params while drag
-	this.dragparams = {};
-
 	//parse attributes of targret
 	var prop, parseResult;
 	for (var propName in Draggy.options){
@@ -46,6 +43,30 @@ function Draggy(target, options){
 			this[propName] = options[propName];
 		}
 	}
+
+
+	//holder for params while drag
+	this.dragparams = {
+		//initial offset from the `within` in 0-position
+		initOffsetX: 0,
+		initOffsetY: 0,
+
+		//click offsets
+		innerOffsetX: 0,
+		innerOffsetY: 0,
+
+		//previous position on the screen
+		prevClientX: 0,
+		prevClientY: 0,
+
+		//tracking params
+		velocity: 0,
+		angle: 0,
+		//[clientX, clientY] for the last track
+		frame: undefined,
+		timestamp: undefined,
+	};
+
 
 	//apply params
 	state(this, Draggy.options);
@@ -317,35 +338,6 @@ Draggy.options = {
 
 	/** Ignore position change */
 	freeze: false,
-
-
-	/**
-	 * Main drag properties holder
-	 */
-	dragparams: {
-		init: function(){
-			return {
-				//initial offset from the `within` in 0-position
-				initOffsetX: 0,
-				initOffsetY: 0,
-
-				//click offsets
-				innerOffsetX: 0,
-				innerOffsetY: 0,
-
-				//previous position on the screen
-				prevClientX: 0,
-				prevClientY: 0,
-
-				//tracking params
-				velocity: 0,
-				angle: 0,
-				//[clientX, clientY] for the last track
-				frame: undefined,
-				timestamp: undefined,
-			};
-		}
-	},
 
 
 	/**
