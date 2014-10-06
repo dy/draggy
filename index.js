@@ -108,11 +108,11 @@ Draggy.options = {
 				});
 
 				if (value === false){
-					return [this.offsetWidth*.5, this.offsetHeight*.5,this.offsetWidth*.5, this.offsetHeight*.5]
+					return [this.element.offsetWidth*.5, this.element.offsetHeight*.5,this.element.offsetWidth*.5, this.element.offsetHeight*.5]
 				}
 				//else set it the whole area
 				else {
-					return [0,0,this.offsetWidth, this.offsetHeight];
+					return [0,0,this.element.offsetWidth, this.element.offsetHeight];
 				}
 			}
 
@@ -288,7 +288,6 @@ Draggy.options = {
 		},
 		changed: function(value){
 			if (this.freeze) return;
-
 			css(this.element,
 				'transform',
 				['translate3d(', value, 'px,', this.y, 'px, 0)'].join(''));
@@ -375,8 +374,8 @@ Draggy.options = {
 			var initOffsetY = this.dragparams.initOffsetY = selfOffsets.top - containerOffsets.top - this.y;
 
 			//calc offsets limitEl restriction container, including translation
-			var height = this.offsetHeight,
-				width = this.offsetWidth;
+			var height = this.element.offsetHeight,
+				width = this.element.offsetWidth;
 
 			return {
 				left: -pin[0] - initOffsetX + paddings.left,
