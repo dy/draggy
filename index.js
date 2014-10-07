@@ -353,7 +353,7 @@ Draggy.options = {
 
 		/** Set limits based on passed element */
 		set: function(limitEl){
-			if (!type.isElement(limitEl)) return limitEl;
+			if (limitEl.bottom !== undefined) return limitEl;
 
 			var paddings = css.paddings(limitEl);
 			var pin = this.pin;
