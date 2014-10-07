@@ -27,6 +27,8 @@ module.exports = Draggy;
 
 function Draggy(target, options){
 	this.element = target;
+	this.element.draggy = this;
+
 	options = options || {};
 
 	//parse attributes of targret
@@ -460,7 +462,8 @@ Draggy.options = {
 
 		drag: {
 			before: function(){
-				this.emit('dragstart').emit('drag');
+				Enot.emit(this.element, 'dragstart', null, true)
+				.emit(this.element, 'drag', null, true);
 			},
 
 			//update position onmove
@@ -490,7 +493,7 @@ Draggy.options = {
 				params.prevClientY = y;
 
 				//emit drag
-				this.emit('drag', true, true);
+				Enot.emit(this.element, 'drag', null, true);
 			},
 
 			//stop drag onleave
@@ -508,7 +511,7 @@ Draggy.options = {
 			},
 
 			after: function(){
-				this.emit('dragend');
+				Enot.emit(this.element, 'dragend', null, true);
 			}
 		},
 
