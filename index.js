@@ -76,9 +76,6 @@ function Draggy(target, options){
 
 
 
-Draggy.prototype = Object.create(Enot.prototype);
-
-
 /* ---------------------------------- O P T I O N S ---------------------------------- */
 
 
@@ -400,24 +397,7 @@ Draggy.options = {
 				e.preventDefault();
 				e.stopPropagation();
 
-				//prepare limits for drag session
-				this.limits = this.within;
-
-				var params = this.dragparams;
-
-				//set initial position - have to go after updating limits
-				params.prevClientX = clientX(e);
-				params.prevClientY = clientY(e);
-
-				//measure initial inner offset
-				params.innerOffsetX = e.pageX - params.initOffsetX - this.x;
-				params.innerOffsetY = e.pageY - params.initOffsetY - this.y;
-
-				//set initial client x & y
-				params.initClientX = params.prevClientX;
-				params.initClientY = params.prevClientY;
-
-				this.dragstate = 'threshold';
+				this.startDrag(e);
 			},
 
 			/** Track kinetic movement */
@@ -563,6 +543,36 @@ Draggy.options = {
 			}
 		}
 	}
+};
+
+
+
+/* ------------------------------    A    P    I    ---------------------------------- */
+
+
+var DraggyProto = Draggy.prototype = Object.create(Enot.prototype);
+
+
+/** Start drag according to the point of passed event */
+DraggyProto.startDrag = function(e){
+	//prepare limits for drag session
+	this.limits = this.within;
+
+	var params = this.dragparams;
+
+	//set initial position - have to go after updating limits
+	params.prevClientX = clientX(e);
+	params.prevClientY = clientY(e);
+
+	//measure initial inner offset
+	params.innerOffsetX = e.pageX - params.initOffsetX - this.x;
+	params.innerOffsetY = e.pageY - params.initOffsetY - this.y;
+
+	//set initial client x & y
+	params.initClientX = params.prevClientX;
+	params.initClientY = params.prevClientY;
+
+	this.dragstate = 'threshold';
 };
 
 
