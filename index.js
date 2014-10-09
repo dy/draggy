@@ -320,7 +320,6 @@ Draggy.options = {
 		},
 		changed: function(value){
 			if (this.freeze) return;
-
 			css(this.element,
 				'transform',
 				['translate3d(', this.x, 'px,', value, 'px, 0)'].join(''));
@@ -360,6 +359,8 @@ Draggy.options = {
 			translateStr = translateStr.slice(m1.index + m1[0].length);
 			var m2 =  /\b[\d\.]+/.exec(translateStr);
 			var ty = parseFloat(m2[0]);
+			// var tx = this.x;
+			// var ty = this.y;
 
 			//initial offsets from the `limitEl`, 0-translation:
 			var initOffsetX = this.dragparams.initOffsetX = selfOffsets.left - containerOffsets.left - tx;
@@ -462,6 +463,7 @@ Draggy.options = {
 
 		drag: {
 			before: function(){
+				css.disableSelection(this.element);
 				Enot.emit(this.element, 'dragstart', null, true)
 				.emit(this.element, 'drag', null, true);
 			},
@@ -510,6 +512,7 @@ Draggy.options = {
 			},
 
 			after: function(){
+				css.enableSelection(this.element);
 				Enot.emit(this.element, 'dragend', null, true);
 			}
 		},
