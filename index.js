@@ -4,6 +4,7 @@ var m = require('mumath');
 var state = require('st8');
 var parse = require('muparse');
 var Enot = require('enot');
+var getEl = require('tiny-element');
 
 var win = window,
 	doc = document,
@@ -91,14 +92,7 @@ Draggy.options = {
 			return init || this.element.parentNode || win;
 		},
 		set: function(within){
-			//TODO: think of utilizing parseTarget there (expose enot’s parsing utils)
-			if (type.isElement(within)){
-				return within;
-			} else if (isString(within)){
-				return doc.querySelector(within);
-			} else {
-				return root;
-			}
+			return getEl(within) || root;
 		}
 	},
 
@@ -294,7 +288,6 @@ Draggy.options = {
 	/** Hide cursor on drag (reduce clutter) */
 	hideCursor: false,
 
-
 	/**
 	 * Position
 	 */
@@ -310,6 +303,7 @@ Draggy.options = {
 		},
 		changed: function(value){
 			if (this.freeze) return;
+
 			css(this.element,
 				'transform',
 				['translate3d(', value, 'px,', this.y, 'px, 0)'].join(''));
@@ -319,7 +313,6 @@ Draggy.options = {
 		init: 0,
 		set: function(value){
 			var limits = this.limits;
-
 			value = between(value, limits.top, limits.bottom);
 
 			//snap to pixels
@@ -357,14 +350,20 @@ Draggy.options = {
 			var paddings = css.paddings(limitEl);
 			var pin = this.pin;
 
-			//TODO: calc moving limits based on restriction area & viewport
-			//TODO: set this area before drag, not in get
 			var containerOffsets = css.offsets(limitEl);
 			var selfOffsets = css.offsets(this.element);
 
+			//parse translate x & y
+			var translateStr = this.element.style.transform;
+			var m1 = /\b[\d\.]+/.exec(translateStr);
+			var tx = parseFloat(m1[0]);
+			translateStr = translateStr.slice(m1.index + m1[0].length);
+			var m2 =  /\b[\d\.]+/.exec(translateStr);
+			var ty = parseFloat(m2[0]);
+
 			//initial offsets from the `limitEl`, 0-translation:
-			var initOffsetX = this.dragparams.initOffsetX = selfOffsets.left - containerOffsets.left - this.x;
-			var initOffsetY = this.dragparams.initOffsetY = selfOffsets.top - containerOffsets.top - this.y;
+			var initOffsetX = this.dragparams.initOffsetX = selfOffsets.left - containerOffsets.left - tx;
+			var initOffsetY = this.dragparams.initOffsetY = selfOffsets.top - containerOffsets.top - ty;
 
 			//calc offsets limitEl restriction container, including translation
 			var height = this.element.offsetHeight,
@@ -443,6 +442,7 @@ Draggy.options = {
 
 				//get angle
 				params.angle = 0.7 * Math.atan2(deltaY, deltaX) + 0.2 * params.angle + 0.1 * Math.atan2(params.frame[0] - params.initClientX, params.frame[1] - params.initClientY);
+
 				this.emit('track:after(20)');
 			}
 		},
@@ -486,7 +486,6 @@ Draggy.options = {
 				// this.y += deltaY;
 				this.x = x + win.pageXOffset - params.initOffsetX - params.innerOffsetX;
 				this.y = y + win.pageYOffset - params.initOffsetY - params.innerOffsetY;
-
 
 				//save dragparams for the next drag call
 				params.prevClientX = x;
@@ -560,6 +559,7 @@ var DraggyProto = Draggy.prototype = Object.create(Enot.prototype);
 DraggyProto.startDrag = function(e){
 	//prepare limits for drag session
 	this.limits = this.within;
+	// console.log('---startDrag', this.limits)
 
 	var params = this.dragparams;
 

@@ -24,7 +24,8 @@
     "mustring": "*",
     "mutypes": "*",
     "muparse": "*",
-    "st8": "*"
+    "st8": "*",
+    "tiny-element": "~1.1.0"
   },
   "devDependencies": {
     "mocha": "*"
