@@ -30,6 +30,8 @@ function Draggy(target, options){
 	this.element = target;
 	this.element.draggy = this;
 
+	this.element.classList.add('draggy');
+
 	options = options || {};
 
 	//parse attributes of targret
@@ -65,16 +67,19 @@ function Draggy(target, options){
 		//tracking params
 		velocity: 0,
 		angle: 0,
+
 		//[clientX, clientY] for the last track
 		frame: undefined,
 		timestamp: undefined,
+
+		//container absolute offsets
+		containerOffsetX: undefined,
+		containerOffsetY: undefined
 	};
 
 
 	//apply params
 	state(this, Draggy.options);
-
-	this.element.classList.add('draggy');
 }
 
 
@@ -92,7 +97,9 @@ Draggy.options = {
 			return init || this.element.parentNode || win;
 		},
 		set: function(within){
-			return getEl(within) || root;
+			var res = getEl(within) || root;
+			if (res === document) res = root;
+			return res;
 		}
 	},
 
@@ -115,22 +122,13 @@ Draggy.options = {
 			else if (isNumber(value)){
 				return [value, value, value, value];
 			}
-			//set pin centered, if it is definitely set false
-			else if (!value){
-				var self = this;
-				//plan updating pin on the first touchstart or mousedown
-				Enot.one(this.element, 'touchstart, mousedown', function(){
-					self.pin = value;
-				});
 
-				if (value === false){
-					return [this.element.offsetWidth*.5, this.element.offsetHeight*.5,this.element.offsetWidth*.5, this.element.offsetHeight*.5]
-				}
-				//else set it the whole area
-				else {
-					return [0,0,this.element.offsetWidth, this.element.offsetHeight];
-				}
-			}
+			return value;
+		},
+
+		get: function(value){
+			//return the whole size if no value defined
+			if (!value)	return [0,0,this.element.offsetWidth, this.element.offsetHeight];
 
 			return value;
 		}
@@ -295,9 +293,7 @@ Draggy.options = {
 		init: 0,
 		set: function(value){
 			var limits = this.limits;
-
 			value = between(value, limits.left, limits.right);
-
 			//snap to pixels
 			return Math.round(value);
 		},
@@ -314,7 +310,6 @@ Draggy.options = {
 		set: function(value){
 			var limits = this.limits;
 			value = between(value, limits.top, limits.bottom);
-
 			//snap to pixels
 			return Math.round(value);
 		},
@@ -340,42 +335,6 @@ Draggy.options = {
 	limits: {
 		init: function(){
 			return {top:0, bottom:0, left: 0, right:0};
-		},
-
-		/** Set limits based on passed element */
-		set: function(limitEl){
-			if (limitEl.bottom !== undefined) return limitEl;
-
-			var paddings = css.paddings(limitEl);
-			var pin = this.pin;
-
-			var containerOffsets = css.offsets(limitEl);
-			var selfOffsets = css.offsets(this.element);
-
-			//parse translate x & y
-			var translateStr = this.element.style.transform;
-			var m1 = /\b[\d\.]+/.exec(translateStr);
-			var tx = parseFloat(m1[0]);
-			translateStr = translateStr.slice(m1.index + m1[0].length);
-			var m2 =  /\b[\d\.]+/.exec(translateStr);
-			var ty = parseFloat(m2[0]);
-			// var tx = this.x;
-			// var ty = this.y;
-
-			//initial offsets from the `limitEl`, 0-translation:
-			var initOffsetX = this.dragparams.initOffsetX = selfOffsets.left - containerOffsets.left - tx;
-			var initOffsetY = this.dragparams.initOffsetY = selfOffsets.top - containerOffsets.top - ty;
-
-			//calc offsets limitEl restriction container, including translation
-			var height = this.element.offsetHeight,
-				width = this.element.offsetWidth;
-
-			return {
-				left: -pin[0] - initOffsetX + paddings.left,
-				top: -pin[1] - initOffsetY + paddings.top,
-				right: - initOffsetX + limitEl.offsetWidth - width - paddings.right + (width - pin[2]),
-				bottom: - initOffsetY + limitEl.offsetHeight - height - paddings.bottom + (height - pin[3])
-			};
 		}
 	},
 
@@ -421,8 +380,8 @@ Draggy.options = {
 			}
 		},
 
+		//track velocity
 		'threshold, drag': {
-			//track velocity
 			track: function(){
 				var params = this.dragparams;
 
@@ -466,6 +425,8 @@ Draggy.options = {
 				css.disableSelection(this.element);
 				Enot.emit(this.element, 'dragstart', null, true)
 				.emit(this.element, 'drag', null, true);
+
+				this.emit('dragstart').emit('drag');
 			},
 
 			//update position onmove
@@ -473,28 +434,7 @@ Draggy.options = {
 				e.preventDefault();
 				e.stopPropagation();
 
-				var params = this.dragparams;
-
-				var x = clientX(e),
-					y = clientY(e),
-					deltaX = x - params.prevClientX,
-					deltaY = y - params.prevClientY;
-
-				//set new position avoiding jittering
-				// if (!isBetween(deltaX, -2, 2)) this.x += deltaX;
-				// if (!isBetween(deltaX, -2, 2)) this.y += deltaY;
-				//TODO: calc this statically, ignore difs (only for sniper mode)
-				// this.x += deltaX;
-				// this.y += deltaY;
-				this.x = x + win.pageXOffset - params.initOffsetX - params.innerOffsetX;
-				this.y = y + win.pageYOffset - params.initOffsetY - params.innerOffsetY;
-
-				//save dragparams for the next drag call
-				params.prevClientX = x;
-				params.prevClientY = y;
-
-				//emit drag
-				Enot.emit(this.element, 'drag', null, true);
+				this.doDrag(e);
 			},
 
 			//stop drag onleave
@@ -514,6 +454,8 @@ Draggy.options = {
 			after: function(){
 				css.enableSelection(this.element);
 				Enot.emit(this.element, 'dragend', null, true);
+
+				this.emit('dragend');
 			}
 		},
 
@@ -560,8 +502,9 @@ var DraggyProto = Draggy.prototype = Object.create(Enot.prototype);
 
 /** Start drag according to the point of passed event */
 DraggyProto.startDrag = function(e){
-	//prepare limits for drag session
-	this.limits = this.within;
+	//prepare limits & pin for drag session
+	this.update();
+
 	// console.log('---startDrag', this.limits)
 
 	var params = this.dragparams;
@@ -570,15 +513,96 @@ DraggyProto.startDrag = function(e){
 	params.prevClientX = clientX(e);
 	params.prevClientY = clientY(e);
 
-	//measure initial inner offset
-	params.innerOffsetX = e.pageX - params.initOffsetX - this.x;
-	params.innerOffsetY = e.pageY - params.initOffsetY - this.y;
+	//measure initial inner offset, if it is inside the element
+	if (e.target === this.element) {
+		params.innerOffsetX = e.offsetX;
+		params.innerOffsetY = e.offsetY;
+	} else {
+		params.innerOffsetX = this.pin[0];
+		params.innerOffsetY = this.pin[1];
+	}
 
 	//set initial client x & y
 	params.initClientX = params.prevClientX;
 	params.initClientY = params.prevClientY;
 
+
 	this.dragstate = 'threshold';
+};
+
+DraggyProto.doDrag = function(e){
+	var params = this.dragparams;
+
+	var x = clientX(e),
+		y = clientY(e),
+		deltaX = x - params.prevClientX,
+		deltaY = y - params.prevClientY;
+
+	//set new position avoiding jittering
+	// if (!isBetween(deltaX, -2, 2)) this.x += deltaX;
+	// if (!isBetween(deltaX, -2, 2)) this.y += deltaY;
+	//TODO: calc this statically, ignore difs (only for sniper mode)
+	// this.x += deltaX;
+	// this.y += deltaY;
+	this.x = x + win.pageXOffset - params.initOffsetX - params.innerOffsetX - params.containerOffsetX;
+	this.y = y + win.pageYOffset - params.initOffsetY - params.innerOffsetY - params.containerOffsetY;
+
+	//save dragparams for the next drag call
+	params.prevClientX = x;
+	params.prevClientY = y;
+
+	//emit drag
+	Enot.emit(this.element, 'drag', null, true);
+	this.emit('drag');
+};
+
+
+/** Update all values */
+DraggyProto.update = function(){
+	this.updateLimits();
+};
+
+
+/** Actualize self limits & container offsets */
+DraggyProto.updateLimits = function(){
+	var within = this.within;
+
+	var paddings = css.paddings(within);
+	var pin = this.pin;
+
+	var containerOffsets = css.offsets(within);
+	var selfOffsets = css.offsets(this.element);
+
+	//parse translate x & y
+	var translateStr = this.element.style.transform;
+	var m1 = /-?\b[\d\.]+/.exec(translateStr);
+	var tx = parseFloat(m1[0]);
+	translateStr = translateStr.slice(m1.index + m1[0].length);
+	var m2 =  /-?\b[\d\.]+/.exec(translateStr);
+	var ty = parseFloat(m2[0]);
+	// var tx = this.x;
+	// var ty = this.y;
+
+	//initial offsets from the `limitEl`, 0-translation:
+	var initOffsetX = this.dragparams.initOffsetX = selfOffsets.left - containerOffsets.left - tx;
+	var initOffsetY = this.dragparams.initOffsetY = selfOffsets.top - containerOffsets.top - ty;
+
+	//initial container offsets from page
+	this.dragparams.containerOffsetX = containerOffsets.left;
+	this.dragparams.containerOffsetY = containerOffsets.top;
+
+	//calc offsets limitEl restriction container, including translation
+	var height = this.element.offsetHeight,
+		width = this.element.offsetWidth;
+
+
+	//save limits && offsets
+	this.limits = {
+		left: -pin[0] - initOffsetX + paddings.left,
+		top: -pin[1] - initOffsetY + paddings.top,
+		right: - initOffsetX + within.offsetWidth - width - paddings.right + (width - pin[2]),
+		bottom: - initOffsetY + within.offsetHeight - height - paddings.bottom + (height - pin[3])
+	};
 };
 
 

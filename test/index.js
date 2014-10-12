@@ -12,83 +12,83 @@ describe("Draggy", function(){
 	it("within", function(){
 		var a = createDraggyCase("within doc", {
 			within: document
-		})
+		});
 	});
 
 	it("release", function(){
 		var a = createDraggyCase("release", {
 			release: 800
-		})
+		});
 	});
 
 	it("pin area", function(){
 		var a = createDraggyCase("pin area", {
 			pin: [20,20,40,40]
-		})
-	})
+		});
+	});
 
 	it("point picker", function(){
 		var a = createDraggyCase("point picker", {
-			pin: false,
+			pin: [30,30],
 			threshold: 0
-		})
-	})
+		});
+	});
 
 	it("x", function(){
 		createDraggyCase("x", {
 			within: document,
 			axis: 'x'
-		})
-	})
+		});
+	});
 
 	it("y", function(){
 		createDraggyCase("y", {
 			within: document,
 			axis: 'y'
-		})
-	})
+		});
+	});
 
 	it("inner elements (carousel drag)", function(){
 		var d = createDraggyCase("carousel", {
 			axis: 'x'
 		});
 		d.classList.add('carousel');
-	})
+	});
 
 	it("handle", function(){
 		xxx
-	})
+	});
 
 	it("circular", function(){
 		xxx
 		// createDraggyCase("circular")
-	})
+	});
 
 	it("threshold", function(){
 		xxx
 		// createDraggyCase("circular")
-	})
+	});
 
 
 	it("ghost", function(){
 		xxx
-	})
+	});
 
 	it("drop areas", function(){
 		xxx
-	})
+	});
 
 	it("loose limits", function(){
 		xxx
-	})
+	});
 
 	it("sniper mode", function(){
 		xxx
-	})
+	});
 
 	it("autoscroll", function(){
 		xxx
-	})
+	});
 
 
 
