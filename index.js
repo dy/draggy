@@ -3,6 +3,7 @@ var css = require('mucss');
 var m = require('mumath');
 var state = require('st8');
 var parse = require('muparse');
+var Emitter = require('emmy');
 var Enot = require('enot');
 var getEl = require('tiny-element');
 
@@ -297,9 +298,8 @@ Draggy.options = {
 			//snap to pixels
 			return Math.round(value);
 		},
-		changed: function(value){
+		changed: function(value, old){
 			if (this.freeze) return;
-
 			css(this.element,
 				'transform',
 				['translate3d(', value, 'px,', this.y, 'px, 0)'].join(''));
@@ -356,7 +356,7 @@ Draggy.options = {
 			},
 			'@element touchstart, @element mousedown': function(e){
 				e.preventDefault();
-				e.stopPropagation();
+				// e.stopPropagation();
 
 				this.startDrag(e);
 			},
@@ -410,6 +410,8 @@ Draggy.options = {
 		threshold: {
 			before: function(){
 				this.emit('threshold');
+
+				//TODO: keep threshold
 				return 'drag';
 			},
 
@@ -423,7 +425,9 @@ Draggy.options = {
 		drag: {
 			before: function(){
 				css.disableSelection(this.element);
-				Enot.emit(this.element, 'dragstart', null, true)
+
+				//emit drag evts
+				Emitter.emit(this.element, 'dragstart', null, true)
 				.emit(this.element, 'drag', null, true);
 
 				this.emit('dragstart').emit('drag');
@@ -432,7 +436,7 @@ Draggy.options = {
 			//update position onmove
 			'document touchmove, document mousemove': function(e){
 				e.preventDefault();
-				e.stopPropagation();
+				// e.stopPropagation();
 
 				this.doDrag(e);
 			},
@@ -440,7 +444,7 @@ Draggy.options = {
 			//stop drag onleave
 			'document touchend, document mouseup, document mouseleave': function(e){
 				e.preventDefault();
-				e.stopPropagation();
+				// e.stopPropagation();
 
 
 				if (this.dragparams.velocity > 1) {
@@ -453,7 +457,7 @@ Draggy.options = {
 
 			after: function(){
 				css.enableSelection(this.element);
-				Enot.emit(this.element, 'dragend', null, true);
+				Emitter.emit(this.element, 'dragend', null, true);
 
 				this.emit('dragend');
 			}
@@ -497,7 +501,9 @@ Draggy.options = {
 /* ------------------------------    A    P    I    ---------------------------------- */
 
 
-var DraggyProto = Draggy.prototype = Object.create(Enot.prototype);
+var DraggyProto = Draggy.prototype;
+
+Enot(DraggyProto);
 
 
 /** Start drag according to the point of passed event */
@@ -505,7 +511,7 @@ DraggyProto.startDrag = function(e){
 	//prepare limits & pin for drag session
 	this.update();
 
-	// console.log('---startDrag', this.limits)
+	// console.log('---startDrag')
 
 	var params = this.dragparams;
 
@@ -526,11 +532,19 @@ DraggyProto.startDrag = function(e){
 	params.initClientX = params.prevClientX;
 	params.initClientY = params.prevClientY;
 
-
+	//do drag on empty threshold
 	this.dragstate = 'threshold';
+
+	//with zero-threshold move picker to the point of click
+	if (this.threshold[0] === 0) {
+		this.doDrag(e);
+	}
+
+	return this;
 };
 
 DraggyProto.doDrag = function(e){
+	// console.log('dodrag')
 	var params = this.dragparams;
 
 	var x = clientX(e),
@@ -552,8 +566,10 @@ DraggyProto.doDrag = function(e){
 	params.prevClientY = y;
 
 	//emit drag
-	Enot.emit(this.element, 'drag', null, true);
+	Emitter.emit(this.element, 'drag', null, true);
 	this.emit('drag');
+
+	return this;
 };
 
 
