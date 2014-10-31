@@ -1,4 +1,4 @@
-describe("Draggy", function(){
+describe("Functionality", function(){
 	var canvas = document.querySelector('.painter-canvas');
 	var ctx = canvas.getContext("2d");
 	canvas.width  = window.innerWidth;
@@ -102,6 +102,7 @@ describe("Draggy", function(){
 		//create mover
 		var drEl = document.createElement("div");
 		drEl.innerHTML = name;
+		drEl.className = 'draggy';
 		el.appendChild(drEl);
 
 		var draggy = new Draggy(drEl, opts);
@@ -225,5 +226,17 @@ describe("Draggy", function(){
 	function clear(){
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 	}
+});
 
-})
+
+describe('Special cases', function(){
+	it('Placer tests', function(){
+		var div = document.createElement('div');
+		div.style.width = '10px';
+		div.style.height = '10px';
+		div.style.background = 'red';
+		document.body.appendChild(div);
+
+		new Draggy(div);
+	});
+});

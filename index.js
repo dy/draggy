@@ -31,8 +31,6 @@ function Draggy(target, options){
 	this.element = target;
 	this.element.draggy = this;
 
-	this.element.classList.add('draggy');
-
 	options = options || {};
 
 	//parse attributes of targret
@@ -112,7 +110,7 @@ Draggy.options = {
 	 */
 	pin: {
 		set: function(value){
-			if (isArray(value)){
+			if (type.isArray(value)){
 				if (value.length === 2){
 					return [value[0], value[1], value[0], value[1]];
 				} else if (value.length === 4){
@@ -120,7 +118,7 @@ Draggy.options = {
 				}
 			}
 
-			else if (isNumber(value)){
+			else if (type.isNumber(value)){
 				return [value, value, value, value];
 			}
 
@@ -164,7 +162,7 @@ Draggy.options = {
 
 		//return array[x,y,x,y]
 		get: function(val){
-			if (isFn(val)){
+			if (type.isFn(val)){
 				return val();
 			} else {
 				return val;
@@ -180,7 +178,7 @@ Draggy.options = {
 			} else if(val.length === 4){
 				//Array(x1,y1,x2,y2)
 				return val;
-			} else if (isFn(val)){
+			} else if (type.isFn(val)){
 				//custom val funciton
 				return val;
 			} else {
@@ -294,7 +292,7 @@ Draggy.options = {
 		init: 0,
 		set: function(value){
 			var limits = this.limits;
-			value = between(value, limits.left, limits.right);
+			value = m.between(value, limits.left, limits.right);
 			//snap to pixels
 			return Math.round(value);
 		},
@@ -309,7 +307,7 @@ Draggy.options = {
 		init: 0,
 		set: function(value){
 			var limits = this.limits;
-			value = between(value, limits.top, limits.bottom);
+			value = m.between(value, limits.top, limits.bottom);
 			//snap to pixels
 			return Math.round(value);
 		},

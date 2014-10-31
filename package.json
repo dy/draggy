@@ -25,9 +25,11 @@
     "mutypes": "*",
     "muparse": "*",
     "st8": "*",
-    "tiny-element": "~1.1.0"
+    "tiny-element": "~1.1.0",
+    "mumath": "~0.1.0"
   },
   "devDependencies": {
-    "mocha": "*"
+    "mocha": "*",
+    "require-stub": "~1.x"
   }
 }
