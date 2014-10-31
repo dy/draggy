@@ -1,33 +1,31 @@
 # Draggy
 
-Makes element draggable.
+A very simple draggable behavior provider. Just makes any element draggable.
+Can be used within web-components.
 
 
 ## Use
 
+You have to use [browserify](https://github.com/substack/node-browserify), [component](https://github.com/componentjs/component), [duo](http://duojs.org/), [webmake](https://github.com/medikoo/modules-webmake) or any other browser `require` provider in order to use draggy.
+
 `$ npm install draggy`
 
-You’re going to need to browserify in order to use draggy.
 
 ```
-var draggy = require('draggy');
+var Draggy = require('draggy');
 
-
-//create a new element
-var el1 = new Draggy();
-document.body.appendChild(el1);
-
-
-//make other element draggy
-var el2 = new Draggy(document.querySelector('.target'));
-
-
-//pass an options
-var el2 = new Draggy({
+//make an element draggable
+var el = document.querySelector('.my-element');
+var draggy = new Draggy(el, {
+	//options
 	release: true,
-	sniper: false
+	sniper: false,
+	axis: 'x'
 });
-document.body.appendChild(el3);
+
+draggy.on('drag', function(){
+
+});
 ```
 
 

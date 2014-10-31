@@ -79,6 +79,12 @@ function Draggy(target, options){
 
 	//apply params
 	state(this, Draggy.options);
+
+
+	//update limits, if draggy is in the content already
+	if (document.contains(this.element)){
+		this.updateLimits();
+	}
 }
 
 

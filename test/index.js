@@ -1,3 +1,5 @@
+var assert = require('chai').assert;
+
 describe("Functionality", function(){
 	var canvas = document.querySelector('.painter-canvas');
 	var ctx = canvas.getContext("2d");
@@ -229,14 +231,20 @@ describe("Functionality", function(){
 });
 
 
+
 describe('Special cases', function(){
-	it('Placer tests', function(){
+	it.skip('Make limits & API available for draggies in content', function(){
 		var div = document.createElement('div');
 		div.style.width = '10px';
 		div.style.height = '10px';
 		div.style.background = 'red';
 		document.body.appendChild(div);
 
-		new Draggy(div);
+		var dr = new Draggy(div);
+
+		dr.x = 20;
+		dr.y = 20;
+
+		assert.notEqual(dr.limits.right,0);
 	});
 });
