@@ -56,3 +56,8 @@ draggy.on('drag', function(){
 | `release` | User released drag |
 | `dragend` | Drag finished, called after release (stopped) |
 
+
+---
+
+
+Unlicensed

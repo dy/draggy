@@ -39,7 +39,7 @@ function Draggy(target, options){
 		//parse attribute, if no option passed
 		if (options[propName] === undefined){
 			prop = Draggy.options[propName];
-			options[propName] = parse.attribute(target, propName, prop.init !== undefined ? prop.init : prop);
+			options[propName] = parse.attribute(target, propName, prop && prop.init !== undefined ? prop.init : prop);
 		}
 
 		//declare initial value
@@ -497,7 +497,11 @@ Draggy.options = {
 				this.off('stop');
 			}
 		}
-	}
+	},
+
+
+	/** Callbacks */
+	'drag, dragstart, dragrelease, dragend': undefined
 };
 
 
