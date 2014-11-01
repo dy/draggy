@@ -59,6 +59,10 @@ function Draggy(target, options){
 		innerOffsetX: 0,
 		innerOffsetY: 0,
 
+		//dragstert initial client x and y
+		initClientX: 0,
+		initClientY: 0,
+
 		//previous position on the screen
 		prevClientX: 0,
 		prevClientY: 0,
@@ -164,7 +168,7 @@ Draggy.options = {
 	 * @type {(Array(4)|Array(2)|Function|number)}
 	 */
 	threshold: {
-		init: 12,
+		init: 0,
 
 		//return array[x,y,x,y]
 		get: function(val){
@@ -362,7 +366,16 @@ Draggy.options = {
 				e.preventDefault();
 				// e.stopPropagation();
 
-				this.startDrag(e);
+				//init drag params
+				this.initDragparams(e);
+
+				//do drag on empty threshold
+				this.dragstate = 'threshold';
+
+				//with zero-threshold move picker to the point of click
+				if (isZero(this.threshold)) {
+					this.doDrag(e);
+				}
 			},
 
 			/** Track kinetic movement */
@@ -415,8 +428,33 @@ Draggy.options = {
 			before: function(){
 				this.emit('threshold');
 
-				//TODO: keep threshold
-				return 'drag';
+				//ignore threshold state, if threshold is none
+				if (isZero(this.threshold)) return 'drag';
+			},
+
+			//update position onmove
+			'document touchmove, document mousemove': function(e){
+				e.preventDefault();
+
+				//compare movement to the threshold
+				var params = this.dragparams;
+				var clientX = getClientX(e);
+				var clientY = getClientY(e);
+				var difX = params.initClientX - clientX;
+				var difY = params.initClientY - clientY;
+
+				if (difX < this.threshold[0] || difX > this.threshold[2] || difY < this.threshold[1] || difY > this.threshold[3]) {
+					this.initDragparams(e);
+
+					this.dragstate = 'drag';
+				}
+			},
+
+			//stop drag onleave
+			'document touchend, document mouseup, document mouseleave': function(e){
+				e.preventDefault();
+
+				this.dragstate = 'idle';
 			},
 
 			after: function(){
@@ -501,7 +539,10 @@ Draggy.options = {
 
 
 	/** Callbacks */
-	'drag, dragstart, dragrelease, dragend': undefined
+	drag: undefined,
+	dragstart: undefined,
+	dragend: undefined,
+	dragrelease: undefined
 };
 
 
@@ -514,18 +555,18 @@ var DraggyProto = Draggy.prototype;
 Enot(DraggyProto);
 
 
-/** Start drag according to the point of passed event */
-DraggyProto.startDrag = function(e){
+/** Set drag params for the initial drag */
+DraggyProto.initDragparams = function(e){
 	//prepare limits & pin for drag session
 	this.update();
 
-	// console.log('---startDrag')
+	// console.log('---initDragparams')
 
 	var params = this.dragparams;
 
 	//set initial position - have to go after updating limits
-	params.prevClientX = clientX(e);
-	params.prevClientY = clientY(e);
+	params.prevClientX = getClientX(e);
+	params.prevClientY = getClientY(e);
 
 	//measure initial inner offset, if it is inside the element
 	if (e.target === this.element) {
@@ -540,14 +581,6 @@ DraggyProto.startDrag = function(e){
 	params.initClientX = params.prevClientX;
 	params.initClientY = params.prevClientY;
 
-	//do drag on empty threshold
-	this.dragstate = 'threshold';
-
-	//with zero-threshold move picker to the point of click
-	if (this.threshold[0] === 0) {
-		this.doDrag(e);
-	}
-
 	return this;
 };
 
@@ -555,8 +588,8 @@ DraggyProto.doDrag = function(e){
 	// console.log('dodrag')
 	var params = this.dragparams;
 
-	var x = clientX(e),
-		y = clientY(e),
+	var x = getClientX(e),
+		y = getClientY(e),
 		deltaX = x - params.prevClientX,
 		deltaY = y - params.prevClientY;
 
@@ -634,6 +667,12 @@ DraggyProto.updateLimits = function(){
 /* ---------------------------------- H E L P E R S ---------------------------------- */
 
 
+/** Check whether arr is filled with zeros */
+function isZero(arr){
+	if (!arr[0] && !arr[1] && !arr[2] && !arr[3]) return true;
+}
+
+
 /**
  * get clientY/clientY from event
  *
@@ -642,7 +681,7 @@ DraggyProto.updateLimits = function(){
  * @return {number} Coordinate relative to the screen
  */
 
-function clientY(e){
+function getClientY(e){
 	// touch event
 	if (e.targetTouches && (e.targetTouches.length >= 1)) {
 		return e.targetTouches[0].clientY;
@@ -651,7 +690,7 @@ function clientY(e){
 	// mouse event
 	return e.clientY;
 }
-function clientX(e){
+function getClientX(e){
 	// touch event
 	if (e.targetTouches && (e.targetTouches.length >= 1)) {
 		return e.targetTouches[0].clientX;

@@ -57,39 +57,40 @@ describe("Functionality", function(){
 		d.classList.add('carousel');
 	});
 
-	it("handle", function(){
-		xxx
+	it.skip("handle", function(){
+
 	});
 
-	it("circular", function(){
-		xxx
+	it.skip("circular", function(){
+
 		// createDraggyCase("circular")
 	});
 
 	it("threshold", function(){
-		xxx
-		// createDraggyCase("circular")
+		var d = createDraggyCase("threshold", {
+			threshold: 20
+		});
 	});
 
 
-	it("ghost", function(){
-		xxx
+	it.skip("ghost", function(){
+
 	});
 
-	it("drop areas", function(){
-		xxx
+	it.skip("drop areas", function(){
+
 	});
 
-	it("loose limits", function(){
-		xxx
+	it.skip("loose limits", function(){
+
 	});
 
-	it("sniper mode", function(){
-		xxx
+	it.skip("sniper mode", function(){
+
 	});
 
-	it("autoscroll", function(){
-		xxx
+	it.skip("autoscroll", function(){
+
 	});
 
 
@@ -247,4 +248,10 @@ describe('Special cases', function(){
 
 		assert.notEqual(dr.limits.right,0);
 	});
+
+	it('Within=null should not decry any constraint', function(){
+		xxx
+	});
+
+
 });
