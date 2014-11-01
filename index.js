@@ -568,13 +568,19 @@ DraggyProto.initDragparams = function(e){
 	params.prevClientX = getClientX(e);
 	params.prevClientY = getClientY(e);
 
-	//measure initial inner offset, if it is inside the element
+	//if drag started outside the element - align the element centered by pin (excl threshold case)
 	if (e.target === this.element) {
 		params.innerOffsetX = e.offsetX;
 		params.innerOffsetY = e.offsetY;
-	} else {
-		params.innerOffsetX = this.pin[0];
-		params.innerOffsetY = this.pin[1];
+	}
+	else if (this.dragstate === 'threshold'){
+		var offsets = css.offsets(this.element);
+		params.innerOffsetX = params.prevClientX - offsets.left;
+		params.innerOffsetY = params.prevClientY - offsets.top;
+	}
+	else {
+		params.innerOffsetX = this.pin[0] / 2 + this.pin[2] / 2;
+		params.innerOffsetY = this.pin[1] / 2 + this.pin[3] / 2;
 	}
 
 	//set initial client x & y
