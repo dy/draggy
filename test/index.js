@@ -8,53 +8,59 @@ describe("Functionality", function(){
 
 
 	it("plain", function(){
-		var a = createDraggyCase("plain");
+		var a = createDraggyCase("plain", {
+			within: 'parent'
+		});
 	});
 
 	it("within", function(){
 		var a = createDraggyCase("within doc", {
-			within: document
+			within: undefined
 		});
 	});
 
 	it("release", function(){
 		var a = createDraggyCase("release", {
-			release: 800
+			release: 800,
+			within: 'parent'
 		});
 	});
 
 	it("pin area", function(){
 		var a = createDraggyCase("pin area", {
-			pin: [20,20,40,40]
+			pin: [20,20,40,40],
+			within: 'parent'
 		});
 	});
 
 	it("point picker", function(){
 		var a = createDraggyCase("point picker", {
 			pin: [30,30],
-			threshold: 0
+			threshold: 0,
+			within: 'parent'
 		});
 	});
 
 	it("x", function(){
 		createDraggyCase("x", {
-			within: document,
+			within: 'parent',
 			axis: 'x'
 		});
 	});
 
 	it("y", function(){
 		createDraggyCase("y", {
-			within: document,
 			axis: 'y'
 		});
 	});
 
 	it("inner elements (carousel drag)", function(){
 		var d = createDraggyCase("carousel", {
-			axis: 'x'
+			axis: 'x',
+			within: 'parent'
 		});
 		d.classList.add('carousel');
+		d.parentNode.classList.add('carousel-case');
 	});
 
 	it.skip("handle", function(){

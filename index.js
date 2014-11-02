@@ -103,10 +103,17 @@ Draggy.options = {
 	 */
 	within: {
 		init: function(init){
-			return init || this.element.parentNode || win;
+			return init || root;
 		},
 		set: function(within){
-			var res = getEl(within) || root;
+			var res;
+			//catch predefined parent reference string
+			if (within === 'parent' || within === '..') {
+				res = this.element.parentNode || root;
+			}
+			else {
+				res = getEl(within) || root;
+			}
 			if (res === document) res = root;
 			return res;
 		}
@@ -574,7 +581,7 @@ DraggyProto.initDragparams = function(e){
 		params.innerOffsetY = e.offsetY;
 	}
 	else if (this.dragstate === 'threshold'){
-		var offsets = css.offsets(this.element);
+		var offsets = this.element.getBoundingClientRect();
 		params.innerOffsetX = params.prevClientX - offsets.left;
 		params.innerOffsetY = params.prevClientY - offsets.top;
 	}
