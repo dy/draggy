@@ -371,6 +371,9 @@ Draggy.options = {
 			},
 			'@element touchstart, @element mousedown': function(e){
 				e.preventDefault();
+
+				//don’t start double drag (if draggable is within other draggable)
+				if (e.target.draggy !== this) return;
 				// e.stopPropagation();
 
 				//init drag params
