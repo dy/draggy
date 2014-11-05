@@ -99,7 +99,7 @@ function Draggy(target, options){
 Draggy.options = {
 	/** Restricting container
 	 * @type {Element|object}
-	 * @default this.parentNode
+	 * @default root
 	 */
 	within: {
 		init: function(init){
@@ -676,6 +676,16 @@ DraggyProto.updateLimits = function(){
 		right: - initOffsetX + within.offsetWidth - width - paddings.right + (width - pin[2]),
 		bottom: - initOffsetY + within.offsetHeight - height - paddings.bottom + (height - pin[3])
 	};
+};
+
+
+/** deconstructor - removes any memory bindings */
+DraggyProto.destroy = function(){
+	//TODO: unbind all events
+
+	//remove references
+	this.element.draggy = null;
+	this.element = null;
 };
 
 
