@@ -108,7 +108,7 @@ Draggy.options = {
 		set: function(within){
 			var res;
 			//catch predefined parent reference string
-			if (within === 'parent' || within === '..') {
+			if (within === undefined || within === 'parent' || within === '..') {
 				res = this.element.parentNode || root;
 			}
 			else {
@@ -664,17 +664,13 @@ DraggyProto.updateLimits = function(){
 	this.dragparams.containerOffsetX = containerOffsets.left;
 	this.dragparams.containerOffsetY = containerOffsets.top;
 
-	//calc offsets limitEl restriction container, including translation
-	var height = this.element.offsetHeight,
-		width = this.element.offsetWidth;
-
 
 	//save limits && offsets
 	this.limits = {
 		left: -pin[0] - initOffsetX + paddings.left,
 		top: -pin[1] - initOffsetY + paddings.top,
-		right: - initOffsetX + within.offsetWidth - width - paddings.right + (width - pin[2]),
-		bottom: - initOffsetY + within.offsetHeight - height - paddings.bottom + (height - pin[3])
+		right: -initOffsetX + containerOffsets.width - paddings.right - pin[2],
+		bottom: -initOffsetY + containerOffsets.height - paddings.bottom - pin[3]
 	};
 };
 
