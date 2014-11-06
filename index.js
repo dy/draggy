@@ -52,8 +52,8 @@ function Draggy(target, options){
 	//holder for params while drag
 	this.dragparams = {
 		//initial offset from the `within` in 0-position
-		initOffsetX: 0,
-		initOffsetY: 0,
+		initOffsetX: undefined,
+		initOffsetY: undefined,
 
 		//click offsets
 		innerOffsetX: 0,
@@ -76,8 +76,8 @@ function Draggy(target, options){
 		timestamp: undefined,
 
 		//container absolute offsets
-		containerOffsetX: undefined,
-		containerOffsetY: undefined
+		containerOffsetX: 0,
+		containerOffsetY: 0
 	};
 
 
@@ -103,18 +103,22 @@ Draggy.options = {
 	 */
 	within: {
 		init: function(init){
-			return init || root;
+			return init;
 		},
 		set: function(within){
 			var res;
+
 			//catch predefined parent reference string
 			if (within === undefined || within === 'parent' || within === '..') {
-				res = this.element.parentNode || root;
+				res = this.element.parentNode;
 			}
+			else if (!within) return within;
 			else {
-				res = getEl(within) || root;
+				res = getEl(within);
 			}
+
 			if (res === document) res = root;
+
 			return res;
 		}
 	},
@@ -349,7 +353,7 @@ Draggy.options = {
 	 */
 	limits: {
 		init: function(){
-			return {top:0, bottom:0, left: 0, right:0};
+			return {top:-9999, bottom:9999, left: -9999, right:9999};
 		}
 	},
 
@@ -568,7 +572,7 @@ Enot(DraggyProto);
 /** Set drag params for the initial drag */
 DraggyProto.initDragparams = function(e){
 	//prepare limits & pin for drag session
-	this.update();
+	this.updateLimits();
 
 	// console.log('---initDragparams')
 
@@ -605,17 +609,9 @@ DraggyProto.doDrag = function(e){
 	var params = this.dragparams;
 
 	var x = getClientX(e),
-		y = getClientY(e),
-		deltaX = x - params.prevClientX,
-		deltaY = y - params.prevClientY;
-
-	//set new position avoiding jittering
-	// if (!isBetween(deltaX, -2, 2)) this.x += deltaX;
-	// if (!isBetween(deltaX, -2, 2)) this.y += deltaY;
-	//TODO: calc this statically, ignore difs (only for sniper mode)
-	// this.x += deltaX;
-	// this.y += deltaY;
+		y = getClientY(e);
 	this.x = x + win.pageXOffset - params.initOffsetX - params.innerOffsetX - params.containerOffsetX;
+
 	this.y = y + win.pageYOffset - params.initOffsetY - params.innerOffsetY - params.containerOffsetY;
 
 	//save dragparams for the next drag call
@@ -630,47 +626,50 @@ DraggyProto.doDrag = function(e){
 };
 
 
-/** Update all values */
-DraggyProto.update = function(){
-	this.updateLimits();
-};
-
-
 /** Actualize self limits & container offsets */
 DraggyProto.updateLimits = function(){
 	var within = this.within;
-
-	var paddings = css.paddings(within);
 	var pin = this.pin;
-
-	var containerOffsets = css.offsets(within);
-	var selfOffsets = css.offsets(this.element);
+	var params = this.dragparams;
 
 	//parse translate x & y
+	//they are needed to get real initial offsets on drag start
 	var translateStr = this.element.style.transform;
 	var m1 = /-?\b[\d\.]+/.exec(translateStr);
 	var tx = parseFloat(m1[0]);
 	translateStr = translateStr.slice(m1.index + m1[0].length);
 	var m2 =  /-?\b[\d\.]+/.exec(translateStr);
 	var ty = parseFloat(m2[0]);
-	// var tx = this.x;
-	// var ty = this.y;
 
-	//initial offsets from the `limitEl`, 0-translation:
-	var initOffsetX = this.dragparams.initOffsetX = selfOffsets.left - containerOffsets.left - tx;
-	var initOffsetY = this.dragparams.initOffsetY = selfOffsets.top - containerOffsets.top - ty;
+
+	var selfOffsets = css.offsets(this.element);
+
+	//initial offsets from the `limitEl`, 0-translation (only first init)
+	params.initOffsetX = selfOffsets.left - tx;
+	params.initOffsetY = selfOffsets.top - ty;
+
+	//ignore undefined restriction container
+	if (!within) return;
+
+	var containerOffsets = css.offsets(within);
+	var paddings = css.paddings(within);
+
 
 	//initial container offsets from page
-	this.dragparams.containerOffsetX = containerOffsets.left;
-	this.dragparams.containerOffsetY = containerOffsets.top;
+	params.containerOffsetX = containerOffsets.left;
+	params.containerOffsetY = containerOffsets.top;
 
+
+	//correct init offsets
+	params.initOffsetX -= containerOffsets.left - tx;
+	params.initOffsetY -= containerOffsets.top - ty;
 
 	//save limits && offsets
 	this.limits = {
-		left: -pin[0] - initOffsetX + paddings.left,
-		top: -pin[1] - initOffsetY + paddings.top,
-		right: -initOffsetX + containerOffsets.width - paddings.right - pin[2],
-		bottom: -initOffsetY + containerOffsets.height - paddings.bottom - pin[3]
+		left: -pin[0] - params.initOffsetX + paddings.left,
+		top: -pin[1] - params.initOffsetY + paddings.top,
+		right: -params.initOffsetX + containerOffsets.width - pin[2] - paddings.right,
+		bottom: -params.initOffsetY + containerOffsets.height - pin[3] - paddings.bottom
 	};
 };
 
@@ -702,7 +701,6 @@ function isZero(arr){
  *
  * @return {number} Coordinate relative to the screen
  */
-
 function getClientY(e){
 	// touch event
 	if (e.targetTouches && (e.targetTouches.length >= 1)) {

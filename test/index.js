@@ -15,7 +15,7 @@ describe("Functionality", function(){
 
 	it("within", function(){
 		var a = createDraggyCase("within doc", {
-			within: undefined
+			within: null
 		});
 	});
 
@@ -68,7 +68,6 @@ describe("Functionality", function(){
 	});
 
 	it.skip("circular", function(){
-
 		// createDraggyCase("circular")
 	});
 
@@ -146,6 +145,8 @@ describe("Functionality", function(){
 
 	function paintRestrictionArea($el){
 		var $within = $el.within;
+
+		if (!$within) return;
 
 		var pos = $within.getBoundingClientRect(),
 			pads = css.paddings($within);
