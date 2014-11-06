@@ -370,7 +370,7 @@ Draggy.options = {
 				this.emit('idle');
 
 				//enable document interavtivity
-				css.disableSelection(root);
+				css.enableSelection(root);
 				if (this.hideCursor) css(root, {"cursor": null});
 			},
 			'@element touchstart, @element mousedown': function(e){
@@ -473,7 +473,7 @@ Draggy.options = {
 
 			after: function(){
 				//reduce dragging clutter
-				css.enableSelection(root);
+				css.disableSelection(root);
 				if (this.hideCursor) css(root, {"cursor": "none"});
 			}
 		},
