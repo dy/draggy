@@ -1,6 +1,6 @@
 # Draggy
 
-A very simple draggable behavior provider. Just makes any element draggable.
+A very simple draggable behavior provider. Just makes any element draggable, as jQuery UI, but without jQuery.
 Can be used within web-components.
 
 
@@ -11,7 +11,7 @@ You have to use [browserify](https://github.com/substack/node-browserify), [comp
 `$ npm install draggy`
 
 
-```
+```js
 var Draggy = require('draggy');
 
 //make an element draggable
