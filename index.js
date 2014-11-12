@@ -5,7 +5,7 @@ var state = require('st8');
 var parse = require('muparse');
 var Emitter = require('emmy');
 var Enot = require('enot');
-var getEl = require('tiny-element');
+var getEl = require('query-relative');
 
 var win = window,
 	doc = document,
@@ -109,12 +109,12 @@ Draggy.options = {
 			var res;
 
 			//catch predefined parent reference string
-			if (within === undefined || within === 'parent' || within === '..') {
+			if (within === undefined) {
 				res = this.element.parentNode;
 			}
 			else if (!within) return within;
 			else {
-				res = getEl(within);
+				res = getEl(within, this.element);
 			}
 
 			if (res === document) res = root;
@@ -661,8 +661,8 @@ DraggyProto.updateLimits = function(){
 
 
 	//correct init offsets
-	params.initOffsetX -= containerOffsets.left - tx;
-	params.initOffsetY -= containerOffsets.top - ty;
+	params.initOffsetX -= containerOffsets.left;
+	params.initOffsetY -= containerOffsets.top;
 
 	//save limits && offsets
 	this.limits = {
