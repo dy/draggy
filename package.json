@@ -27,7 +27,8 @@
     "st8": "*",
     "query-relative": "*",
     "mumath": "~0.1.*",
-    "enot": "~1.x"
+    "enot": "~1.x",
+    "emmy": "*"
   },
   "devDependencies": {
     "mocha": "*",
