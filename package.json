@@ -26,7 +26,8 @@
     "muparse": "*",
     "st8": "*",
     "query-relative": "*",
-    "mumath": "~0.1.*"
+    "mumath": "~0.1.*",
+    "enot": "~1.x"
   },
   "devDependencies": {
     "mocha": "*",
