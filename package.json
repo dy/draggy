@@ -22,13 +22,13 @@
   "dependencies": {
     "mucss": "*",
     "mustring": "*",
-    "mutypes": "*",
     "muparse": "*",
     "st8": "*",
     "query-relative": "*",
-    "mumath": "~0.1.*",
+    "mumath": "~0.x",
     "enot": "~1.x",
-    "emmy": "*"
+    "emmy": "*",
+    "mutype": "~0.2.3"
   },
   "devDependencies": {
     "mocha": "*",

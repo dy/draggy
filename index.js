@@ -1,4 +1,4 @@
-var type = require('mutypes');
+var type = require('mutype');
 var css = require('mucss');
 var m = require('mumath');
 var state = require('st8');
@@ -86,7 +86,7 @@ function Draggy(target, options){
 
 
 	//update limits, if draggy is in the content already
-	if (document.contains(this.element)){
+	if (doc.contains(this.element)){
 		this.updateLimits();
 	}
 }
@@ -114,7 +114,7 @@ Draggy.options = {
 			}
 			else if (!within) return within;
 			else {
-				res = getEl(within, this.element);
+				res = getEl(this.element, within);
 			}
 
 			if (res === document) res = root;
@@ -635,6 +635,7 @@ DraggyProto.updateLimits = function(){
 	//parse translate x & y
 	//they are needed to get real initial offsets on drag start
 	var translateStr = this.element.style.transform;
+
 	var m1 = /-?\b[\d\.]+/.exec(translateStr);
 	var tx = parseFloat(m1[0]);
 	translateStr = translateStr.slice(m1.index + m1[0].length);
