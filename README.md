@@ -1,12 +1,11 @@
-# Draggy
+# Draggy ![Deps](https://david-dm.org/dfcreative/draggy.svg)
 
-A very simple draggable behavior provider. Just makes any element draggable, as jQuery UI, but without jQuery.
-Can be used within web-components.
+A draggable behavior provider for any element.
 
 
 ## Use
 
-You have to use [browserify](https://github.com/substack/node-browserify), [component](https://github.com/componentjs/component), [duo](http://duojs.org/), [webmake](https://github.com/medikoo/modules-webmake) or any other browser `require` provider in order to use draggy.
+You have to use [browserify](https://github.com/substack/node-browserify), [component](https://github.com/componentjs/component), [duo](http://duojs.org/), [webmake](https://github.com/medikoo/modules-webmake) or alike to use draggy.
 
 `$ npm install draggy`
 
