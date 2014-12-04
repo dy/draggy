@@ -1,7 +1,7 @@
 <h1>
 <img src="https://cdn.rawgit.com/dfcreative/draggy/design/logo.png"/><br/>
 
-Draggy <img src="https://david-dm.org/dfcreative/draggy.svg"/>
+Draggy <img src="https://david-dm.org/dfcreative/draggy.svg"/> <a href="http://unlicense.org/UNLICENSE"><img src="http://upload.wikimedia.org/wikipedia/commons/6/62/PD-icon.svg" width="20"/></a>
 </h1>
 
 A draggable behavior provider for any element.
@@ -60,7 +60,4 @@ draggy.on('drag', function(){
 | `dragend` | Drag finished, called after release (stopped) |
 
 
----
-
-
-Unlicensed
+[![NPM](https://nodei.co/npm/draggy.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/draggy/)
