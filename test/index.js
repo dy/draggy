@@ -1,7 +1,29 @@
-var assert = require('chai').assert;
+window.WeakMap = require('weak-map');
+var Draggy = require('../index');
+
+var body = document.body;
+
+/**simple polyfill*/
+if (!document.contains){
+	Node.prototype.contains = function contains(node) {
+		if (!(0 in arguments)) {
+			throw new TypeError('1 argument is required');
+		}
+
+		do {
+			if (this === node) {
+				return true;
+			}
+		} while (node = node && node.parentNode);
+
+		return false;
+	};
+}
 
 describe("Functionality", function(){
-	var canvas = document.querySelector('.painter-canvas');
+	var canvas = document.createElement('canvas');
+	canvas.className = 'painter-canvas';
+	body.appendChild(canvas);
 	var ctx = canvas.getContext("2d");
 	canvas.width  = window.innerWidth;
 	canvas.height = window.innerHeight;
@@ -102,7 +124,7 @@ describe("Functionality", function(){
 		var el = document.createElement("div");
 		el.title = name;
 		el.className = "draggy-case";
-		document.body.appendChild(el);
+		body.appendChild(el);
 
 		//create mover
 		var drEl = document.createElement("div");
@@ -243,7 +265,7 @@ describe('Special cases', function(){
 		div.style.width = '10px';
 		div.style.height = '10px';
 		div.style.background = 'red';
-		document.body.appendChild(div);
+		body.appendChild(div);
 
 		var dr = new Draggy(div);
 
@@ -253,8 +275,8 @@ describe('Special cases', function(){
 		assert.notEqual(dr.limits.right,0);
 	});
 
-	it('Within=null should not decry any constraint', function(){
-		xxx
+	it.skip('Within=null should not decry any constraint', function(){
+
 	});
 
 

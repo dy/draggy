@@ -640,8 +640,7 @@ DraggyProto.updateLimits = function(){
 
 	//parse translate x & y
 	//they are needed to get real initial offsets on drag start
-	var translateStr = this.element.style.transform;
-
+	var translateStr = css(this.element, 'transform');
 	var m1 = /-?\b[\d\.]+/.exec(translateStr);
 	var tx = parseFloat(m1[0]);
 	translateStr = translateStr.slice(m1.index + m1[0].length);

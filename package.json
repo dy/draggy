@@ -4,7 +4,7 @@
   "description": "Draggable behaviour provider",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "mochify"
   },
   "repository": {
     "type": "git",
@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "mocha": "*",
-    "require-stub": "~1.x"
+    "require-stub": "~1.x",
+    "mochify": ">=2.1.0"
   }
 }

@@ -1,13 +1,17 @@
 <h1>
-<img src="https://cdn.rawgit.com/dfcreative/draggy/design/logo.png"/><br/>
+	<img src="https://cdn.rawgit.com/dfcreative/draggy/design/logo.png"/><br/>
 
-Draggy <img src="https://david-dm.org/dfcreative/draggy.svg"/> <a href="http://unlicense.org/UNLICENSE"><img src="http://upload.wikimedia.org/wikipedia/commons/6/62/PD-icon.svg" width="20"/></a>
+	Draggy
+
+	<a href="https://travis-ci.org/dfcreative/draggy"><img src="https://travis-ci.org/dfcreative/draggy.svg?branch=master"/></a>
+	<img src="https://david-dm.org/dfcreative/draggy.svg"/>
+	<a href="http://unlicense.org/UNLICENSE"><img src="http://upload.wikimedia.org/wikipedia/commons/6/62/PD-icon.svg" width="20"/></a>
 </h1>
 
 A draggable behavior provider for any element.
 
 
-## Use
+# Use
 
 You have to use [browserify](https://github.com/substack/node-browserify), [component](https://github.com/componentjs/component), [duo](http://duojs.org/), [webmake](https://github.com/medikoo/modules-webmake) or alike to use draggy.
 
@@ -32,7 +36,7 @@ draggy.on('drag', function(){
 ```
 
 
-## Options
+# Options
 
 | Parameter | Default | Description |
 |---|:---:|---|
@@ -50,7 +54,7 @@ draggy.on('drag', function(){
 | `within` | _parent element_ | Restrict movement within the container |
 
 
-## Events
+# Events
 
 | Name | Description |
 |---|---|
@@ -59,5 +63,9 @@ draggy.on('drag', function(){
 | `release` | User released drag |
 | `dragend` | Drag finished, called after release (stopped) |
 
+
+# Contribute
+
+There are not many to do, though
 
 [![NPM](https://nodei.co/npm/draggy.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/draggy/)
