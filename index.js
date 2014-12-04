@@ -16,17 +16,22 @@ var win = window,
  * Draggy mod - makes any element draggable
  *
  * @module draggy
- * @constructor
  *
- * @return {Element} Target element
  */
 module.exports = Draggy;
 
 
 
-/* ------------------------------------ I N I T -------------------------------------- */
-
-
+/**
+ * Make an element draggable by this
+ *
+ * @constructor
+ *
+ * @param {HTMLElement} target An element whether in/out of DOM
+ * @param {Object} options An draggable options
+ *
+ * @return {HTMLElement} Target element
+ */
 function Draggy(target, options){
 	this.element = target;
 	this.element.draggy = this;
@@ -39,6 +44,7 @@ function Draggy(target, options){
 		//parse attribute, if no option passed
 		if (options[propName] === undefined){
 			prop = Draggy.options[propName];
+
 			options[propName] = parse.attribute(target, propName, prop && prop.init !== undefined ? prop.init : prop);
 		}
 
@@ -434,7 +440,7 @@ Draggy.options = {
 				//get angle
 				params.angle = 0.7 * Math.atan2(deltaY, deltaX) + 0.2 * params.angle + 0.1 * Math.atan2(params.frame[0] - params.initClientX, params.frame[1] - params.initClientY);
 
-				this.emit('track:after(20)');
+				this.emit('track:defer(20)');
 			}
 		},
 
@@ -532,7 +538,7 @@ Draggy.options = {
 				this.y += params.velocity * Math.sin(params.angle);
 
 				//release release after 1ms (animation)
-				this.emit('stop:after(' + this.release + ')');
+				this.emit('stop:defer(' + this.release + ')');
 			},
 
 			//stop movement

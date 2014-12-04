@@ -25,10 +25,10 @@
     "muparse": "*",
     "st8": "*",
     "query-relative": "*",
-    "mumath": "~0.x",
-    "enot": "~1.x",
+    "mumath": ">=0.x",
+    "enot": ">=1.x",
     "emmy": "*",
-    "mutype": "~0.2.3"
+    "mutype": ">=0.2.3"
   },
   "devDependencies": {
     "mocha": "*",

@@ -40,7 +40,8 @@ describe("Functionality", function(){
 
 	it("x", function(){
 		createDraggyCase("x", {
-			axis: 'x'
+			axis: 'x',
+			within: null
 		});
 	});
 
