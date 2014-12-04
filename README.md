@@ -1,3 +1,5 @@
+<img src="https://cdn.rawgit.com/dfcreative/draggy/design/logo.png"/>
+
 # Draggy ![Deps](https://david-dm.org/dfcreative/draggy.svg)
 
 A draggable behavior provider for any element.
