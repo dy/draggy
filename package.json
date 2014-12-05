@@ -33,6 +33,7 @@
   "devDependencies": {
     "mocha": "*",
     "require-stub": "~1.x",
-    "mochify": ">=2.1.0"
+    "mochify": ">=2.1.0",
+    "weak-map": "*"
   }
 }
