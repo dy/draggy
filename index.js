@@ -8,7 +8,7 @@
 var css = require('mucss/css');
 var parseCSSValue = require('mucss/parse-value');
 var selection = require('mucss/selection');
-var getOffsets = require('mucss/offsets');
+var offsets = require('mucss/offsets');
 var getTranslate = require('mucss/translate');
 
 //events
@@ -22,10 +22,8 @@ var isArray = require('is-array');
 var isNumber = require('is-number');
 var isFn = require('is-function');
 var contains = require('contains');
-var parseAttr = require('parse-attr/parse');
 var defineState = require('define-state');
 var extend = require('xtend/mutable');
-var util = require('util');
 
 //math helpers - round to a precision, limit by min and max
 var round = require('mumath/round');
@@ -68,53 +66,6 @@ function Draggable(target, options){
 	//take over options
 	extend(this, options);
 
-	//parse attributes on a target, apply to instance
-	var prop, parseResult;
-	for (var propName in proto) {
-		//parse attribute, if no option passed
-		if (this[propName] === undefined) {
-			parseResult = parseAttr(target, propName, proto[propName]);
-			if (parseResult !== undefined) this[propName] = parseResult;
-		}
-	}
-
-	//preset dragparams
-	/*
-	extend(this, {
-		//initial offset from the `within` in 0-position
-		initOffsetX: undefined,
-		initOffsetY: undefined,
-
-		//click offsets
-		innerOffsetX: 0,
-		innerOffsetY: 0,
-
-		//dragstart initial client x and y
-		initClientX: 0,
-		initClientY: 0,
-
-		//previous position on the screen
-		prevClientX: 0,
-		prevClientY: 0,
-
-		//tracking params
-		velocity: 0,
-		angle: 0,
-
-		//[clientX, clientY] for the last track
-		frame: undefined,
-		timestamp: undefined,
-
-		//container absolute offsets
-		containerOffsetX: 0,
-		containerOffsetY: 0,
-
-		//initial coords
-		x: 0,
-		y: 0
-	});
-	*/
-
 	//init threshold
 	this.threshold = (function (val) {
 		if (isNumber(val)){
@@ -136,8 +87,8 @@ function Draggable(target, options){
 
 	//define mode of drag
 	defineState(this, 'placingType', this.placingType);
-	// this.placingType = 'translate3d';
-	this.placingType = 'position';
+	this.placingType = 'translate3d';
+	// this.placingType = 'position';
 
 
 	//define state behaviour
@@ -147,7 +98,7 @@ function Draggable(target, options){
 
 
 /** Inherit draggable from Emitter */
-util.inherits(Draggable, Emitter);
+var proto = Draggable.prototype =  Object.create(Emitter.prototype);
 
 
 var proto = Draggable.prototype;
@@ -197,7 +148,7 @@ proto.state = {
 				var ty = parseFloat(m2[0]);
 
 
-				var selfOffsets = getOffsets(this.element);
+				var selfOffsets = offsets(this.element);
 
 				//initial offsets from the `limitEl`, 0-translation (only first init)
 				this.initOffsetX = selfOffsets.left - tx;
@@ -284,18 +235,22 @@ proto.state = {
 				self.prevMouseX = getClientX(e);
 				self.prevMouseY = getClientY(e);
 
-				//zero-position client rect, with translation(0,0)
-				// var clientRect = self.element.getBoundingClientRect();
-				// self.initClientX = clientRect.left - self.prevX;
-				// self.initClientY = clientRect.top - self.prevY;
+				//container rect might be outside the vp, so calc absolute offsets
+				//zero-position offsets, with translation(0,0)
+				var selfOffsets = offsets(self.element);
+				self.initOffsetX = selfOffsets.left - self.prevX;
+				self.initOffsetY = selfOffsets.top - self.prevY;
 
-				//calculate limits
-				// self.limits = {
-				// 	left: -pin[0] - this.initOffsetX + paddings.left,
-				// 	top: -pin[1] - this.initOffsetY + paddings.top,
-				// 	right: -this.initOffsetX + containerOffsets.width - pin[2] - paddings.right,
-				// 	bottom: -this.initOffsetY + containerOffsets.height - pin[3] - paddings.bottom
-				// };
+				//absolute offsets of a container
+				var withinOffsets = offsets(self.within);
+
+				//calculate movement limits
+				self.limits = {
+					left: withinOffsets.left - self.initOffsetX,
+					top: withinOffsets.top - self.initOffsetY,
+					right: withinOffsets.right - self.initOffsetX - self.element.clientWidth,
+					bottom: withinOffsets.bottom - self.initOffsetY - self.element.clientHeight
+				};
 
 				//go to threshold state
 				self.state = 'threshold';
@@ -370,14 +325,12 @@ proto.state = {
 					mouseY = getClientY(e);
 
 				//calc movement diff
-				var diffX = mouseX - self.prevMouseX,
-					diffY = mouseY - self.prevMouseY;
+				var diffMouseX = mouseX - self.prevMouseX,
+					diffMouseY = mouseY - self.prevMouseY;
 
 				//calc new coords
-				// var x = between(self.prevX + diffX, limits.left, limits.right),
-					// y = between(self.prevY + diffY, limits.top, limits.bottom);
-				var x = self.prevX + diffX,
-					y = self.prevY + diffY;
+				var x = between(self.prevX + diffMouseX, self.limits.left, self.limits.right),
+					y = between(self.prevY + diffMouseY, self.limits.top, self.limits.bottom);
 
 				//move element
 				self.move(x, y);
@@ -642,46 +595,6 @@ proto.repeat = {
 
 /** Hide cursor on drag (reduce clutter) */
 proto.hideCursor = false;
-
-
-/**
- * Position
- */
-// x: {
-// 	init: 0,
-// 	set: function(value){
-// 		var limits = this.limits;
-// 		value = m.between(value, limits.left, limits.right);
-// 		//snap to pixels
-// 		return Math.round(value);
-// 	},
-// 	changed: function(value, old){
-// 		if (this.freeze) return;
-// 		css(this.element,
-// 			'transform',
-// 			['translate3d(', value, 'px,', this.y, 'px, 0)'].join(''));
-// 	}
-// },
-// y: {
-// 	init: 0,
-// 	set: function(value){
-// 		var limits = this.limits;
-// 		value = m.between(value, limits.top, limits.bottom);
-// 		//snap to pixels
-// 		return Math.round(value);
-// 	},
-// 	changed: function(value){
-// 		if (this.freeze) return;
-// 		css(this.element,
-// 			'transform',
-// 			['translate3d(', this.x, 'px,', value, 'px, 0)'].join(''));
-// 	}
-// },
-
-
-/** Ignore position change */
-proto.freeze = false;
-
 
 
 

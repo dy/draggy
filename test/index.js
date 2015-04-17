@@ -18,8 +18,8 @@ describe("Functionality", function(){
 	});
 
 	it("within", function(){
-		var a = createDraggyCase("within dawg", {
-			within: document
+		var a = createDraggyCase("within parent", {
+			within: 'parent'
 		});
 	});
 
@@ -114,6 +114,9 @@ describe("Functionality", function(){
 		drEl.innerHTML = name;
 		drEl.className = 'draggy';
 		el.appendChild(drEl);
+
+		//handle parent case
+		if (opts.within === 'parent') opts.within = el;
 
 		var draggy = new Draggy(drEl, opts);
 

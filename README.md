@@ -17,11 +17,11 @@ Simple draggable.
 `$ npm install draggy`
 
 ```js
-var Draggy = require('draggy');
+var Draggable = require('draggy');
 
 //make an element draggable
 var el = document.querySelector('.my-element');
-var draggy = new Draggy(el, {
+var draggy = new Draggable(el, {
 	release: true,
 	sniper: false,
 	axis: 'x'
