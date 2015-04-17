@@ -6,6 +6,7 @@
 
 //work with css
 var css = require('mucss/css');
+var parseCSSValue = require('mucss/parse-value');
 var selection = require('mucss/selection');
 var getOffsets = require('mucss/offsets');
 var getTranslate = require('mucss/translate');
@@ -450,7 +451,8 @@ proto.state = {
 proto.placingType = {
 	position: function () {
 		this.getCoords = function () {
-			return [this.element.offsetLeft, this.element.offsetTop];
+			// return [this.element.offsetLeft, this.element.offsetTop];
+			return [parseCSSValue(css(this.element,'left')), parseCSSValue(css(this.element, 'top'))];
 		};
 
 		this.move = function (x, y) {
