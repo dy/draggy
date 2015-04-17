@@ -4,6 +4,8 @@
   "description": "Draggable behaviour provider",
   "main": "index.js",
   "scripts": {
+    "watch": "watchify -r ./index.js:draggy -d -o test/bundle.js",
+    "build": "browserify -r ./index:draggy -d -o test/bundle.js",
     "test": "mochify"
   },
   "repository": {
@@ -13,27 +15,27 @@
   "keywords": [
     "draggable"
   ],
-  "author": "Deema Eevanov",
+  "author": "Deema Ywanov",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/dfcreative/draggy/issues"
   },
   "homepage": "https://github.com/dfcreative/draggy",
   "dependencies": {
-    "mucss": "*",
-    "mustring": "*",
-    "muparse": "*",
-    "st8": "*",
-    "query-relative": "*",
+    "contains": "^0.1.1",
+    "define-state": "^1.0.0",
+    "emmy": ">=5.0.0",
+    "is-array": "^1.0.1",
+    "is-function": "^1.0.1",
+    "is-number": "^1.1.2",
+    "mucss": "^0.6.0",
     "mumath": ">=0.x",
-    "enot": ">=1.x",
-    "emmy": "*",
-    "mutype": ">=0.2.3"
+    "muparse": "*",
+    "mustring": "*",
+    "parse-attr": "^1.0.0"
   },
   "devDependencies": {
     "mocha": "*",
-    "require-stub": "~1.x",
-    "mochify": ">=2.1.0",
-    "weak-map": "*"
+    "mochify": "^2.7.1"
   }
 }

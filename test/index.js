@@ -1,24 +1,7 @@
-window.WeakMap = require('weak-map');
-var Draggy = require('../index');
+var Draggy = require('draggy');
 
 var body = document.body;
 
-/**simple polyfill*/
-if (!document.contains){
-	Node.prototype.contains = function contains(node) {
-		if (!(0 in arguments)) {
-			throw new TypeError('1 argument is required');
-		}
-
-		do {
-			if (this === node) {
-				return true;
-			}
-		} while (node = node && node.parentNode);
-
-		return false;
-	};
-}
 
 describe("Functionality", function(){
 	var canvas = document.createElement('canvas');
@@ -118,7 +101,7 @@ describe("Functionality", function(){
 	});
 
 
-
+	/** Create test case */
 	function createDraggyCase(name, opts){
 		//create container
 		var el = document.createElement("div");
@@ -140,12 +123,12 @@ describe("Functionality", function(){
 		drEl.appendChild(arr);
 
 		//bind listeners
-		draggy.on('threshold', paintThreshold);
-		draggy.on('dragstart', renderHelpers);
-		draggy.on('drag', renderHelpers);
-		draggy.on('dragend', clear);
-		draggy.on('idle', clear);
-		draggy.on('track', renderDirection);
+		// draggy.on('threshold', paintThreshold);
+		// draggy.on('dragstart', renderHelpers);
+		// draggy.on('drag', renderHelpers);
+		// draggy.on('dragend', clear);
+		// draggy.on('idle', clear);
+		// draggy.on('track', renderDirection);
 
 		return drEl;
 	}
