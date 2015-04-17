@@ -13,7 +13,9 @@
     "url": "https://github.com/dfcreative/draggy"
   },
   "keywords": [
-    "draggable"
+    "draggable",
+    "drag-n-drop",
+    "interact"
   ],
   "author": "Deema Ywanov",
   "license": "MIT",

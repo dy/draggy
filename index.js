@@ -4,23 +4,31 @@
  * @module draggy
  */
 
+//work with css
 var css = require('mucss/css');
 var selection = require('mucss/selection');
 var getOffsets = require('mucss/offsets');
 var getTranslate = require('mucss/translate');
-var parseAttr = require('parse-attr/parse');
+
+//events
 var on = require('emmy/on');
 var off = require('emmy/off');
 var emit = require('emmy/emit');
+var Emitter = require('events');
+
+//utils
 var isArray = require('is-array');
 var isNumber = require('is-number');
 var isFn = require('is-function');
 var contains = require('contains');
+var parseAttr = require('parse-attr/parse');
 var defineState = require('define-state');
 var extend = require('xtend/mutable');
-var Emitter = require('events');
 var util = require('util');
+
+//math helpers - round to a precision, limit by min and max
 var round = require('mumath/round');
+var between = require('mumath/between');
 
 
 var win = window, doc = document;
@@ -127,7 +135,8 @@ function Draggable(target, options){
 
 	//define mode of drag
 	defineState(this, 'placingType', this.placingType);
-	this.placingType = 'translate3d';
+	// this.placingType = 'translate3d';
+	this.placingType = 'position';
 
 
 	//define state behaviour
@@ -264,7 +273,7 @@ proto.state = {
 				*/
 
 				//initial translation offsets
-				var initXY = getTranslate(self.element) || [0,0];
+				var initXY = self.getCoords();
 
 				//calc initial coords
 				self.prevX = initXY[0];
@@ -273,6 +282,19 @@ proto.state = {
 				//get initial mouse position
 				self.prevMouseX = getClientX(e);
 				self.prevMouseY = getClientY(e);
+
+				//zero-position client rect, with translation(0,0)
+				// var clientRect = self.element.getBoundingClientRect();
+				// self.initClientX = clientRect.left - self.prevX;
+				// self.initClientY = clientRect.top - self.prevY;
+
+				//calculate limits
+				// self.limits = {
+				// 	left: -pin[0] - this.initOffsetX + paddings.left,
+				// 	top: -pin[1] - this.initOffsetY + paddings.top,
+				// 	right: -this.initOffsetX + containerOffsets.width - pin[2] - paddings.right,
+				// 	bottom: -this.initOffsetY + containerOffsets.height - pin[3] - paddings.bottom
+				// };
 
 				//go to threshold state
 				self.state = 'threshold';
@@ -351,12 +373,15 @@ proto.state = {
 					diffY = mouseY - self.prevMouseY;
 
 				//calc new coords
+				// var x = between(self.prevX + diffX, limits.left, limits.right),
+					// y = between(self.prevY + diffY, limits.top, limits.bottom);
 				var x = self.prevX + diffX,
 					y = self.prevY + diffY;
 
+				//move element
 				self.move(x, y);
 
-				//save prev coords to use as a start point
+				//save prev coords to use as a start point next time
 				self.prevX = x;
 				self.prevY = y;
 
@@ -424,13 +449,24 @@ proto.state = {
  */
 proto.placingType = {
 	position: function () {
-		this.move = function (x, y) {
+		this.getCoords = function () {
+			return [this.element.offsetLeft, this.element.offsetTop];
+		};
 
+		this.move = function (x, y) {
+			css(this.element, {
+				left: x,
+				top: y
+			});
 		};
 	},
 
 	//undefined placing is treated as translate3d
 	_: function () {
+		this.getCoords  = function () {
+			return getTranslate(this.element) || [0,0];
+		};
+
 		this.move = function (x, y) {
 			x = round(x, this.precition);
 			y = round(y, this.precition);
