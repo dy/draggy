@@ -28,6 +28,7 @@ var extend = require('xtend/mutable');
 //math helpers - round to a precision, limit by min and max
 var round = require('mumath/round');
 var between = require('mumath/between');
+var isBetween = require('mumath/is-between');
 
 
 var win = window, doc = document;
@@ -67,6 +68,7 @@ function Draggable(target, options){
 	extend(this, options);
 
 	//init threshold
+	//FIXME: simplify this
 	this.threshold = (function (val) {
 		if (isNumber(val)){
 				return [-val*.5, -val*.5, val*.5, val*.5];
@@ -240,17 +242,37 @@ proto.state = {
 				var selfOffsets = offsets(self.element);
 				self.initOffsetX = selfOffsets.left - self.prevX;
 				self.initOffsetY = selfOffsets.top - self.prevY;
+				self.offsets = selfOffsets;
 
 				//absolute offsets of a container
 				var withinOffsets = offsets(self.within);
+				self.withinOffsets = withinOffsets;
 
 				//calculate movement limits
 				self.limits = {
 					left: withinOffsets.left - self.initOffsetX,
 					top: withinOffsets.top - self.initOffsetY,
-					right: withinOffsets.right - self.initOffsetX - self.element.clientWidth,
-					bottom: withinOffsets.bottom - self.initOffsetY - self.element.clientHeight
+					right: withinOffsets.right - self.initOffsetX - selfOffsets.width,
+					bottom: withinOffsets.bottom - self.initOffsetY - selfOffsets.height
 				};
+
+				//save inner offset
+				if (contains(self.element, e.target)) {
+					var selfClientRect = self.element.getBoundingClientRect();
+					self.innerOffsetX = - selfClientRect.left + e.clientX;
+					self.innerOffsetY = - selfClientRect.top + e.clientY;
+				}
+				//FIXME
+				// else if (self.state === 'threshold'){
+				// 	var offsets = self.element.getBoundingClientRect();
+				// 	self.innerOffsetX = self.prevClientX - offsets.left;
+				// 	self.innerOffsetY = self.prevClientY - offsets.top;
+				// }
+				//if drag started outside the element - center by pin
+				// else {
+				// 	self.innerOffsetX = self.pin[0] / 2 + self.pin[2] / 2;
+				// 	self.innerOffsetY = self.pin[1] / 2 + self.pin[3] / 2;
+				// }
 
 				//go to threshold state
 				self.state = 'threshold';
@@ -324,13 +346,27 @@ proto.state = {
 				var mouseX = getClientX(e),
 					mouseY = getClientY(e);
 
-				//calc movement diff
+				//calc mouse movement diff
 				var diffMouseX = mouseX - self.prevMouseX,
 					diffMouseY = mouseY - self.prevMouseY;
 
+				//get real movement diff
+				var diffX = diffMouseX;
+				var diffY = diffMouseY;
+
+				//ignore diff if mouse is outside the movable area
+				if ( !isBetween(
+					mouseX + win.pageXOffset - self.innerOffsetX,
+					self.withinOffsets.left,
+					self.withinOffsets.right - self.offsets.width )) diffX = 0;
+				if ( !isBetween(
+					mouseY + win.pageYOffset - self.innerOffsetY,
+					self.withinOffsets.top,
+					self.withinOffsets.bottom - self.offsets.height )) diffY = 0;
+
 				//calc new coords
-				var x = between(self.prevX + diffMouseX, self.limits.left, self.limits.right),
-					y = between(self.prevY + diffMouseY, self.limits.top, self.limits.bottom);
+				var x = between(self.prevX + diffX, self.limits.left, self.limits.right),
+					y = between(self.prevY + diffY, self.limits.top, self.limits.bottom);
 
 				//move element
 				self.move(x, y);
