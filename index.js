@@ -355,18 +355,37 @@ proto.state = {
 				var diffY = diffMouseY;
 
 				//ignore diff if mouse is outside the movable area
-				if ( !isBetween(
-					mouseX + win.pageXOffset - self.innerOffsetX,
-					self.withinOffsets.left,
-					self.withinOffsets.right - self.offsets.width )) diffX = 0;
-				if ( !isBetween(
-					mouseY + win.pageYOffset - self.innerOffsetY,
-					self.withinOffsets.top,
-					self.withinOffsets.bottom - self.offsets.height )) diffY = 0;
+				var mouseAbsX = mouseX + win.pageXOffset - self.innerOffsetX;
+				var mouseAbsY = mouseY + win.pageYOffset - self.innerOffsetY;
 
-				//calc new coords
-				var x = between(self.prevX + diffX, self.limits.left, self.limits.right),
-					y = between(self.prevY + diffY, self.limits.top, self.limits.bottom);
+				//calc movement x and y
+				var x,y;
+
+				//if mouse is too left
+				if (mouseAbsX < self.withinOffsets.left) {
+					x = self.limits.left;
+				}
+				//mouse is too right
+				else if (mouseAbsX > self.withinOffsets.right - self.offsets.width) {
+					x = self.limits.right
+				}
+				//mouse is between
+				else {
+					x = between(self.prevX + diffX, self.limits.left, self.limits.right)
+				}
+
+				//if mouse is too top
+				if (mouseAbsY < self.withinOffsets.top) {
+					y = self.limits.top;
+				}
+				//mouse is too bottom
+				else if (mouseAbsY > self.withinOffsets.bottom - self.offsets.width) {
+					y = self.limits.bottom
+				}
+				//mouse is between
+				else {
+					y = between(self.prevY + diffY, self.limits.top, self.limits.bottom)
+				}
 
 				//move element
 				self.move(x, y);
