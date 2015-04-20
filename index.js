@@ -16,6 +16,8 @@ var on = require('emmy/on');
 var off = require('emmy/off');
 var emit = require('emmy/emit');
 var Emitter = require('events');
+var getClientX = require('get-client-xy').x;
+var getClientY = require('get-client-xy').y;
 
 //utils
 var isArray = require('is-array');
@@ -45,7 +47,7 @@ var win = window, doc = document;
  *
  * That is why weakmap.
  */
-var draggableCache = new WeakMap;
+var draggableCache = Draggable.cache = new WeakMap;
 
 
 
@@ -60,6 +62,8 @@ var draggableCache = new WeakMap;
  * @return {HTMLElement} Target element
  */
 function Draggable(target, options){
+	if (!(this instanceof Draggable)) return new Draggable(target, options);
+
 	//save element passed
 	this.element = target;
 	draggableCache.set(target, this);
@@ -652,42 +656,10 @@ proto.repeat = {
 proto.hideCursor = false;
 
 
-
-/** ----------------- Helpers ---------------- */
-
-
-
 /** Check whether arr is filled with zeros */
 function isZeroArray(arr){
 	if (!arr[0] && !arr[1] && !arr[2] && !arr[3]) return true;
 }
-
-/**
- * get clientY/clientY from event
- *
- * @param {Event} e Event raised, like mousemove
- *
- * @return {number} Coordinate relative to the screen
- */
-function getClientY (e) {
-	// touch event
-	if (e.targetTouches && (e.targetTouches.length >= 1)) {
-		return e.targetTouches[0].clientY;
-	}
-
-	// mouse event
-	return e.clientY;
-}
-function getClientX (e) {
-	// touch event
-	if (e.targetTouches && (e.targetTouches.length >= 1)) {
-		return e.targetTouches[0].clientX;
-	}
-
-	// mouse event
-	return e.clientX;
-}
-
 
 
 module.exports = Draggable;

@@ -27,6 +27,7 @@
     "contains": "^0.1.1",
     "define-state": "^1.0.0",
     "emmy": ">=5.0.0",
+    "get-client-xy": "^1.0.1",
     "is-array": "^1.0.1",
     "is-function": "^1.0.1",
     "is-number": "^1.1.2",
