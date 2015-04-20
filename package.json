@@ -33,7 +33,6 @@
     "is-number": "^1.1.2",
     "mucss": "^0.6.0",
     "mumath": ">=0.x",
-    "muparse": "*",
     "mustring": "*",
     "parse-attr": "^1.0.0"
   },
