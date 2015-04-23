@@ -48,15 +48,13 @@ describe("Functionality", function(){
 
 	it("x", function(){
 		createDraggyCase("x", {
-			axis: 'x',
-			within: null
+			axis: 'x'
 		});
 	});
 
 	it("y", function(){
 		createDraggyCase("y", {
-			axis: 'y',
-			within: null
+			axis: 'y'
 		});
 	});
 

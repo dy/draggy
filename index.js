@@ -70,37 +70,20 @@ function Draggable(target, options) {
 	this.element = target;
 	draggableCache.set(target, this);
 
-	//take over options
-	extend(this, options);
-
-	//init threshold
-	//FIXME: simplify this
-	this.threshold = (function (val) {
-		if (isNumber(val)) {
-				return [-val*.5, -val*.5, val*.5, val*.5];
-		} else if (val.length === 2) {
-			//Array(w,h)
-			return [-val[0]*.5, -val[1]*.5, val[0]*.5, val[1]*.5];
-		} else if(val.length === 4) {
-			//Array(x1,y1,x2,y2)
-			return val;
-		} else if (isFn(val)) {
-			//custom val funciton
-			return val;
-		} else {
-			return [0,0,0,0];
-		}
-	})(this.threshold);
-
 	//define mode of drag
 	defineState(this, 'placingType', this.placingType);
 	this.placingType = 'translate3d';
-	// this.placingType = 'position';
-
 
 	//define state behaviour
 	defineState(this, 'state', this.state);
 	this.state = 'idle';
+
+	//define axis behaviour
+	defineState(this, 'axis', this.axis);
+	this.axis = null;
+
+	//take over options
+	extend(this, options);
 }
 
 
@@ -402,10 +385,6 @@ proto.state = {
 				//move element
 				self.move(x, y);
 
-				//save prev coords to use as a start point next time
-				self.prevX = x;
-				self.prevY = y;
-
 				//save prevClientXY for calculating diff
 				self.prevMouseX = mouseX;
 				self.prevMouseY = mouseY;
@@ -473,11 +452,15 @@ proto.placingType = {
 			return [parseCSSValue(css(this.element,'left')), parseCSSValue(css(this.element, 'top'))];
 		};
 
-		this.move = function (x, y) {
+		this.setCoords = function (x, y) {
 			css(this.element, {
 				left: x,
 				top: y
 			});
+
+			//save prev coords to use as a start point next time
+			this.prevX = x;
+			this.prevY = y;
 		};
 	},
 
@@ -487,10 +470,15 @@ proto.placingType = {
 			return getTranslate(this.element) || [0,0];
 		};
 
-		this.move = function (x, y) {
+		this.setCoords = function (x, y) {
 			x = round(x, this.precition);
 			y = round(y, this.precition);
+
 			css(this.element, 'transform', ['translate3d(', x, 'px,', y, 'px, 0)'].join(''));
+
+			//save prev coords to use as a start point next time
+			this.prevX = x;
+			this.prevY = y;
 		};
 	}
 };
@@ -566,6 +554,32 @@ Object.defineProperty(proto, 'pin', {
 	}
 });
 
+/**
+ * Threshold setting
+ */
+Object.defineProperty(proto, 'threshold', {
+	set: function (val) {
+		if (isNumber(val)) {
+			this._threshold = [-val*0.5, -val*0.5, val*0.5, val*0.5];
+		} else if (val.length === 2) {
+			//Array(w,h)
+			this._threshold = [-val[0]*0.5, -val[1]*0.5, val[0]*0.5, val[1]*0.5];
+		} else if (val.length === 4) {
+			//Array(x1,y1,x2,y2)
+			this._threshold = val;
+		} else if (isFn(val)) {
+			//custom val funciton
+			this._threshold = val;
+		} else {
+			this._threshold = [0,0,0,0];
+		}
+	},
+
+	get: function () {
+		return this._threshold;
+	}
+});
+
 
 /** Clone object for dragging */
 proto.ghost = false;
@@ -618,7 +632,23 @@ proto.sniperSpeed = .15;
  * @default undefined
  * @enum {string}
  */
-proto.axis = null;
+proto.axis = {
+	_: function () {
+		this.move = function (x, y) {
+			this.setCoords(x, y);
+		}
+	},
+	x: function () {
+		this.move = function (x, y) {
+			this.setCoords(x, this.prevY);
+		};
+	},
+	y: function () {
+		this.move = function (x, y) {
+			this.setCoords(this.prevX, y);
+		};
+	}
+};
 
 
 /**

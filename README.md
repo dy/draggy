@@ -50,7 +50,7 @@ draggy.on('drag', function () {
 | `sniperSpeed` | `0.15` | Slowing down ratio for the sniper mode. |
 | `threshold` | `10` | A movement threshold required to start drag. |
 | `velocity` | `1000` | Velocity on release. |
-| `within` | `document` | Restrict movement within the container. |
+| `within` | `document` | Restrict movement within the container. Pass `'parent'` to take parent node. |
 
 
 ## Events
