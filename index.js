@@ -4,6 +4,8 @@
  * @module draggy
  */
 
+//TODO: make within/pin/others a function
+
 //work with css
 var css = require('mucss/css');
 var parseCSSValue = require('mucss/parse-value');
@@ -61,7 +63,7 @@ var draggableCache = Draggable.cache = new WeakMap;
  *
  * @return {HTMLElement} Target element
  */
-function Draggable(target, options){
+function Draggable(target, options) {
 	if (!(this instanceof Draggable)) return new Draggable(target, options);
 
 	//save element passed
@@ -74,22 +76,21 @@ function Draggable(target, options){
 	//init threshold
 	//FIXME: simplify this
 	this.threshold = (function (val) {
-		if (isNumber(val)){
+		if (isNumber(val)) {
 				return [-val*.5, -val*.5, val*.5, val*.5];
-		} else if (val.length === 2){
+		} else if (val.length === 2) {
 			//Array(w,h)
 			return [-val[0]*.5, -val[1]*.5, val[0]*.5, val[1]*.5];
-		} else if(val.length === 4){
+		} else if(val.length === 4) {
 			//Array(x1,y1,x2,y2)
 			return val;
-		} else if (isFn(val)){
+		} else if (isFn(val)) {
 			//custom val funciton
 			return val;
 		} else {
 			return [0,0,0,0];
 		}
 	})(this.threshold);
-
 
 	//define mode of drag
 	defineState(this, 'placingType', this.placingType);
@@ -104,7 +105,7 @@ function Draggable(target, options){
 
 
 /** Inherit draggable from Emitter */
-var proto = Draggable.prototype =  Object.create(Emitter.prototype);
+var proto = Draggable.prototype = Object.create(Emitter.prototype);
 
 
 var proto = Draggable.prototype;
@@ -116,7 +117,7 @@ var proto = Draggable.prototype;
  * @default is 'idle'
  */
 proto.state = {
-	//idle state
+	//idle
 	_: {
 		before: function () {
 			//enable document interactivity
@@ -132,6 +133,9 @@ proto.state = {
 
 				//ignore non-draggable target
 				if (!self) return;
+
+				//handle parent case
+				if (self.within === 'parent') self.within = self.element.parentNode || doc;
 
 				/*
 
@@ -196,7 +200,7 @@ proto.state = {
 					self.innerOffsetY = e.offsetY;
 				}
 				//FIXME
-				// else if (self.state === 'threshold'){
+				// else if (self.state === 'threshold') {
 				// 	var offsets = self.element.getBoundingClientRect();
 				// 	self.innerOffsetX = self.prevClientX - offsets.left;
 				// 	self.innerOffsetY = self.prevClientY - offsets.top;
@@ -230,6 +234,9 @@ proto.state = {
 
 				*/
 
+				//set initial pin to element’s size
+				if (!self.pin) self.pin = [0,0,self.element.offsetWidth, self.element.offsetHeight];
+
 				//initial translation offsets
 				var initXY = self.getCoords();
 
@@ -254,10 +261,10 @@ proto.state = {
 
 				//calculate movement limits
 				self.limits = {
-					left: withinOffsets.left - self.initOffsetX,
-					top: withinOffsets.top - self.initOffsetY,
-					right: withinOffsets.right - self.initOffsetX - selfOffsets.width,
-					bottom: withinOffsets.bottom - self.initOffsetY - selfOffsets.height
+					left: withinOffsets.left - self.initOffsetX - self.pin[0],
+					top: withinOffsets.top - self.initOffsetY - self.pin[1],
+					right: withinOffsets.right - self.initOffsetX - self.pin[2],
+					bottom: withinOffsets.bottom - self.initOffsetY - self.pin[3]
 				};
 
 				//save inner offset
@@ -267,7 +274,7 @@ proto.state = {
 					self.innerOffsetY = - selfClientRect.top + e.clientY;
 				}
 				//FIXME
-				// else if (self.state === 'threshold'){
+				// else if (self.state === 'threshold') {
 				// 	var offsets = self.element.getBoundingClientRect();
 				// 	self.innerOffsetX = self.prevClientX - offsets.left;
 				// 	self.innerOffsetY = self.prevClientY - offsets.top;
@@ -365,13 +372,14 @@ proto.state = {
 				//calc movement x and y
 				var x,y;
 
+				//border conditions needs to be absolutely overtaken to avoid displacement of inner offset
 				//if mouse is too left
-				if (mouseAbsX < self.withinOffsets.left) {
+				if (mouseAbsX < self.withinOffsets.left - self.pin[0]) {
 					x = self.limits.left;
 				}
 				//mouse is too right
-				else if (mouseAbsX > self.withinOffsets.right - self.offsets.width) {
-					x = self.limits.right
+				else if (mouseAbsX > self.withinOffsets.right - self.pin[2]) {
+					x = self.limits.right;
 				}
 				//mouse is between
 				else {
@@ -379,14 +387,14 @@ proto.state = {
 				}
 
 				//if mouse is too top
-				if (mouseAbsY < self.withinOffsets.top) {
+				if (mouseAbsY < self.withinOffsets.top - self.pin[1]) {
 					y = self.limits.top;
 				}
 				//mouse is too bottom
-				else if (mouseAbsY > self.withinOffsets.bottom - self.offsets.width) {
-					y = self.limits.bottom
+				else if (mouseAbsY > self.withinOffsets.bottom - self.pin[3]) {
+					y = self.limits.bottom;
 				}
-				//mouse is between
+				// mouse is between
 				else {
 					y = between(self.prevY + diffY, self.limits.top, self.limits.bottom)
 				}
@@ -421,8 +429,6 @@ proto.state = {
 		}
 	},
 
-
-	//inertional moving
 	release: {
 		before: function () {
 			//set proper transition
@@ -533,34 +539,32 @@ proto.within = doc;
 
 /**
  * Which area of draggable should not be outside the restriction area.
- * False value means center by the self rect
- * @type {(Array|number|false)}
- * @default this
+ * @type {(Array|number)}
+ * @default [0,0,this.element.offsetWidth, this.element.offsetHeight]
  */
-proto.pin = {
-	set: function(value){
-		if (isArray(value)){
-			if (value.length === 2){
-				return [value[0], value[1], value[0], value[1]];
-			} else if (value.length === 4){
-				return value;
+Object.defineProperty(proto, 'pin', {
+	set: function (value) {
+		if (isArray(value)) {
+			if (value.length === 2) {
+				this._pin = [value[0], value[1], value[0], value[1]];
+			} else if (value.length === 4) {
+				this._pin = value;
 			}
 		}
 
-		else if (isNumber(value)){
-			return [value, value, value, value];
+		else if (isNumber(value)) {
+			this._pin = [value, value, value, value];
 		}
 
-		return value;
+		else {
+			this._pin = value;
+		}
 	},
 
-	get: function(value){
-		//return the whole size if no value defined
-		if (!value)	return [0,0,this.element.offsetWidth, this.element.offsetHeight];
-
-		return value;
+	get: function () {
+		return this._pin;
 	}
-};
+});
 
 
 /** Clone object for dragging */
@@ -630,8 +634,8 @@ proto.repeat = {
 	_: function () {
 		//TODO
 		//vector passed
-		if (this.repeat instanceof Array){
-			if (this.repeat.length){
+		if (this.repeat instanceof Array) {
+			if (this.repeat.length) {
 				if (this.repeat[0] && this.repeat[1])
 					return "both";
 				else if (this.repeat[0])
@@ -641,7 +645,7 @@ proto.repeat = {
 			}
 
 		//just repeat any possible way
-		} else if (this.repeat === true){
+		} else if (this.repeat === true) {
 			return this.axis
 
 		//unrecognized value passed
@@ -657,7 +661,7 @@ proto.hideCursor = false;
 
 
 /** Check whether arr is filled with zeros */
-function isZeroArray(arr){
+function isZeroArray(arr) {
 	if (!arr[0] && !arr[1] && !arr[2] && !arr[3]) return true;
 }
 

@@ -4,8 +4,8 @@
   "description": "Draggable behaviour provider",
   "main": "index.js",
   "scripts": {
-    "watch": "watchify -r ./index.js:draggy -d -o test/bundle.js",
-    "build": "browserify -r ./index:draggy -o test/bundle.js",
+    "watch": "watchify -r ./index.js:draggy -r mucss -d -o test/bundle.js",
+    "build": "browserify -r ./index:draggy -r mucss -o test/bundle.js",
     "test": "mochify"
   },
   "repository": {

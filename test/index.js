@@ -1,4 +1,5 @@
 var Draggy = require('draggy');
+var css = require('mucss');
 
 var body = document.body;
 
@@ -26,13 +27,14 @@ describe("Functionality", function(){
 	it("release", function(){
 		var a = createDraggyCase("release", {
 			release: 800,
-			within: ':parent'
+			within: 'parent'
 		});
 	});
 
 	it("pin area", function(){
 		var a = createDraggyCase("pin area", {
-			pin: [20,20,40,40],
+			pin: [20,20,50,50],
+			within: 'parent'
 		});
 	});
 
@@ -40,6 +42,7 @@ describe("Functionality", function(){
 		var a = createDraggyCase("point picker", {
 			pin: [30,30],
 			threshold: 0,
+			within: 'parent'
 		});
 	});
 
@@ -115,9 +118,6 @@ describe("Functionality", function(){
 		drEl.className = 'draggy';
 		el.appendChild(drEl);
 
-		//handle parent case
-		if (opts.within === 'parent') opts.within = el;
-
 		var draggy = new Draggy(drEl, opts);
 
 		//create direction arrow
@@ -127,10 +127,10 @@ describe("Functionality", function(){
 
 		//bind listeners
 		// draggy.on('threshold', paintThreshold);
-		// draggy.on('dragstart', renderHelpers);
-		// draggy.on('drag', renderHelpers);
-		// draggy.on('dragend', clear);
-		// draggy.on('idle', clear);
+		draggy.on('dragstart', renderHelpers);
+		draggy.on('drag', renderHelpers);
+		draggy.on('dragend', clear);
+		draggy.on('idle', clear);
 		// draggy.on('track', renderDirection);
 
 		return drEl;
@@ -148,13 +148,13 @@ describe("Functionality", function(){
 	}
 
 
-	function paintRestrictionArea($el){
-		var $within = $el.within;
+	function paintRestrictionArea(el){
+		var within = el.within;
 
-		if (!$within) return;
+		if (!within || within === document) return;
 
-		var pos = $within.getBoundingClientRect(),
-			pads = css.paddings($within);
+		var pos = within.getBoundingClientRect(),
+			pads = new css.Rect//css.paddings(within);
 
 		ctx.strokeStyle = 'rgba(60,60,60,1)';
 		ctx.lineWidth = 1;
@@ -170,12 +170,12 @@ describe("Functionality", function(){
 
 
 	function paintThreshold(e){
-		var $el = this;
+		var el = this;
 
 		clear();
 
-		var rect = $el.threshold,
-			d = $el.dragparams,
+		var rect = el.threshold,
+			d = el.dragparams,
 			offsetX = d.x,
 			offsetY = d.x;
 
@@ -196,7 +196,7 @@ describe("Functionality", function(){
 		rect[2] += 1
 		rect[3] += 1
 
-		var pos = $el.element.getBoundingClientRect();
+		var pos = el.element.getBoundingClientRect();
 
 		ctx.strokeStyle = 'rgba(60,180,250,1)';
 		ctx.lineWidth = 2;
@@ -211,12 +211,12 @@ describe("Functionality", function(){
 	}
 
 
-	function paintPinRect($el){
-		var pin = $el.pin.slice();
+	function paintPinRect(el){
+		var pin = el.pin.slice();
 		pin[2] += 1;
 		pin[3] += 1;
 
-		var pos = $el.element.getBoundingClientRect();
+		var pos = el.element.getBoundingClientRect();
 
 		ctx.strokeStyle = 'rgba(60,250,60,1)';
 		ctx.lineWidth = 2;
@@ -231,10 +231,10 @@ describe("Functionality", function(){
 	}
 
 	function renderDirection(e){
-		// var $el = e.target;
-		// var $arr = $el.querySelector('.draggy-arrow');
-		// $arr.style.transform = 'rotate(' + $el.dragparams.angle + 'rad)';
-		// $arr.style.width = $el.dragparams.velocity * 10 + 'px';
+		// var el = e.target;
+		// var $arr = el.querySelector('.draggy-arrow');
+		// $arr.style.transform = 'rotate(' + el.dragparams.angle + 'rad)';
+		// $arr.style.width = el.dragparams.velocity * 10 + 'px';
 	}
 
 
