@@ -63,5 +63,17 @@ draggy.on('drag', function () {
 | `dragend` | Drag finished, called after release (stopped) |
 
 
+## API
+
+| Name | Description |
+|---|---|
+| `Draggy.cache` | WeakMap containing draggy instances for elements.  |
+| `Draggy.prototype.getCoords()` | Get current raw translation coordinates. |
+| `Draggy.prototype.setCoords(x, y)` | Set current raw translation coordinates. `0,0` - initial position with no drag. |
+| `Draggy.prototype.move(x, y)` | Move to a new position, taking into account axis. |
+| `Draggy.prototype.state` | Current drag state: `'idle'`, `'threshold'`, `'drag'`, `'release'` |
+| `Draggy.prototype.startDrag(event?)` | Start drag programmatically at the point given in the `event`. |
+| `Draggy.prototype.update(event?)` | Update movement limits. `event` is optional. |
+
 
 [![NPM](https://nodei.co/npm/draggy.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/draggy/)

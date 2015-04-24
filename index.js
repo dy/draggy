@@ -35,7 +35,7 @@ var between = require('mumath/between');
 var isBetween = require('mumath/is-between');
 
 
-var win = window, doc = document;
+var win = window, doc = document, root = doc.documentElement;
 
 
 /**
@@ -103,10 +103,6 @@ proto.state = {
 	//idle
 	_: {
 		before: function () {
-			//enable document interactivity
-			selection.enable(doc.documentElement);
-			if (this.hideCursor) css(doc.documentElement, {"cursor": null});
-
 			//start drag
 			on(this.element, 'touchstart.drag mousedown.drag', function (e) {
 				e.preventDefault();
@@ -116,9 +112,6 @@ proto.state = {
 
 				//ignore non-draggable target
 				if (!self) return;
-
-				//handle parent case
-				if (self.within === 'parent') self.within = self.element.parentNode || doc;
 
 				/*
 
@@ -217,38 +210,9 @@ proto.state = {
 
 				*/
 
-				//set initial pin to element’s size
-				if (!self.pin) self.pin = [0,0,self.element.offsetWidth, self.element.offsetHeight];
 
-				//initial translation offsets
-				var initXY = self.getCoords();
-
-				//calc initial coords
-				self.prevX = initXY[0];
-				self.prevY = initXY[1];
-
-				//get initial mouse position
-				self.prevMouseX = getClientX(e);
-				self.prevMouseY = getClientY(e);
-
-				//container rect might be outside the vp, so calc absolute offsets
-				//zero-position offsets, with translation(0,0)
-				var selfOffsets = offsets(self.element);
-				self.initOffsetX = selfOffsets.left - self.prevX;
-				self.initOffsetY = selfOffsets.top - self.prevY;
-				self.offsets = selfOffsets;
-
-				//absolute offsets of a container
-				var withinOffsets = offsets(self.within);
-				self.withinOffsets = withinOffsets;
-
-				//calculate movement limits
-				self.limits = {
-					left: withinOffsets.left - self.initOffsetX - self.pin[0],
-					top: withinOffsets.top - self.initOffsetY - self.pin[1],
-					right: withinOffsets.right - self.initOffsetX - self.pin[2],
-					bottom: withinOffsets.bottom - self.initOffsetY - self.pin[3]
-				};
+				//update movement limits
+				self.update(e);
 
 				//save inner offset
 				if (contains(self.element, e.target)) {
@@ -256,6 +220,7 @@ proto.state = {
 					self.innerOffsetX = - selfClientRect.left + e.clientX;
 					self.innerOffsetY = - selfClientRect.top + e.clientY;
 				}
+
 				//FIXME
 				// else if (self.state === 'threshold') {
 				// 	var offsets = self.element.getBoundingClientRect();
@@ -302,9 +267,6 @@ proto.state = {
 		},
 
 		after: function () {
-			//reduce dragging clutter
-			selection.disable(doc.documentElement);
-			if (this.hideCursor) css(doc.documentElement, {"cursor": "none"});
 		}
 	},
 
@@ -312,7 +274,9 @@ proto.state = {
 		before: function () {
 			var self = this;
 
-			selection.disable(this.element);
+			//reduce dragging clutter
+			selection.disable(root);
+			if (this.hideCursor) css(root, {"cursor": "none"});
 
 			//emit drag evts on element
 			emit(this.element, 'dragstart', null, true);
@@ -396,7 +360,9 @@ proto.state = {
 		},
 
 		after: function () {
-			selection.enable(this.element);
+			//enable document interactivity
+			selection.enable(root);
+			if (this.hideCursor) css(root, {"cursor": null});
 
 			//emit dragend on element, this
 			emit(this.element, 'dragend', null, true);
@@ -437,6 +403,65 @@ proto.state = {
 			this.off('stop');
 		}
 	}
+};
+
+
+/**
+ * Start drag with an event passed.
+ * Use to programmatically start drag at the point given.
+ */
+proto.startDrag = function (e) {
+	this.update(e);
+	this.state = 'drag';
+};
+
+
+/**
+ * Update movement limits.
+ * Refresh self.withinOffsets and self.limits.
+ */
+proto.update = function (e) {
+	var self = this;
+
+	//set initial pin to element’s size
+	if (!self.pin) self.pin = [0,0, self.element.offsetWidth, self.element.offsetHeight];
+
+	//initial translation offsets
+	var initXY = self.getCoords();
+
+	//calc initial coords
+	self.prevX = initXY[0];
+	self.prevY = initXY[1];
+
+	//container rect might be outside the vp, so calc absolute offsets
+	//zero-position offsets, with translation(0,0)
+	var selfOffsets = offsets(self.element);
+	self.initOffsetX = selfOffsets.left - self.prevX;
+	self.initOffsetY = selfOffsets.top - self.prevY;
+	self.offsets = selfOffsets;
+
+	//handle parent case
+	if (self.within === 'parent') self.within = self.element.parentNode || doc;
+
+	//absolute offsets of a container
+	var withinOffsets = offsets(self.within);
+	self.withinOffsets = withinOffsets;
+
+	//calculate movement limits
+	self.limits = {
+		left: withinOffsets.left - self.initOffsetX - self.pin[0],
+		top: withinOffsets.top - self.initOffsetY - self.pin[1],
+		right: withinOffsets.right - self.initOffsetX - self.pin[2],
+		bottom: withinOffsets.bottom - self.initOffsetY - self.pin[3]
+	};
+
+	//preset inner offsets
+	self.innerOffsetX = self.pin[0];
+	self.innerOffsetY = self.pin[1];
+
+	//get initial mouse position from event
+	self.prevMouseX = e && getClientX(e) || 0;
+	self.prevMouseY = e && getClientY(e) || 0;
 };
 
 
