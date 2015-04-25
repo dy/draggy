@@ -5,6 +5,7 @@
  */
 
 //TODO: make within/pin/others a function
+//TODO: ignore multiple elements drag
 
 //work with css
 var css = require('mucss/css');
@@ -214,13 +215,6 @@ proto.state = {
 				//update movement limits
 				self.update(e);
 
-				//save inner offset
-				if (contains(self.element, e.target)) {
-					var selfClientRect = self.element.getBoundingClientRect();
-					self.innerOffsetX = - selfClientRect.left + e.clientX;
-					self.innerOffsetY = - selfClientRect.top + e.clientY;
-				}
-
 				//FIXME
 				// else if (self.state === 'threshold') {
 				// 	var offsets = self.element.getBoundingClientRect();
@@ -407,16 +401,6 @@ proto.state = {
 
 
 /**
- * Start drag with an event passed.
- * Use to programmatically start drag at the point given.
- */
-proto.startDrag = function (e) {
-	this.update(e);
-	this.state = 'drag';
-};
-
-
-/**
  * Update movement limits.
  * Refresh self.withinOffsets and self.limits.
  */
@@ -459,9 +443,35 @@ proto.update = function (e) {
 	self.innerOffsetX = self.pin[0];
 	self.innerOffsetY = self.pin[1];
 
-	//get initial mouse position from event
-	self.prevMouseX = e && getClientX(e) || 0;
-	self.prevMouseY = e && getClientY(e) || 0;
+	var selfClientRect = self.element.getBoundingClientRect();
+	var pinX = (self.pin[0] + self.pin[2] ) * .5;
+	var pinY = (self.pin[1] + self.pin[3] ) * .5;
+
+	//if event passed - update acc to event
+	if (e) {
+		//take last mouse position from the event
+		self.prevMouseX = getClientX(e);
+		self.prevMouseY = getClientY(e);
+
+		//if mouse is within the element - take offset normally as rel displacement
+		if (contains(self.element, e.target)) {
+			self.innerOffsetX = -selfClientRect.left + getClientX(e);
+			self.innerOffsetY = -selfClientRect.top + getClientY(e);
+		}
+		//else take offset as centered by pin
+		else {
+			self.innerOffsetX = pinX;
+			self.innerOffsetY = pinY;
+		}
+	}
+	//if no event - suppose pin-centered event
+	else {
+		//take mouse position & inner offset as center of pin
+		self.prevMouseX = selfClientRect.left + pinX;
+		self.prevMouseY = selfClientRect.top + pinY;
+		self.innerOffsetX = pinX;
+		self.innerOffsetY = pinY;
+	}
 };
 
 
@@ -550,58 +560,58 @@ function track (target, e) {
 proto.within = doc;
 
 
-/**
- * Which area of draggable should not be outside the restriction area.
- * @type {(Array|number)}
- * @default [0,0,this.element.offsetWidth, this.element.offsetHeight]
- */
-Object.defineProperty(proto, 'pin', {
-	set: function (value) {
-		if (isArray(value)) {
-			if (value.length === 2) {
-				this._pin = [value[0], value[1], value[0], value[1]];
-			} else if (value.length === 4) {
+Object.defineProperties(proto, {
+	/**
+	 * Which area of draggable should not be outside the restriction area.
+	 * @type {(Array|number)}
+	 * @default [0,0,this.element.offsetWidth, this.element.offsetHeight]
+	 */
+	pin: {
+		set: function (value) {
+			if (isArray(value)) {
+				if (value.length === 2) {
+					this._pin = [value[0], value[1], value[0], value[1]];
+				} else if (value.length === 4) {
+					this._pin = value;
+				}
+			}
+
+			else if (isNumber(value)) {
+				this._pin = [value, value, value, value];
+			}
+
+			else {
 				this._pin = value;
 			}
-		}
+		},
 
-		else if (isNumber(value)) {
-			this._pin = [value, value, value, value];
-		}
-
-		else {
-			this._pin = value;
+		get: function () {
+			return this._pin;
 		}
 	},
 
-	get: function () {
-		return this._pin;
-	}
-});
+	/** Avoid initial mousemove */
+	threshold: {
+		set: function (val) {
+			if (isNumber(val)) {
+				this._threshold = [-val*0.5, -val*0.5, val*0.5, val*0.5];
+			} else if (val.length === 2) {
+				//Array(w,h)
+				this._threshold = [-val[0]*0.5, -val[1]*0.5, val[0]*0.5, val[1]*0.5];
+			} else if (val.length === 4) {
+				//Array(x1,y1,x2,y2)
+				this._threshold = val;
+			} else if (isFn(val)) {
+				//custom val funciton
+				this._threshold = val;
+			} else {
+				this._threshold = [0,0,0,0];
+			}
+		},
 
-/**
- * Threshold setting
- */
-Object.defineProperty(proto, 'threshold', {
-	set: function (val) {
-		if (isNumber(val)) {
-			this._threshold = [-val*0.5, -val*0.5, val*0.5, val*0.5];
-		} else if (val.length === 2) {
-			//Array(w,h)
-			this._threshold = [-val[0]*0.5, -val[1]*0.5, val[0]*0.5, val[1]*0.5];
-		} else if (val.length === 4) {
-			//Array(x1,y1,x2,y2)
-			this._threshold = val;
-		} else if (isFn(val)) {
-			//custom val funciton
-			this._threshold = val;
-		} else {
-			this._threshold = [0,0,0,0];
+		get: function () {
+			return this._threshold;
 		}
-	},
-
-	get: function () {
-		return this._threshold;
 	}
 });
 
