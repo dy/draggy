@@ -85,6 +85,9 @@ function Draggable(target, options) {
 
 	//take over options
 	extend(this, options);
+
+	//try to calc out basic limits
+	this.update();
 }
 
 
@@ -124,15 +127,6 @@ proto.state = {
 				//prepare limits & pin for drag session
 				var within = this.within;
 				var pin = this.pin;
-
-				//parse translate x & y
-				//they are needed to get real initial offsets on drag start
-				var translateStr = css(this.element, 'transform');
-				var m1 = /-?\b[\d\.]+/.exec(translateStr);
-				var tx = parseFloat(m1[0]);
-				translateStr = translateStr.slice(m1.index + m1[0].length);
-				var m2 =  /-?\b[\d\.]+/.exec(translateStr);
-				var ty = parseFloat(m2[0]);
 
 
 				var selfOffsets = offsets(this.element);
