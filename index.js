@@ -119,80 +119,6 @@ proto.state = {
 
 				/*
 
-				//don’t start double drag (if draggable is within other draggable)
-				//FIXME: what’s the case?
-				// if (e.target.draggable !== this) return;
-
-				//init drag params
-				//prepare limits & pin for drag session
-				var within = this.within;
-				var pin = this.pin;
-
-
-				var selfOffsets = offsets(this.element);
-
-				//initial offsets from the `limitEl`, 0-translation (only first init)
-				this.initOffsetX = selfOffsets.left - tx;
-				this.initOffsetY = selfOffsets.top - ty;
-
-				//ignore undefined restriction container
-				if (!within) return;
-
-				var containerOffsets = css.offsets(within);
-				var paddings = css.paddings(within);
-
-
-				//initial container offsets from page
-				this.containerOffsetX = containerOffsets.left;
-				this.containerOffsetY = containerOffsets.top;
-
-
-				//correct init offsets
-				this.initOffsetX -= containerOffsets.left;
-				this.initOffsetY -= containerOffsets.top;
-
-				//save limits && offsets
-				this.limits = {
-					left: -pin[0] - this.initOffsetX + paddings.left,
-					top: -pin[1] - this.initOffsetY + paddings.top,
-					right: -this.initOffsetX + containerOffsets.width - pin[2] - paddings.right,
-					bottom: -this.initOffsetY + containerOffsets.height - pin[3] - paddings.bottom
-				};
-
-
-				//set initial position - have to go after updating limits
-				self.prevClientX = getClientX(e);
-				self.prevClientY = getClientY(e);
-
-
-				//if drag started outside the element - align the element centered by pin (excl threshold case)
-				if (e.target === self.element) {
-					self.innerOffsetX = e.offsetX;
-					self.innerOffsetY = e.offsetY;
-				}
-				//FIXME
-				// else if (self.state === 'threshold') {
-				// 	var offsets = self.element.getBoundingClientRect();
-				// 	self.innerOffsetX = self.prevClientX - offsets.left;
-				// 	self.innerOffsetY = self.prevClientY - offsets.top;
-				// }
-				else {
-					self.innerOffsetX = self.pin[0] / 2 + self.pin[2] / 2;
-					self.innerOffsetY = self.pin[1] / 2 + self.pin[3] / 2;
-				}
-
-
-				//set initial client x & y
-				self.initClientX = self.prevClientX;
-				self.initClientY = self.prevClientY;
-
-
-				//with zero-threshold move picker to the point of click
-				//FIXME what’s that and why?
-				// if (isZeroArray(self.threshold)) {
-				// 	self.drag(e);
-				// }
-
 				//if release is defined - set tracking
 				if (self.release) {
 					//set initial kinetic props
@@ -209,17 +135,7 @@ proto.state = {
 				//update movement limits
 				self.update(e);
 
-				//FIXME
-				// else if (self.state === 'threshold') {
-				// 	var offsets = self.element.getBoundingClientRect();
-				// 	self.innerOffsetX = self.prevClientX - offsets.left;
-				// 	self.innerOffsetY = self.prevClientY - offsets.top;
-				// }
-				//if drag started outside the element - center by pin
-				// else {
-				// 	self.innerOffsetX = self.pin[0] / 2 + self.pin[2] / 2;
-				// 	self.innerOffsetY = self.pin[1] / 2 + self.pin[3] / 2;
-				// }
+				//FIXME if drag started outside the element - center by pin
 
 				//go to threshold state
 				self.state = 'threshold';
