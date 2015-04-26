@@ -316,9 +316,8 @@ proto.state = {
 				else if (mouseAbsX > self.withinOffsets.right - self.pin[2]) {
 					x = self.limits.right;
 				}
-				//mouse is between
 				else {
-					x = between(self.prevX + diffX, self.limits.left, self.limits.right)
+					x = self.prevX + diffX;
 				}
 
 				//if mouse is too top
@@ -329,9 +328,8 @@ proto.state = {
 				else if (mouseAbsY > self.withinOffsets.bottom - self.pin[3]) {
 					y = self.limits.bottom;
 				}
-				// mouse is between
 				else {
-					y = between(self.prevY + diffY, self.limits.top, self.limits.bottom)
+					y = self.prevY + diffY;
 				}
 
 				//move element
@@ -664,16 +662,20 @@ proto.sniperSpeed = .15;
 proto.axis = {
 	_: function () {
 		this.move = function (x, y) {
+			x = between(x, this.limits.left, this.limits.right);
+			y = between(y, this.limits.top, this.limits.bottom);
 			this.setCoords(x, y);
-		}
+		};
 	},
 	x: function () {
 		this.move = function (x, y) {
+			x = between(x, this.limits.left, this.limits.right);
 			this.setCoords(x, this.prevY);
 		};
 	},
 	y: function () {
 		this.move = function (x, y) {
+			y = between(y, this.limits.top, this.limits.bottom);
 			this.setCoords(this.prevX, y);
 		};
 	}
