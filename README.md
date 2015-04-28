@@ -43,7 +43,7 @@ draggy.on('drag', function () {
 | `hideCursor` | `false` | Hide cursor while drag. Useful for color pickers. |
 | `pin` | `[0,0, selfWidth, selfHeight]` | An area within draggable element which is surely resides within movement limits. Useful if you need draggable element to be restricted not by it’s own shape, but by some inner shape. |
 | `precision` | `1` | Round position to that extent, in pixels. |
-| `placingType` | `translate3d` | Define placing type: via css `position` or `translate3d`. The first is more precise and reliable, the second is faster. |
+| `css3` | `true` | Use `position` or `translate3d` to place element. The first is more precise and reliable, the second is faster. |
 | `release` | `false` | Continue movement when user releases drag. |
 | `sniper` | `true` | Slow down movement by pressing Ctrl/Cmd. |
 | `sniperKey` | `[a, b]` | Key codes to use to slow down drag. |
@@ -58,8 +58,9 @@ draggy.on('drag', function () {
 | Name | Description |
 |---|---|
 | `dragstart` | Drag start |
+| `threshold` | Enter threshold mode |
 | `drag` | Drag iteration |
-| `dragrelease` | User released drag |
+| `release` | User released drag |
 | `dragend` | Drag finished, called after release (stopped) |
 
 

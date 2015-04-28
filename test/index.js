@@ -4,7 +4,7 @@ var css = require('mucss');
 var body = document.body;
 
 
-describe("Functionality", function(){
+describe("Functionality", function () {
 	var canvas = document.createElement('canvas');
 	canvas.className = 'painter-canvas';
 	body.appendChild(canvas);
@@ -13,32 +13,39 @@ describe("Functionality", function(){
 	canvas.height = window.innerHeight;
 
 
-	it("plain", function(){
+	it("plain", function () {
 		var a = createDraggyCase("plain", {
 		});
 	});
 
-	it("within", function(){
+	it("within", function () {
 		var a = createDraggyCase("within parent", {
 			within: 'parent'
 		});
 	});
 
-	it("release", function(){
+	it("threshold", function () {
+		var d = createDraggyCase("threshold", {
+			threshold: 20,
+			within: 'parent'
+		});
+	});
+
+	it("release", function () {
 		var a = createDraggyCase("release", {
 			release: 800,
 			within: 'parent'
 		});
 	});
 
-	it("pin area", function(){
+	it("pin area", function () {
 		var a = createDraggyCase("pin area", {
 			pin: [20,20,50,50],
 			within: 'parent'
 		});
 	});
 
-	it("point picker", function(){
+	it("point picker", function () {
 		var a = createDraggyCase("point picker", {
 			pin: [30,30],
 			threshold: 0,
@@ -46,19 +53,31 @@ describe("Functionality", function(){
 		});
 	});
 
-	it("x", function(){
+	it("x", function () {
 		createDraggyCase("x", {
 			axis: 'x'
 		});
 	});
 
-	it("y", function(){
+	it("y", function () {
 		createDraggyCase("y", {
 			axis: 'y'
 		});
 	});
 
-	it("inner elements (carousel drag)", function(){
+	it("restrict by borders", function () {
+		var a = createDraggyCase("borders", {
+			within: 'parent'
+		});
+	});
+
+	it("custom movement function", function () {
+		var a = createDraggyCase("custom movement", {
+			within: 'parent'
+		});
+	});
+
+	it("inner elements (carousel drag)", function () {
 		var d = createDraggyCase("carousel", {
 			axis: 'x'
 		});
@@ -66,44 +85,38 @@ describe("Functionality", function(){
 		d.parentNode.classList.add('carousel-case');
 	});
 
-	it.skip("handle", function(){
+	it.skip("handle", function () {
 
 	});
 
-	it.skip("circular", function(){
+	it.skip("circular", function () {
 		// createDraggyCase("circular")
 	});
 
-	it("threshold", function(){
-		var d = createDraggyCase("threshold", {
-			threshold: 20
-		});
-	});
 
-
-	it.skip("ghost", function(){
+	it.skip("ghost", function () {
 
 	});
 
-	it.skip("drop areas", function(){
+	it.skip("drop areas", function () {
 
 	});
 
-	it.skip("loose limits", function(){
+	it.skip("loose limits", function () {
 
 	});
 
-	it.skip("sniper mode", function(){
+	it.skip("sniper mode", function () {
 
 	});
 
-	it.skip("autoscroll", function(){
+	it.skip("autoscroll", function () {
 
 	});
 
 
 	/** Create test case */
-	function createDraggyCase(name, opts){
+	function createDraggyCase(name, opts) {
 		//create container
 		var el = document.createElement("div");
 		el.title = name;
@@ -124,7 +137,7 @@ describe("Functionality", function(){
 		drEl.appendChild(arr);
 
 		//bind listeners
-		// draggy.on('threshold', paintThreshold);
+		draggy.on('threshold', paintThreshold);
 		draggy.on('dragstart', renderHelpers);
 		draggy.on('drag', renderHelpers);
 		draggy.on('dragend', clear);
@@ -136,17 +149,17 @@ describe("Functionality", function(){
 
 
 	//canvas painters
-	function renderHelpers(){
+	function renderHelpers() {
 		clear();
 		try{
 			ctx.setLineDash([7,4]);
-		} catch (e){}
+		} catch (e) {}
 		paintRestrictionArea(this);
 		paintPinRect(this);
 	}
 
 
-	function paintRestrictionArea(el){
+	function paintRestrictionArea(el) {
 		var within = el.within;
 
 		if (!within || within === document) return;
@@ -167,34 +180,33 @@ describe("Functionality", function(){
 	}
 
 
-	function paintThreshold(e){
-		var el = this;
+	function paintThreshold(e) {
+		var el = this.element, d = this;
 
 		clear();
 
-		var rect = el.threshold,
-			d = el.dragparams,
-			offsetX = d.x,
-			offsetY = d.x;
+		var rect = d.threshold,
+			offsetX = d.innerOffsetX,
+			offsetY = d.innerOffsetY;
 
-		if (typeof rect === "number"){
+		if (typeof rect === "number") {
 			//number
 			rect = [-rect*.5, -rect*.5, rect*.5, rect*.5]
-		} else if (rect.length === 2){
+		} else if (rect.length === 2) {
 			//Array(w,h)
 			rect = [-rect[0] *.5, -rect[1] *.5, rect[0] *.5, rect[1] *.5]
-		} else if(rect.length === 4){
+		} else if(rect.length === 4) {
 			//Array(x1,y1,x2,y2)
 			rect = rect.slice();
-		} else if (typeof rect === "function"){
+		} else if (typeof rect === "function") {
 			//custom rect funciton
 			return;
 		}
 
-		rect[2] += 1
-		rect[3] += 1
+		rect[2] += 1;
+		rect[3] += 1;
 
-		var pos = el.element.getBoundingClientRect();
+		var pos = el.getBoundingClientRect();
 
 		ctx.strokeStyle = 'rgba(60,180,250,1)';
 		ctx.lineWidth = 2;
@@ -209,7 +221,7 @@ describe("Functionality", function(){
 	}
 
 
-	function paintPinRect(el){
+	function paintPinRect(el) {
 		var pin = el.pin.slice();
 		pin[2] += 1;
 		pin[3] += 1;
@@ -228,7 +240,7 @@ describe("Functionality", function(){
 		ctx.stroke();
 	}
 
-	function renderDirection(e){
+	function renderDirection (e) {
 		// var el = e.target;
 		// var $arr = el.querySelector('.draggy-arrow');
 		// $arr.style.transform = 'rotate(' + el.dragparams.angle + 'rad)';
@@ -236,15 +248,15 @@ describe("Functionality", function(){
 	}
 
 
-	function clear(){
+	function clear() {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 	}
 });
 
 
 
-describe('Special cases', function(){
-	it.skip('Make limits & API available for draggies in content', function(){
+describe('Special cases', function () {
+	it.skip('Make limits & API available for draggies in content', function () {
 		var div = document.createElement('div');
 		div.style.width = '10px';
 		div.style.height = '10px';
@@ -259,7 +271,7 @@ describe('Special cases', function(){
 		assert.notEqual(dr.limits.right,0);
 	});
 
-	it.skip('Within=null should not decry any constraint', function(){
+	it.skip('Within=null should not decry any constraint', function () {
 
 	});
 

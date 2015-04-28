@@ -72,8 +72,8 @@ function Draggable(target, options) {
 	draggableCache.set(target, this);
 
 	//define mode of drag
-	defineState(this, 'placingType', this.placingType);
-	this.placingType = 'translate3d';
+	defineState(this, 'css3', this.css3);
+	this.css3 = true;
 
 	//define state behaviour
 	defineState(this, 'state', this.state);
@@ -107,8 +107,12 @@ proto.state = {
 	//idle
 	_: {
 		before: function () {
-			//start drag
-			on(this.element, 'touchstart.drag mousedown.drag', function (e) {
+			//emit drag evts on element
+			emit(this.element, 'idle', null, true);
+			this.emit('idle');
+
+			//bind start drag
+			on(this.element, 'touchstart.draggy mousedown.draggy', function (e) {
 				e.preventDefault();
 
 				var target = e.target;
@@ -117,22 +121,7 @@ proto.state = {
 				//ignore non-draggable target
 				if (!self) return;
 
-				/*
-
-				//if release is defined - set tracking
-				if (self.release) {
-					//set initial kinetic props
-					self.currentVelocity = 0;
-					self.amplitude = 0;
-					self.angle = 0;
-					// self.frame = [self.prevClientX, self.prevClientY];
-					self.timestamp = +new Date();
-				}
-
-				*/
-
-
-				//update movement limits
+				//update movement params
 				self.update(e);
 
 				//FIXME if drag started outside the element - center by pin
@@ -148,29 +137,39 @@ proto.state = {
 
 	threshold: {
 		before: function () {
+			var self = this;
+
 			//ignore threshold state, if threshold is none
-			if (isZeroArray(this.threshold)) this.state = 'drag';
+			if (isZeroArray(self.threshold)) self.state = 'drag';
 
-			// //listen to doc movement
-			// on(document, 'touchmove mousemove', function (e) {
-			// 	e.preventDefault();
+			//emit drag evts on element
+			emit(this.element, 'threshold', null, true);
+			this.emit('threshold');
 
-			// 	//compare movement to the threshold
-			// 	var clientX = getClientX(e);
-			// 	var clientY = getClientY(e);
-			// 	var difX = this.initClientX - clientX;
-			// 	var difY = this.initClientY - clientY;
+			//listen to doc movement
+			on(doc, 'touchmove.draggy mousemove.draggy', function (e) {
+				e.preventDefault();
 
-			// 	if (difX < this.threshold[0] || difX > this.threshold[2] || difY < this.threshold[1] || difY > this.threshold[3]) {
-			// 		this.initDragparams(e);
+				//compare movement to the threshold
+				var clientX = getClientX(e);
+				var clientY = getClientY(e);
+				var difX = self.prevMouseX - clientX;
+				var difY = self.prevMouseY - clientY;
 
-			// 		this.dragstate('drag');
-			// 	}
-			// });
+				if (difX < self.threshold[0] || difX > self.threshold[2] || difY < self.threshold[1] || difY > self.threshold[3]) {
+					self.update(e);
 
+					self.state = 'drag';
+				}
+			});
+			on(doc, 'mouseup.draggy touchend.draggy', function (e) {
+				e.preventDefault();
+				self.state = 'idle';
+			});
 		},
 
 		after: function () {
+			off(doc, 'touchmove.draggy mousemove.draggy mouseup.draggy touchend.draggy');
 		}
 	},
 
@@ -194,7 +193,7 @@ proto.state = {
 			on(doc, 'touchend.draggy mouseup.draggy mouseleave.draggy', function (e) {
 				e.preventDefault();
 
-				if (self.currentVelocity > 1) {
+				if (self.speed > 1) {
 					self.state = 'release';
 				}
 
@@ -284,8 +283,8 @@ proto.state = {
 			});
 
 			//calc target point & animate to it
-			this.x += self.currentVelocity * Math.cos(self.angle);
-			this.y += self.currentVelocity * Math.sin(self.angle);
+			this.x += self.speed * Math.cos(self.angle);
+			this.y += self.speed * Math.sin(self.angle);
 
 			//release release after 1ms (animation)
 			this.emit('stop:defer(' + this.release + ')');
@@ -362,15 +361,8 @@ proto.update = function (e) {
 		self.prevMouseY = getClientY(e);
 
 		//if mouse is within the element - take offset normally as rel displacement
-		if (contains(self.element, e.target)) {
-			self.innerOffsetX = -selfClientRect.left + getClientX(e);
-			self.innerOffsetY = -selfClientRect.top + getClientY(e);
-		}
-		//else take offset as centered by pin
-		else {
-			self.innerOffsetX = pinX;
-			self.innerOffsetY = pinY;
-		}
+		self.innerOffsetX = -selfClientRect.left + getClientX(e);
+		self.innerOffsetY = -selfClientRect.top + getClientY(e);
 	}
 	//if no event - suppose pin-centered event
 	else {
@@ -380,16 +372,23 @@ proto.update = function (e) {
 		self.innerOffsetX = pinX;
 		self.innerOffsetY = pinY;
 	}
+
+	//set initial kinetic props
+	self.speed = 0;
+	self.amplitude = 0;
+	self.angle = 0;
+	self.timestamp = +new Date();
+	self.frame = [self.prevX, self.prevY];
 };
 
 
 /**
  * Way of placement:
- * - position (slower but more precise and cross-browser)
- * - translate3d (faster but may cause blurs on linux systems)
+ * - position === false (slower but more precise and cross-browser)
+ * - translate3d === true (faster but may cause blurs on linux systems)
  */
-proto.placingType = {
-	position: function () {
+proto.css3 = {
+	_: function () {
 		this.getCoords = function () {
 			// return [this.element.offsetLeft, this.element.offsetTop];
 			return [parseCSSValue(css(this.element,'left')), parseCSSValue(css(this.element, 'top'))];
@@ -408,7 +407,7 @@ proto.placingType = {
 	},
 
 	//undefined placing is treated as translate3d
-	_: function () {
+	true: function () {
 		this.getCoords  = function () {
 			return getTranslate(this.element) || [0,0];
 		};
@@ -435,28 +434,34 @@ proto.placingType = {
 // dragrelease: undefined
 
 
-/** Track movement */
-function track (target, e) {
-	var params = this.dragparams;
+/**
+ * Track movement
+ *
+ * @param {Event} e An event to track movement
+ */
+proto.track = function (e) {
+	var self = this;
 
 	var now = +new Date;
-	var elapsed = now - params.timestamp;
+	var elapsed = now - self.timestamp;
 
 	//get delta movement since the last track
-	var deltaX = params.prevClientX - params.frame[0];
-	var deltaY = params.prevClientY - params.frame[1];
-	params.frame[0] = params.prevClientX;
-	params.frame[1] = params.prevClientY;
+	var dX = self.prevX - self.frame[0];
+	var dY = self.prevY - self.frame[1];
+	self.frame[0] = self.prevX;
+	self.frame[1] = self.prevY;
 
-	var delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+	var delta = Math.sqrt(dX * dX + dY * dY);
 
 	//get speec (prevent div by zero)
-	var v = this.velocity * delta / (1 + elapsed);
-	params.currentVelocity = 0.6 * v + 0.4 * params.currentVelocity;
+	var v = self.velocity * delta / (1 + elapsed);
+	self.speed = 0.6 * v + 0.4 * self.speed;
 
-	//get angle
-	params.angle = 0.7 * Math.atan2(deltaY, deltaX) + 0.2 * params.angle + 0.1 * Math.atan2(params.frame[0] - params.initClientX, params.frame[1] - params.initClientY);
-}
+	//get angle as .7 of movement, .3 of prev angle
+	self.angle = 0.7 * Math.atan2(dY, dX) + 0.3 * self.angle;
+
+	return self;
+};
 
 
 
@@ -518,7 +523,7 @@ Object.defineProperties(proto, {
 		},
 
 		get: function () {
-			return this._threshold;
+			return this._threshold || [0,0,0,0];
 		}
 	}
 });
@@ -543,14 +548,6 @@ proto.maxVelocity = 100;
  * @todo
  */
 proto.release = false;
-
-
-/**
- * Initial drag ignore area
- *
- * @type {(Array(4)|Array(2)|Function|number)}
- */
-proto.threshold = [ 0, 0, 0, 0 ];
 
 
 /** Autoscroll on reaching the border of the screen */
