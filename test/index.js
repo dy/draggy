@@ -115,6 +115,7 @@ describe("Functionality", function () {
 	});
 
 
+
 	/** Create test case */
 	function createDraggyCase(name, opts) {
 		//create container
@@ -250,29 +251,4 @@ describe("Functionality", function () {
 	function clear() {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 	}
-});
-
-
-
-describe('Special cases', function () {
-	it.skip('Make limits & API available for draggies in content', function () {
-		var div = document.createElement('div');
-		div.style.width = '10px';
-		div.style.height = '10px';
-		div.style.background = 'red';
-		body.appendChild(div);
-
-		var dr = new Draggy(div);
-
-		dr.x = 20;
-		dr.y = 20;
-
-		assert.notEqual(dr.limits.right,0);
-	});
-
-	it.skip('Within=null should not decry any constraint', function () {
-
-	});
-
-
 });
