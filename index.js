@@ -18,6 +18,7 @@ var getTranslate = require('mucss/translate');
 var on = require('emmy/on');
 var off = require('emmy/off');
 var emit = require('emmy/emit');
+var throttle = require('emmy/throttle');
 var Emitter = require('events');
 var getClientX = require('get-client-xy').x;
 var getClientY = require('get-client-xy').y;
@@ -95,9 +96,6 @@ function Draggable(target, options) {
 var proto = Draggable.prototype = Object.create(Emitter.prototype);
 
 
-var proto = Draggable.prototype;
-
-
 /**
  * Draggable behaviour
  * @enum {string}
@@ -107,31 +105,55 @@ proto.state = {
 	//idle
 	_: {
 		before: function () {
+			var self = this;
+
 			//emit drag evts on element
-			emit(this.element, 'idle', null, true);
-			this.emit('idle');
+			emit(self.element, 'idle', null, true);
+			self.emit('idle');
 
 			//bind start drag
-			on(this.element, 'touchstart.draggy mousedown.draggy', function (e) {
+			on(self.element, 'touchstart.draggy mousedown.draggy', function (e) {
 				e.preventDefault();
-
-				var target = e.target;
-				var self = draggableCache.get(target);
-
-				//ignore non-draggable target
-				if (!self) return;
 
 				//update movement params
 				self.update(e);
-
-				//FIXME if drag started outside the element - center by pin
 
 				//go to threshold state
 				self.state = 'threshold';
 			});
 		},
 		after: function () {
-			off(this.element, 'touchstart.draggy mousedown.draggy');
+			var self = this;
+
+			off(self.element, 'touchstart.draggy mousedown.draggy');
+
+			//set up tracking
+			if (self.release) {
+				self._trackingInterval = setInterval(function (e) {
+					var now = +new Date;
+					var elapsed = now - self.timestamp;
+
+					//get delta movement since the last track
+					var dX = self.prevX - self.frame[0];
+					var dY = self.prevY - self.frame[1];
+					self.frame[0] = self.prevX;
+					self.frame[1] = self.prevY;
+
+					var delta = Math.sqrt(dX * dX + dY * dY);
+
+					//get speed as average of prev and current (prevent div by zero)
+					var v = Math.min(self.velocity * delta / (1 + elapsed), self.maxSpeed);
+					self.speed = 0.8 * v + 0.2 * self.speed;
+
+					//get new angle as a last diff
+					//NOTE: vector average isn’t the same as speed scalar average
+					self.angle = Math.atan2(dY, dX);
+
+					self.emit('track');
+
+					return self;
+				}, self.framerate);
+			}
 		}
 	},
 
@@ -140,7 +162,10 @@ proto.state = {
 			var self = this;
 
 			//ignore threshold state, if threshold is none
-			if (isZeroArray(self.threshold)) self.state = 'drag';
+			if (isZeroArray(self.threshold)) {
+				self.state = 'drag';
+				return;
+			}
 
 			//emit drag evts on element
 			emit(this.element, 'threshold', null, true);
@@ -148,8 +173,6 @@ proto.state = {
 
 			//listen to doc movement
 			on(doc, 'touchmove.draggy mousemove.draggy', function (e) {
-				e.preventDefault();
-
 				//compare movement to the threshold
 				var clientX = getClientX(e);
 				var clientY = getClientY(e);
@@ -272,36 +295,39 @@ proto.state = {
 			//unbind drag events
 			off(doc, 'touchend.draggy mouseup.draggy mouseleave.draggy');
 			off(doc, 'touchmove.draggy mousemove.draggy');
+			clearInterval(this._trackingInterval);
 		}
 	},
 
 	release: {
 		before: function () {
+			clearTimeout(self._animTimeout);
+
 			//set proper transition
 			css(this.element, {
-				'transition': this.release + 'ms ease-out transform'
+				'transition': (this.releaseDuration) + 'ms ease-out ' + (this.css3 ? 'transform' : 'position')
 			});
 
 			//calc target point & animate to it
-			this.x += self.speed * Math.cos(self.angle);
-			this.y += self.speed * Math.sin(self.angle);
+			this.move(
+				this.prevX + this.speed * Math.cos(this.angle),
+				this.prevY + this.speed * Math.sin(this.angle)
+			);
 
-			//release release after 1ms (animation)
-			this.emit('stop:defer(' + this.release + ')');
-		},
+			this.speed = 0;
+			this.emit('track');
 
-		//stop movement
-		stop: function  () {
-			this.dragstate('idle');
+			this.state = 'idle';
 		},
 
 		after: function () {
-			css(this.element, {
-				'transition': null
-			});
-
-			//remove planned stopping
-			this.off('stop');
+			var self = this;
+			//remove transition timeout
+			self._animTimeout = setTimeout(function () {
+				css(self.element, {
+					'transition': null
+				});
+			}, self.releaseDuration);
 		}
 	}
 };
@@ -426,51 +452,13 @@ proto.css3 = {
 };
 
 
-
-/** Callbacks */
-// drag: undefined,
-// dragstart: undefined,
-// dragend: undefined,
-// dragrelease: undefined
-
-
-/**
- * Track movement
- *
- * @param {Event} e An event to track movement
- */
-proto.track = function (e) {
-	var self = this;
-
-	var now = +new Date;
-	var elapsed = now - self.timestamp;
-
-	//get delta movement since the last track
-	var dX = self.prevX - self.frame[0];
-	var dY = self.prevY - self.frame[1];
-	self.frame[0] = self.prevX;
-	self.frame[1] = self.prevY;
-
-	var delta = Math.sqrt(dX * dX + dY * dY);
-
-	//get speec (prevent div by zero)
-	var v = self.velocity * delta / (1 + elapsed);
-	self.speed = 0.6 * v + 0.4 * self.speed;
-
-	//get angle as .7 of movement, .3 of prev angle
-	self.angle = 0.7 * Math.atan2(dY, dX) + 0.3 * self.angle;
-
-	return self;
-};
-
-
-
 /**
  * Restricting container
  * @type {Element|object}
  * @default doc.documentElement
  */
 proto.within = doc;
+
 
 
 Object.defineProperties(proto, {
@@ -516,7 +504,7 @@ Object.defineProperties(proto, {
 				this._threshold = val;
 			} else if (isFn(val)) {
 				//custom val funciton
-				this._threshold = val;
+				this._threshold = val();
 			} else {
 				this._threshold = [0,0,0,0];
 			}
@@ -534,13 +522,6 @@ proto.ghost = false;
 
 
 /**
- * How fast to move when released
- */
-proto.velocity = 2000;
-proto.maxVelocity = 100;
-
-
-/**
  * For how long to release movement
  *
  * @type {(number|false)}
@@ -548,6 +529,10 @@ proto.maxVelocity = 100;
  * @todo
  */
 proto.release = false;
+proto.releaseDuration = 500;
+proto.velocity = 1000;
+proto.maxSpeed = 100;
+proto.framerate = 50;
 
 
 /** Autoscroll on reaching the border of the screen */

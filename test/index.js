@@ -33,7 +33,7 @@ describe("Functionality", function () {
 
 	it("release", function () {
 		var a = createDraggyCase("release", {
-			release: 800,
+			release: true,
 			within: 'parent'
 		});
 	});
@@ -142,11 +142,10 @@ describe("Functionality", function () {
 		draggy.on('drag', renderHelpers);
 		draggy.on('dragend', clear);
 		draggy.on('idle', clear);
-		// draggy.on('track', renderDirection);
+		draggy.on('track', renderDirection);
 
 		return drEl;
 	}
-
 
 	//canvas painters
 	function renderHelpers() {
@@ -241,10 +240,10 @@ describe("Functionality", function () {
 	}
 
 	function renderDirection (e) {
-		// var el = e.target;
-		// var $arr = el.querySelector('.draggy-arrow');
-		// $arr.style.transform = 'rotate(' + el.dragparams.angle + 'rad)';
-		// $arr.style.width = el.dragparams.velocity * 10 + 'px';
+		var el = this.element;
+		var arrEl = el.querySelector('.draggy-arrow');
+		arrEl.style.transform = 'rotate(' + this.angle + 'rad)';
+		arrEl.style.width = this.speed * 10 + 'px';
 	}
 
 

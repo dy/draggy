@@ -38,7 +38,7 @@ draggy.on('drag', function () {
 
 | Parameter | Default | Description |
 |---|:---:|---|
-| `axis` | `undefined` | Restrict movement by axis: `'x'`, `'y'` or `null`  |
+| `axis` | `undefined` | Restrict movement by axis: `'x'`, `'y'` or `null`. |
 | `ghost` | `false` | Drag element’s clone instead. |
 | `hideCursor` | `false` | Hide cursor while drag. Useful for color pickers. |
 | `pin` | `[0,0, selfWidth, selfHeight]` | An area within draggable element which is surely resides within movement limits. Useful if you need draggable element to be restricted not by it’s own shape, but by some inner shape. |
@@ -48,7 +48,7 @@ draggy.on('drag', function () {
 | `sniper` | `true` | Slow down movement by pressing Ctrl/Cmd. |
 | `sniperKey` | `[a, b]` | Key codes to use to slow down drag. |
 | `sniperSpeed` | `0.15` | Slowing down ratio for the sniper mode. |
-| `threshold` | `10` | A movement threshold required to start drag. |
+| `threshold` | `0` | A movement threshold required to start drag - whether array, number or function. |
 | `velocity` | `1000` | Velocity on release. |
 | `within` | `document` | Restrict movement within the container. Pass `'parent'` to take parent node. |
 
