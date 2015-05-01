@@ -4,8 +4,6 @@
  * @module draggy
  */
 
-//TODO: make within/pin/others a function
-//TODO: ignore multiple elements drag
 
 //work with css
 var css = require('mucss/css');
@@ -18,7 +16,6 @@ var getTranslate = require('mucss/translate');
 var on = require('emmy/on');
 var off = require('emmy/off');
 var emit = require('emmy/emit');
-var throttle = require('emmy/throttle');
 var Emitter = require('events');
 var getClientX = require('get-client-xy').x;
 var getClientY = require('get-client-xy').y;
@@ -27,14 +24,10 @@ var getClientY = require('get-client-xy').y;
 var isArray = require('is-array');
 var isNumber = require('is-number');
 var isFn = require('is-function');
-var contains = require('contains');
 var defineState = require('define-state');
 var extend = require('xtend/mutable');
-
-//math helpers - round to a precision, limit by min and max
 var round = require('mumath/round');
 var between = require('mumath/between');
-var isBetween = require('mumath/is-between');
 
 
 var win = window, doc = document, root = doc.documentElement;
@@ -130,7 +123,7 @@ proto.state = {
 			//set up tracking
 			if (self.release) {
 				self._trackingInterval = setInterval(function (e) {
-					var now = +new Date;
+					var now = Date.now();
 					var elapsed = now - self.timestamp;
 
 					//get delta movement since the last track
@@ -168,7 +161,6 @@ proto.state = {
 			}
 
 			//emit drag evts on element
-			emit(this.element, 'threshold', null, true);
 			this.emit('threshold');
 
 			//listen to doc movement
@@ -202,15 +194,14 @@ proto.state = {
 
 			//reduce dragging clutter
 			selection.disable(root);
-			if (this.hideCursor) css(root, {"cursor": "none"});
 
 			//emit drag evts on element
+			this.emit('dragstart');
 			emit(this.element, 'dragstart', null, true);
-			emit(this.element, 'drag', null, true);
 
 			//emit drag events on self
-			this.emit('dragstart');
 			this.emit('drag');
+			emit(this.element, 'drag', null, true);
 
 			//stop drag on leave
 			on(doc, 'touchend.draggy mouseup.draggy mouseleave.draggy', function (e) {
@@ -238,10 +229,16 @@ proto.state = {
 				var mouseAbsX = mouseX + win.pageXOffset,
 					mouseAbsY = mouseY + win.pageYOffset;
 
+				//calc sniper offset, if any
+				if (e.ctrlKey || e.metaKey) {
+					self.sniperOffsetX += diffMouseX * self.sniperSlowdown;
+					self.sniperOffsetY += diffMouseY * self.sniperSlowdown;
+				}
+
 				//calc movement x and y
 				//take absolute placing as it is the only reliable way (2x proved)
-				var x = (mouseAbsX - self.initOffsetX) - self.innerOffsetX,
-					y = (mouseAbsY - self.initOffsetY) - self.innerOffsetY;
+				var x = (mouseAbsX - self.initOffsetX) - self.innerOffsetX - self.sniperOffsetX,
+					y = (mouseAbsY - self.initOffsetY) - self.innerOffsetY - self.sniperOffsetY;
 
 				//move element
 				self.move(x, y);
@@ -251,19 +248,18 @@ proto.state = {
 				self.prevMouseY = mouseY;
 
 				//emit drag
+				self.emit('drag');
 				emit(self.element, 'drag', null, true);
-				emit(self, 'drag');
 			});
 		},
 
 		after: function () {
 			//enable document interactivity
 			selection.enable(root);
-			if (this.hideCursor) css(root, {"cursor": null});
 
 			//emit dragend on element, this
-			emit(this.element, 'dragend', null, true);
 			this.emit('dragend');
+			emit(this.element, 'dragend', null, true);
 
 			//unbind drag events
 			off(doc, 'touchend.draggy mouseup.draggy mouseleave.draggy');
@@ -379,6 +375,10 @@ proto.update = function (e) {
 	self.angle = 0;
 	self.timestamp = +new Date();
 	self.frame = [self.prevX, self.prevY];
+
+	//set sniper offset
+	self.sniperOffsetX = 0;
+	self.sniperOffsetY = 0;
 };
 
 
@@ -491,9 +491,6 @@ Object.defineProperties(proto, {
 });
 
 
-/** Clone object for dragging */
-proto.ghost = false;
-
 
 /**
  * For how long to release movement
@@ -509,10 +506,6 @@ proto.maxSpeed = 100;
 proto.framerate = 50;
 
 
-/** Autoscroll on reaching the border of the screen */
-proto.autoscroll = false;
-
-
 /** To what extent round position */
 proto.precision = 1;
 
@@ -521,8 +514,8 @@ proto.precision = 1;
 proto.sniper = true;
 
 
-/** How much is slower sniper drag */
-proto.sniperSpeed = .15;
+/** How much to slow sniper drag */
+proto.sniperSlowdown = .75;
 
 
 /**
@@ -587,10 +580,6 @@ proto.repeat = {
 		}
 	}
 };
-
-
-/** Hide cursor on drag (reduce clutter) */
-proto.hideCursor = false;
 
 
 /** Check whether arr is filled with zeros */

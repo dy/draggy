@@ -9,7 +9,7 @@
 </h1>
 
 
-Simple draggable. [Tests](TODO).
+Simple draggable behaviour for elements. [Tests](TODO).
 
 
 ## Use
@@ -38,19 +38,13 @@ draggy.on('drag', function () {
 
 | Parameter | Default | Description |
 |---|:---:|---|
-| `axis` | `undefined` | Restrict movement by axis: `'x'`, `'y'` or `null`. |
-| `ghost` | `false` | Drag element’s clone instead. |
-| `hideCursor` | `false` | Hide cursor while drag. Useful for color pickers. |
+| `axis` | `null` | Restrict movement by axis: `'x'`, `'y'` or `null`. |
 | `pin` | `[0,0, selfWidth, selfHeight]` | An area within draggable element which is surely resides within movement limits. Useful if you need draggable element to be restricted not by it’s own shape, but by some inner shape. |
 | `precision` | `1` | Round position to that extent, in pixels. |
 | `css3` | `true` | Use `position` or `translate3d` to place element. The first is more precise and reliable, the second is faster. |
 | `release` | `false` | Continue movement when user releases drag. |
-| `releaseDuration` | `500` | Duration of release. |
 | `sniper` | `true` | Slow down movement by pressing Ctrl/Cmd. |
-| `sniperKey` | `[a, b]` | Key codes to use to slow down drag. |
-| `sniperSpeed` | `0.15` | Slowing down ratio for the sniper mode. |
 | `threshold` | `0` | A movement threshold required to start drag - whether array, number or function. |
-| `velocity` | `1000` | Velocity on release. |
 | `within` | `document` | Restrict movement within the container. Pass `'parent'` to take parent node. |
 
 
@@ -58,11 +52,12 @@ draggy.on('drag', function () {
 
 | Name | Description |
 |---|---|
-| `dragstart` | Drag start |
-| `threshold` | Enter threshold mode |
-| `drag` | Drag iteration |
-| `release` | User released drag |
-| `dragend` | Drag finished, called after release (stopped) |
+| `dragstart` | Drag started. Called both on element/controller. |
+| `threshold` | Entered threshold mode. Called on controller. |
+| `drag` | Drag iteration. Called both on element/controller. |
+| `track` | Track movement. Called on controller. |
+| `release` | User released drag. Called on controller. |
+| `dragend` | Drag has completely finished. Called both on element/controller. |
 
 
 ## API
@@ -73,9 +68,15 @@ draggy.on('drag', function () {
 | `Draggy.prototype.getCoords()` | Get current raw translation coordinates. |
 | `Draggy.prototype.setCoords(x, y)` | Set current raw translation coordinates. `0,0` - initial position with no drag. |
 | `Draggy.prototype.move(x, y)` | Move to a new position, taking into account axis. |
-| `Draggy.prototype.state` | Current drag state: `'idle'`, `'threshold'`, `'drag'`, `'release'` |
-| `Draggy.prototype.startDrag(event?)` | Start drag programmatically at the point given in the `event`. |
+| `Draggy.prototype.state` | Current drag state: `'idle'`, `'threshold'`, `'drag'`, `'release'`.  |
 | `Draggy.prototype.update(event?)` | Update movement limits. `event` is optional. |
+
+
+
+## What draggy is not
+
+* It doesn’t do ghost move, as it is not draggable behaviour and can be implemented externally.
+* It doesn’t do mouse hiding on drag, as it is implementable externally via callbacks.
 
 
 [![NPM](https://nodei.co/npm/draggy.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/draggy/)
