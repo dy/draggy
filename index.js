@@ -234,41 +234,14 @@ proto.state = {
 				var diffMouseX = mouseX - self.prevMouseX,
 					diffMouseY = mouseY - self.prevMouseY;
 
-				//get real movement diff
-				var diffX = diffMouseX;
-				var diffY = diffMouseY;
-
-				//ignore diff if mouse is outside the movable area
-				var mouseAbsX = mouseX + win.pageXOffset - self.innerOffsetX;
-				var mouseAbsY = mouseY + win.pageYOffset - self.innerOffsetY;
+				//absolute mouse coordinate
+				var mouseAbsX = mouseX + win.pageXOffset,
+					mouseAbsY = mouseY + win.pageYOffset;
 
 				//calc movement x and y
-				var x,y;
-
-				//border conditions needs to be absolutely overtaken to avoid displacement of inner offset
-				//if mouse is too left
-				if (mouseAbsX < self.withinOffsets.left - self.pin[0]) {
-					x = self.limits.left;
-				}
-				//mouse is too right
-				else if (mouseAbsX > self.withinOffsets.right - self.pin[2]) {
-					x = self.limits.right;
-				}
-				else {
-					x = self.prevX + diffX;
-				}
-
-				//if mouse is too top
-				if (mouseAbsY < self.withinOffsets.top - self.pin[1]) {
-					y = self.limits.top;
-				}
-				//mouse is too bottom
-				else if (mouseAbsY > self.withinOffsets.bottom - self.pin[3]) {
-					y = self.limits.bottom;
-				}
-				else {
-					y = self.prevY + diffY;
-				}
+				//take absolute placing as it is the only reliable way (2x proved)
+				var x = (mouseAbsX - self.initOffsetX) - self.innerOffsetX,
+					y = (mouseAbsY - self.initOffsetY) - self.innerOffsetY;
 
 				//move element
 				self.move(x, y);
@@ -369,8 +342,8 @@ proto.update = function (e) {
 	self.limits = {
 		left: withinOffsets.left - self.initOffsetX - self.pin[0] - dW,
 		top: withinOffsets.top - self.initOffsetY - self.pin[1] - dH,
-		right: pinW > withinOffsets.width ? 0 : (withinOffsets.right - self.initOffsetX - pinW),
-		bottom: pinH > withinOffsets.height ? 0 : (withinOffsets.bottom - self.initOffsetY - pinH)
+		right: pinW > withinOffsets.width ? 0 : (withinOffsets.right - self.initOffsetX - self.pin[2]),
+		bottom: pinH > withinOffsets.height ? 0 : (withinOffsets.bottom - self.initOffsetY - self.pin[3])
 	};
 
 	//preset inner offsets
