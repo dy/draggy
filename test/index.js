@@ -77,9 +77,10 @@ describe("Functionality", function () {
 		});
 	});
 
-	it("inner elements (carousel drag)", function () {
+	it("carousel", function () {
 		var d = createDraggyCase("carousel", {
-			axis: 'x'
+			axis: 'x',
+			within: 'parent'
 		});
 		d.classList.add('carousel');
 		d.parentNode.classList.add('carousel-case');

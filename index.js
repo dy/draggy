@@ -340,9 +340,6 @@ proto.state = {
 proto.update = function (e) {
 	var self = this;
 
-	//set initial pin to element’s size
-	if (!self.pin) self.pin = [0,0, self.element.offsetWidth, self.element.offsetHeight];
-
 	//initial translation offsets
 	var initXY = self.getCoords();
 
@@ -364,12 +361,16 @@ proto.update = function (e) {
 	var withinOffsets = offsets(self.within);
 	self.withinOffsets = withinOffsets;
 
-	//calculate movement limits
+	//calculate movement limits - pin width might be wider than constraints
+	var pinW = self.pin[2] - self.pin[0];
+	var pinH = self.pin[3] - self.pin[1];
+	var dW = Math.max(pinW - withinOffsets.width, 0);
+	var dH = Math.max(pinH - withinOffsets.height, 0);
 	self.limits = {
-		left: withinOffsets.left - self.initOffsetX - self.pin[0],
-		top: withinOffsets.top - self.initOffsetY - self.pin[1],
-		right: withinOffsets.right - self.initOffsetX - self.pin[2],
-		bottom: withinOffsets.bottom - self.initOffsetY - self.pin[3]
+		left: withinOffsets.left - self.initOffsetX - self.pin[0] - dW,
+		top: withinOffsets.top - self.initOffsetY - self.pin[1] - dH,
+		right: pinW > withinOffsets.width ? 0 : (withinOffsets.right - self.initOffsetX - pinW),
+		bottom: pinH > withinOffsets.height ? 0 : (withinOffsets.bottom - self.initOffsetY - pinH)
 	};
 
 	//preset inner offsets
@@ -487,7 +488,7 @@ Object.defineProperties(proto, {
 		},
 
 		get: function () {
-			return this._pin;
+			return this._pin || [0,0, this.offsets.width, this.offsets.height];
 		}
 	},
 

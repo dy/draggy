@@ -45,6 +45,7 @@ draggy.on('drag', function () {
 | `precision` | `1` | Round position to that extent, in pixels. |
 | `css3` | `true` | Use `position` or `translate3d` to place element. The first is more precise and reliable, the second is faster. |
 | `release` | `false` | Continue movement when user releases drag. |
+| `releaseDuration` | `500` | Duration of release. |
 | `sniper` | `true` | Slow down movement by pressing Ctrl/Cmd. |
 | `sniperKey` | `[a, b]` | Key codes to use to slow down drag. |
 | `sniperSpeed` | `0.15` | Slowing down ratio for the sniper mode. |
