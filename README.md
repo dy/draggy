@@ -43,6 +43,7 @@ draggy.on('drag', function () {
 | `precision` | `1` | Round position to that extent, in pixels. |
 | `css3` | `true` | Use `position` or `translate3d` to place element. The first is more precise and reliable, the second is faster. |
 | `release` | `false` | Continue movement when user releases drag. |
+| `repeat` | `false` | Cycle movement by one of axis: `'x'`, `'y'` or `'both'`. |
 | `sniper` | `true` | Slow down movement by pressing Ctrl/Cmd. |
 | `threshold` | `0` | A movement threshold required to start drag - whether array, number or function. |
 | `within` | `document` | Restrict movement within the container. Pass `'parent'` to take parent node. |
@@ -65,9 +66,7 @@ draggy.on('drag', function () {
 | Name | Description |
 |---|---|
 | `Draggy.cache` | WeakMap containing draggy instances for elements.  |
-| `Draggy.prototype.getCoords()` | Get current raw translation coordinates. |
-| `Draggy.prototype.setCoords(x, y)` | Set current raw translation coordinates. `0,0` - initial position with no drag. |
-| `Draggy.prototype.move(x, y)` | Move to a new position, taking into account axis. |
+| `Draggy.prototype.move(x, y)` | Move to a new position, taking into account axis and limits. You can redefine this method to implement custom kinds of movement restrictions, like circular movement. |
 | `Draggy.prototype.state` | Current drag state: `'idle'`, `'threshold'`, `'drag'`, `'release'`.  |
 | `Draggy.prototype.update(event?)` | Update movement limits. `event` is optional. |
 
@@ -77,6 +76,9 @@ draggy.on('drag', function () {
 
 * It doesn’t do ghost move, as it is not draggable behaviour and can be implemented externally.
 * It doesn’t do mouse hiding on drag, as it is implementable externally via callbacks.
+* It doesn’t init itself automatically on elements as it is due to user to decide when to create/init draggable elements.
+* It doesn’t polyfill native draggable, as it targets to complete simple task of visual placement of element.
+
 
 
 [![NPM](https://nodei.co/npm/draggy.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/draggy/)

@@ -515,7 +515,7 @@ proto.sniper = true;
 
 
 /** How much to slow sniper drag */
-proto.sniperSlowdown = .75;
+proto.sniperSlowdown = .85;
 
 
 /**
@@ -527,59 +527,70 @@ proto.sniperSlowdown = .75;
 proto.axis = {
 	_: function () {
 		this.move = function (x, y) {
-			x = between(x, this.limits.left, this.limits.right);
-			y = between(y, this.limits.top, this.limits.bottom);
+			var limits = this.limits;
+
+			if (this.repeat) {
+				var w = (limits.right - limits.left);
+				var h = (limits.bottom - limits.top);
+				var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0];
+				var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1];
+				if (this.repeat === 'x') {
+					x = ((x - oX) % w) + oX;
+					if (x < oX) x += w;
+				}
+				else if (this.repeat === 'y') {
+					y = ((y - oY) % h) + oY;
+					if (y < oY) y += h;
+				}
+				else {
+					x = ((x - oX) % w) + oX;
+					y = ((y - oY) % h) + oY;
+					if (x < oX) x += w;
+					if (y < oY) y += h;
+				}
+			}
+
+			x = between(x, limits.left, limits.right);
+			y = between(y, limits.top, limits.bottom);
+
 			this.setCoords(x, y);
 		};
 	},
 	x: function () {
 		this.move = function (x, y) {
-			x = between(x, this.limits.left, this.limits.right);
+			var limits = this.limits;
+
+			if (this.repeat) {
+				var w = (limits.right - limits.left);
+				var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0];
+				x = ((x - oX) % w) + oX;
+				if (x < oX) x += w;
+			}
+
+			x = between(x, limits.left, limits.right);
 			this.setCoords(x, this.prevY);
 		};
 	},
 	y: function () {
 		this.move = function (x, y) {
-			y = between(y, this.limits.top, this.limits.bottom);
+			var limits = this.limits;
+
+			if (this.repeat) {
+				var h = (limits.bottom - limits.top);
+				var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1];
+				y = ((y - oY) % h) + oY;
+				if (y < oY) y += h;
+			}
+
+			y = between(y, limits.top, limits.bottom);
 			this.setCoords(this.prevX, y);
 		};
 	}
 };
 
 
-/**
- * Repeat position by one of axis
- * @enum {string}
- * @default undefined
- */
-proto.repeat = {
-	undefined: null,
-	both: null,
-	x: null,
-	y: null,
-	_: function () {
-		//TODO
-		//vector passed
-		if (this.repeat instanceof Array) {
-			if (this.repeat.length) {
-				if (this.repeat[0] && this.repeat[1])
-					return "both";
-				else if (this.repeat[0])
-					return "x";
-				else if (this.repeat[1])
-					return "y";
-			}
-
-		//just repeat any possible way
-		} else if (this.repeat === true) {
-			return this.axis
-
-		//unrecognized value passed
-		} else {
-			return undefined;
-		}
-	}
-};
+/** Repeat movement by one of axises */
+proto.repeat = false;
 
 
 /** Check whether arr is filled with zeros */

@@ -53,6 +53,14 @@ describe("Functionality", function () {
 		});
 	});
 
+	it("repeat", function () {
+		var a = createDraggyCase("repeat", {
+			repeat: true,
+			within: 'parent',
+			pin: [10,20,30,40]
+		});
+	});
+
 	it("x", function () {
 		createDraggyCase("x", {
 			axis: 'x'
@@ -62,18 +70,6 @@ describe("Functionality", function () {
 	it("y", function () {
 		createDraggyCase("y", {
 			axis: 'y'
-		});
-	});
-
-	it("restrict by borders", function () {
-		var a = createDraggyCase("borders", {
-			within: 'parent'
-		});
-	});
-
-	it("custom movement function", function () {
-		var a = createDraggyCase("custom movement", {
-			within: 'parent'
 		});
 	});
 
@@ -90,13 +86,12 @@ describe("Functionality", function () {
 
 	});
 
-	it.skip("circular", function () {
-		// createDraggyCase("circular")
+	it.skip("grid", function () {
+
 	});
 
-
-	it.skip("ghost", function () {
-
+	it.skip("circular", function () {
+		// createDraggyCase("circular")
 	});
 
 	it.skip("drop areas", function () {
