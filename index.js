@@ -4,6 +4,9 @@
  * @module draggy
  */
 
+//TODO: aria, grabbed prop & kbd
+//TODO: sniper mode kbd move
+
 
 //work with css
 var css = require('mucss/css');
@@ -28,6 +31,7 @@ var defineState = require('define-state');
 var extend = require('xtend/mutable');
 var round = require('mumath/round');
 var between = require('mumath/between');
+var loop = require('mumath/loop');
 
 
 var win = window, doc = document, root = doc.documentElement;
@@ -535,23 +539,21 @@ proto.axis = {
 				var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0];
 				var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1];
 				if (this.repeat === 'x') {
-					x = ((x - oX) % w) + oX;
-					if (x < oX) x += w;
+					x = loop(x - oX, w) + oX;
 				}
 				else if (this.repeat === 'y') {
-					y = ((y - oY) % h) + oY;
-					if (y < oY) y += h;
+					y = loop(y - oY, h) + oY;
 				}
 				else {
-					x = ((x - oX) % w) + oX;
-					y = ((y - oY) % h) + oY;
-					if (x < oX) x += w;
-					if (y < oY) y += h;
+					x = loop(x - oX, w) + oX;
+					y = loop(y - oY, h) + oY;
 				}
 			}
 
-			x = between(x, limits.left, limits.right);
-			y = between(y, limits.top, limits.bottom);
+			else {
+				x = between(x, limits.left, limits.right);
+				y = between(y, limits.top, limits.bottom);
+			}
 
 			this.setCoords(x, y);
 		};

@@ -31,7 +31,7 @@
     "is-function": "^1.0.1",
     "is-number": "^1.1.2",
     "mucss": "^0.6.0",
-    "mumath": ">=0.x"
+    "mumath": "^1.0.0"
   },
   "devDependencies": {
     "mocha": "*",
