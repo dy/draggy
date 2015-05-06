@@ -68,6 +68,7 @@ draggy.on('drag', function () {
 | `Draggy.cache` | WeakMap containing draggy instances for elements.  |
 | `Draggy.prototype.move(x, y)` | Move to a new position, taking into account axis and limits. You can redefine this method to implement custom kinds of movement restrictions, like circular movement. |
 | `Draggy.prototype.state` | Current drag state: `'idle'`, `'threshold'`, `'drag'`, `'release'`.  |
+| `Draggy.prototype.isAnimated` | Enter animation mode, automatically offed after `releaseDuration` ms. Any movement in that mode is going to be animated. |
 | `Draggy.prototype.update(event?)` | Update movement limits. `event` is optional. |
 
 

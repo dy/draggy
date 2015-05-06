@@ -4,9 +4,6 @@
  * @module draggy
  */
 
-//TODO: aria, grabbed prop & kbd
-//TODO: sniper mode kbd move
-
 
 //work with css
 var css = require('mucss/css');
@@ -301,12 +298,15 @@ proto.isAnimated = {
 		before: function () {
 			var self = this;
 
-			clearTimeout(self._animateTimeout);
-
-			//set proper transition
-			css(self.element, {
-				'transition': (self.releaseDuration) + 'ms ease-out ' + (self.css3 ? 'transform' : 'position')
-			});
+			if (self._animateTimeout) {
+				clearTimeout(self._animateTimeout);
+				self._animateTimeout = null;
+			} else {
+				//set proper transition
+				css(self.element, {
+					'transition': (self.releaseDuration) + 'ms ease-out ' + (self.css3 ? 'transform' : 'position')
+				});
+			}
 
 			//plan leaving anim mode
 			self._animateTimeout = setTimeout(function () {
