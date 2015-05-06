@@ -81,6 +81,9 @@ function Draggable(target, options) {
 	defineState(this, 'axis', this.axis);
 	this.axis = null;
 
+	//define anim mode
+	defineState(this, 'isAnimated', this.isAnimated);
+
 	//take over options
 	extend(this, options);
 
@@ -274,12 +277,8 @@ proto.state = {
 
 	release: {
 		before: function () {
-			clearTimeout(self._animTimeout);
-
-			//set proper transition
-			css(this.element, {
-				'transition': (this.releaseDuration) + 'ms ease-out ' + (this.css3 ? 'transform' : 'position')
-			});
+			//enter animation mode
+			this.isAnimated = true;
 
 			//calc target point & animate to it
 			this.move(
@@ -291,16 +290,33 @@ proto.state = {
 			this.emit('track');
 
 			this.state = 'idle';
-		},
+		}
+	}
+};
 
-		after: function () {
+
+/** Animation mode, automatically offed once onned */
+proto.isAnimated = {
+	true: {
+		before: function () {
 			var self = this;
-			//remove transition timeout
-			self._animTimeout = setTimeout(function () {
-				css(self.element, {
-					'transition': null
-				});
+
+			clearTimeout(self._animateTimeout);
+
+			//set proper transition
+			css(self.element, {
+				'transition': (self.releaseDuration) + 'ms ease-out ' + (self.css3 ? 'transform' : 'position')
+			});
+
+			//plan leaving anim mode
+			self._animateTimeout = setTimeout(function () {
+				self.isAnimated = false;
 			}, self.releaseDuration);
+		},
+		after: function () {
+			css(this.element, {
+				'transition': null
+			});
 		}
 	}
 };
