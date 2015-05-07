@@ -612,11 +612,11 @@ proto.axis = {
 			if (this.repeat) {
 				var w = (limits.right - limits.left);
 				var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0];
-				x = ((x - oX) % w) + oX;
-				if (x < oX) x += w;
+				x = loop(x - oX, w) + oX;
+			} else {
+				x = between(x, limits.left, limits.right);
 			}
 
-			x = between(x, limits.left, limits.right);
 			this.setCoords(x, this.prevY);
 		};
 	},
@@ -627,11 +627,11 @@ proto.axis = {
 			if (this.repeat) {
 				var h = (limits.bottom - limits.top);
 				var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1];
-				y = ((y - oY) % h) + oY;
-				if (y < oY) y += h;
+				y = loop(y - oY, h) + oY;
+			} else {
+				y = between(y, limits.top, limits.bottom);
 			}
 
-			y = between(y, limits.top, limits.bottom);
 			this.setCoords(this.prevX, y);
 		};
 	}
