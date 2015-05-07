@@ -29,6 +29,7 @@ var extend = require('xtend/mutable');
 var round = require('mumath/round');
 var between = require('mumath/between');
 var loop = require('mumath/loop');
+var getUid = require('get-uid');
 
 
 var win = window, doc = document, root = doc.documentElement;
@@ -48,6 +49,9 @@ var win = window, doc = document, root = doc.documentElement;
 var draggableCache = Draggable.cache = new WeakMap;
 
 
+/** Current number of touches, if any */
+var touches = 0;
+
 
 /**
  * Make an element draggable.
@@ -62,30 +66,37 @@ var draggableCache = Draggable.cache = new WeakMap;
 function Draggable(target, options) {
 	if (!(this instanceof Draggable)) return new Draggable(target, options);
 
+	var self = this;
+
+	//get unique id for instance
+	//needed to track event binders
+	self._id = getUid();
+	self._ns = '.draggy_' + self._id;
+
 	//save element passed
-	this.element = target;
-	draggableCache.set(target, this);
+	self.element = target;
+	draggableCache.set(target, self);
 
 	//define mode of drag
-	defineState(this, 'css3', this.css3);
-	this.css3 = true;
+	defineState(self, 'css3', self.css3);
+	self.css3 = true;
 
 	//define state behaviour
-	defineState(this, 'state', this.state);
-	this.state = 'idle';
+	defineState(self, 'state', self.state);
+	self.state = 'idle';
 
 	//define axis behaviour
-	defineState(this, 'axis', this.axis);
-	this.axis = null;
+	defineState(self, 'axis', self.axis);
+	self.axis = null;
 
 	//define anim mode
-	defineState(this, 'isAnimated', this.isAnimated);
+	defineState(self, 'isAnimated', self.isAnimated);
 
 	//take over options
-	extend(this, options);
+	extend(self, options);
 
 	//try to calc out basic limits
-	this.update();
+	self.update();
 }
 
 
@@ -109,8 +120,11 @@ proto.state = {
 			self.emit('idle');
 
 			//bind start drag
-			on(self.element, 'touchstart.draggy mousedown.draggy', function (e) {
+			on(self.element, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
 				e.preventDefault();
+
+				//multitouch has multiple starts
+				if (e.targetTouches) touches++;
 
 				//update movement params
 				self.update(e);
@@ -122,7 +136,7 @@ proto.state = {
 		after: function () {
 			var self = this;
 
-			off(self.element, 'touchstart.draggy mousedown.draggy');
+			off(self.element, 'touchstart' + self._ns + ' mousedown' + self._ns);
 
 			//set up tracking
 			if (self.release) {
@@ -165,15 +179,15 @@ proto.state = {
 			}
 
 			//emit drag evts on element
-			this.emit('threshold');
+			self.emit('threshold');
 
 			//listen to doc movement
-			on(doc, 'touchmove.draggy mousemove.draggy', function (e) {
+			on(doc, 'touchmove' + self._ns + ' mousemove' + self._ns, function (e) {
 				e.preventDefault();
 
 				//compare movement to the threshold
-				var clientX = getClientX(e);
-				var clientY = getClientY(e);
+				var clientX = getClientX(e, self.touchIdx);
+				var clientY = getClientY(e, self.touchIdx);
 				var difX = self.prevMouseX - clientX;
 				var difY = self.prevMouseY - clientY;
 
@@ -183,14 +197,18 @@ proto.state = {
 					self.state = 'drag';
 				}
 			});
-			on(doc, 'mouseup.draggy touchend.draggy', function (e) {
+			on(doc, 'mouseup' + self._ns + ' touchend' + self._ns + '', function (e) {
 				e.preventDefault();
+
+				//forget touches
+				touches--;
+
 				self.state = 'idle';
 			});
 		},
 
 		after: function () {
-			off(doc, 'touchmove.draggy mousemove.draggy mouseup.draggy touchend.draggy');
+			off(doc, 'touchmove' + self._ns + ' mousemove' + self._ns + ' mouseup' + self._ns + ' touchend' + self._ns);
 		}
 	},
 
@@ -202,17 +220,21 @@ proto.state = {
 			selection.disable(root);
 
 			//emit drag evts on element
-			this.emit('dragstart');
-			emit(this.element, 'dragstart', null, true);
+			self.emit('dragstart');
+			emit(self.element, 'dragstart', null, true);
 
 			//emit drag events on self
-			this.emit('drag');
-			emit(this.element, 'drag', null, true);
+			self.emit('drag');
+			emit(self.element, 'drag', null, true);
 
 			//stop drag on leave
-			on(doc, 'touchend.draggy mouseup.draggy mouseleave.draggy', function (e) {
+			on(doc, 'touchend' + self._ns + ' mouseup' + self._ns + ' mouseleave' + self._ns, function (e) {
 				e.preventDefault();
 
+				//forget touches - dragend is called once
+				touches--;
+
+				//manage release movement
 				if (self.speed > 1) {
 					self.state = 'release';
 				}
@@ -223,11 +245,11 @@ proto.state = {
 			});
 
 			//move via transform
-			on(doc, 'touchmove.draggy mousemove.draggy', function (e) {
+			on(doc, 'touchmove' + self._ns + ' mousemove' + self._ns, function (e) {
 				e.preventDefault();
 
-				var mouseX = getClientX(e),
-					mouseY = getClientY(e);
+				var mouseX = getClientX(e, self.touchIdx),
+					mouseY = getClientY(e, self.touchIdx);
 
 				//calc mouse movement diff
 				var diffMouseX = mouseX - self.prevMouseX,
@@ -262,35 +284,39 @@ proto.state = {
 		},
 
 		after: function () {
+			var self = this;
+
 			//enable document interactivity
 			selection.enable(root);
 
 			//emit dragend on element, this
-			this.emit('dragend');
-			emit(this.element, 'dragend', null, true);
+			self.emit('dragend');
+			emit(self.element, 'dragend', null, true);
 
 			//unbind drag events
-			off(doc, 'touchend.draggy mouseup.draggy mouseleave.draggy');
-			off(doc, 'touchmove.draggy mousemove.draggy');
-			clearInterval(this._trackingInterval);
+			off(doc, 'touchend' + self._ns + ' mouseup' + self._ns + ' mouseleave' + self._ns);
+			off(doc, 'touchmove' + self._ns + ' mousemove' + self._ns);
+			clearInterval(self._trackingInterval);
 		}
 	},
 
 	release: {
 		before: function () {
+			var self = this;
+
 			//enter animation mode
-			this.isAnimated = true;
+			self.isAnimated = true;
 
 			//calc target point & animate to it
-			this.move(
-				this.prevX + this.speed * Math.cos(this.angle),
-				this.prevY + this.speed * Math.sin(this.angle)
+			self.move(
+				self.prevX + self.speed * Math.cos(self.angle),
+				self.prevY + self.speed * Math.sin(self.angle)
 			);
 
-			this.speed = 0;
-			this.emit('track');
+			self.speed = 0;
+			self.emit('track');
 
-			this.state = 'idle';
+			self.state = 'idle';
 		}
 	}
 };
@@ -330,6 +356,9 @@ proto.isAnimated = {
  */
 proto.update = function (e) {
 	var self = this;
+
+	//assign the last touch, if any
+	self.touchIdx = touches - 1;
 
 	//initial translation offsets
 	var initXY = self.getCoords();
@@ -375,12 +404,12 @@ proto.update = function (e) {
 	//if event passed - update acc to event
 	if (e) {
 		//take last mouse position from the event
-		self.prevMouseX = getClientX(e);
-		self.prevMouseY = getClientY(e);
+		self.prevMouseX = getClientX(e, self.touchIdx);
+		self.prevMouseY = getClientY(e, self.touchIdx);
 
 		//if mouse is within the element - take offset normally as rel displacement
-		self.innerOffsetX = -selfClientRect.left + getClientX(e);
-		self.innerOffsetY = -selfClientRect.top + getClientY(e);
+		self.innerOffsetX = -selfClientRect.left + getClientX(e, self.touchIdx);
+		self.innerOffsetY = -selfClientRect.top + getClientY(e, self.touchIdx);
 	}
 	//if no event - suppose pin-centered event
 	else {
@@ -611,6 +640,10 @@ proto.axis = {
 
 /** Repeat movement by one of axises */
 proto.repeat = false;
+
+
+/** Which index to use in handling touch events */
+proto.touchIdx = 0;
 
 
 /** Check whether arr is filled with zeros */

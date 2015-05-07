@@ -82,6 +82,24 @@ describe("Functionality", function () {
 		d.parentNode.classList.add('carousel-case');
 	});
 
+	it("multitouch", function () {
+		var d = createDraggyCase("multi", {
+			within: 'parent'
+		});
+		d.parentNode.classList.add('multitouch');
+
+		//create second mover
+		var drEl = document.createElement("div");
+		drEl.innerHTML = 'touch';
+		drEl.className = 'draggy';
+		d.parentNode.appendChild(drEl);
+
+		var draggy = new Draggy(drEl, {
+			within: d.parentNode
+		});
+		css(drEl, 'top', 100);
+	});
+
 	it.skip("handle", function () {
 
 	});
