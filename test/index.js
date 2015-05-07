@@ -84,7 +84,8 @@ describe("Functionality", function () {
 
 	it("multitouch", function () {
 		var d = createDraggyCase("multi", {
-			within: 'parent'
+			within: 'parent',
+			release: true
 		});
 		d.parentNode.classList.add('multitouch');
 
@@ -95,7 +96,8 @@ describe("Functionality", function () {
 		d.parentNode.appendChild(drEl);
 
 		var draggy = new Draggy(drEl, {
-			within: d.parentNode
+			within: d.parentNode,
+			release: true
 		});
 		css(drEl, 'top', 100);
 	});

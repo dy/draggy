@@ -49,7 +49,7 @@ var win = window, doc = document, root = doc.documentElement;
 var draggableCache = Draggable.cache = new WeakMap;
 
 
-/** Current number of touches, if any */
+/** Current number of draggable touches */
 var touches = 0;
 
 
@@ -124,7 +124,10 @@ proto.state = {
 				e.preventDefault();
 
 				//multitouch has multiple starts
-				if (e.touches) touches++;
+				if (e.touches) {
+					self.touchIdx = touches;
+					touches++;
+				}
 
 				//update movement params
 				self.update(e);
@@ -201,7 +204,8 @@ proto.state = {
 				e.preventDefault();
 
 				//forget touches
-				if (e.touches) touches--;
+				touches = 0;
+				self.touchIdx = null;
 
 				self.state = 'idle';
 			});
@@ -233,7 +237,8 @@ proto.state = {
 				e.preventDefault();
 
 				//forget touches - dragend is called once
-				if (e.touches) touches--;
+				touches = 0;
+				self.touchIdx = null;
 
 				//manage release movement
 				if (self.speed > 1) {
@@ -351,16 +356,16 @@ proto.isAnimated = {
 };
 
 
+/** Index to fetch touch number from event */
+proto.touchIdx = null;
+
+
 /**
  * Update movement limits.
  * Refresh self.withinOffsets and self.limits.
  */
 proto.update = function (e) {
 	var self = this;
-
-	//assign the last touch, if any
-	if (e && e.touches) self.touchIdx = touches - 1;
-	else self.touchIdx = undefined;
 
 	//initial translation offsets
 	var initXY = self.getCoords();
@@ -642,10 +647,6 @@ proto.axis = {
 
 /** Repeat movement by one of axises */
 proto.repeat = false;
-
-
-/** Which index to use in handling touch events */
-proto.touchIdx = undefined;
 
 
 /** Check whether arr is filled with zeros */
