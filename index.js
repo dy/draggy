@@ -169,6 +169,8 @@ proto.state = {
 
 			//listen to doc movement
 			on(doc, 'touchmove.draggy mousemove.draggy', function (e) {
+				e.preventDefault();
+
 				//compare movement to the threshold
 				var clientX = getClientX(e);
 				var clientY = getClientY(e);
@@ -222,6 +224,8 @@ proto.state = {
 
 			//move via transform
 			on(doc, 'touchmove.draggy mousemove.draggy', function (e) {
+				e.preventDefault();
+
 				var mouseX = getClientX(e),
 					mouseY = getClientY(e);
 
@@ -298,15 +302,13 @@ proto.isAnimated = {
 		before: function () {
 			var self = this;
 
-			if (self._animateTimeout) {
-				clearTimeout(self._animateTimeout);
-				self._animateTimeout = null;
-			} else {
-				//set proper transition
-				css(self.element, {
-					'transition': (self.releaseDuration) + 'ms ease-out ' + (self.css3 ? 'transform' : 'position')
-				});
-			}
+
+			clearTimeout(self._animateTimeout);
+
+			//set proper transition
+			css(self.element, {
+				'transition': (self.releaseDuration) + 'ms ease-out ' + (self.css3 ? 'transform' : 'position')
+			});
 
 			//plan leaving anim mode
 			self._animateTimeout = setTimeout(function () {
