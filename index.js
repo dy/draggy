@@ -49,9 +49,6 @@ var win = window, doc = document, root = doc.documentElement;
 var draggableCache = Draggable.cache = new WeakMap;
 
 
-/** Current number of draggable touches */
-var touches = 0;
-
 
 /**
  * Make an element draggable.
@@ -124,10 +121,7 @@ proto.state = {
 				e.preventDefault();
 
 				//multitouch has multiple starts
-				if (e.touches) {
-					self.touchIdx = touches;
-					touches++;
-				}
+				self.setTouch(e);
 
 				//update movement params
 				self.update(e);
@@ -204,8 +198,7 @@ proto.state = {
 				e.preventDefault();
 
 				//forget touches
-				touches = 0;
-				self.touchIdx = null;
+				self.resetTouch();
 
 				self.state = 'idle';
 			});
@@ -237,8 +230,7 @@ proto.state = {
 				e.preventDefault();
 
 				//forget touches - dragend is called once
-				touches = 0;
-				self.touchIdx = null;
+				self.resetTouch();
 
 				//manage release movement
 				if (self.speed > 1) {
@@ -325,6 +317,30 @@ proto.state = {
 			self.state = 'idle';
 		}
 	}
+};
+
+
+/** Current number of draggable touches */
+var touches = 0;
+
+
+/** Manage touches */
+proto.setTouch = function (e) {
+	if (!e.touches || this.isTouched()) return this;
+
+	this.touchIdx = touches;
+	touches++;
+
+	return this;
+};
+proto.resetTouch = function () {
+	touches = 0;
+	this.touchIdx = null;
+
+	return this;
+};
+proto.isTouched = function () {
+	return this.touchIdx !== null;
 };
 
 
