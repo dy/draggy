@@ -124,7 +124,7 @@ proto.state = {
 				e.preventDefault();
 
 				//multitouch has multiple starts
-				if (e.targetTouches) touches++;
+				if (e.touches) touches++;
 
 				//update movement params
 				self.update(e);
@@ -201,13 +201,14 @@ proto.state = {
 				e.preventDefault();
 
 				//forget touches
-				touches--;
+				if (e.touches) touches--;
 
 				self.state = 'idle';
 			});
 		},
 
 		after: function () {
+			var self = this;
 			off(doc, 'touchmove' + self._ns + ' mousemove' + self._ns + ' mouseup' + self._ns + ' touchend' + self._ns);
 		}
 	},
@@ -232,7 +233,7 @@ proto.state = {
 				e.preventDefault();
 
 				//forget touches - dragend is called once
-				touches--;
+				if (e.touches) touches--;
 
 				//manage release movement
 				if (self.speed > 1) {
@@ -358,7 +359,8 @@ proto.update = function (e) {
 	var self = this;
 
 	//assign the last touch, if any
-	self.touchIdx = touches - 1;
+	if (e && e.touches) self.touchIdx = touches - 1;
+	else self.touchIdx = undefined;
 
 	//initial translation offsets
 	var initXY = self.getCoords();
@@ -553,7 +555,7 @@ Object.defineProperties(proto, {
 proto.release = false;
 proto.releaseDuration = 500;
 proto.velocity = 1000;
-proto.maxSpeed = 100;
+proto.maxSpeed = 250;
 proto.framerate = 50;
 
 
@@ -643,7 +645,7 @@ proto.repeat = false;
 
 
 /** Which index to use in handling touch events */
-proto.touchIdx = 0;
+proto.touchIdx = undefined;
 
 
 /** Check whether arr is filled with zeros */
