@@ -65,10 +65,11 @@ draggy.on('drag', function () {
 
 | Name | Description |
 |---|---|
-| `Draggy.cache` | WeakMap containing draggy instances for elements.  |
-| `Draggy.prototype.move(x, y)` | Move to a new position, taking into account axis and limits. You can redefine this method to implement custom kinds of movement restrictions, like circular movement. |
+| `Draggy.cache` | WeakMap containing draggy instances for elements. `Draggy.cache.get(element)`  |
+| `Draggy.prototype.move(x, y)` | Move to a new position, taking into account axis and limits. You can redefine this method to implement custom kinds of movement restrictions, like circular movement. But who dares? |
+| `Draggy.prototype.drag(e)` | Apply event, as if it is happened during drag. |
 | `Draggy.prototype.state` | Current drag state: `'idle'`, `'threshold'`, `'drag'`, `'release'`.  |
-| `Draggy.prototype.isAnimated` | Enter animation mode, automatically offed after `releaseDuration` ms. Any movement in that mode is going to be animated. |
+| `Draggy.prototype.isAnimated` | Trigger animation mode. It is automatically offed after `releaseDuration` ms. Any movement during `isAnimated === true` is going to be animated. Interestingly, this property is both method/flag. |
 | `Draggy.prototype.update(event?)` | Update movement limits. `event` is optional. |
 
 

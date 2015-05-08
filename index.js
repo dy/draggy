@@ -413,13 +413,13 @@ proto.update = function (e) {
 	self.withinOffsets = withinOffsets;
 
 	//calculate movement limits - pin width might be wider than constraints
-	var dW = Math.max(self.pin.width - withinOffsets.width, 0);
-	var dH = Math.max(self.pin.height - withinOffsets.height, 0);
+	self.overflowX = self.pin.width - withinOffsets.width;
+	self.overflowY = self.pin.height - withinOffsets.height;
 	self.limits = {
-		left: withinOffsets.left - self.initOffsetX - self.pin[0] - dW,
-		top: withinOffsets.top - self.initOffsetY - self.pin[1] - dH,
-		right: self.pin.width > withinOffsets.width ? 0 : (withinOffsets.right - self.initOffsetX - self.pin[2]),
-		bottom: self.pin.height > withinOffsets.height ? 0 : (withinOffsets.bottom - self.initOffsetY - self.pin[3])
+		left: withinOffsets.left - self.initOffsetX - self.pin[0] - (self.overflowX < 0 ? 0 : self.overflowX),
+		top: withinOffsets.top - self.initOffsetY - self.pin[1] - (self.overflowY < 0 ? 0 : self.overflowY),
+		right: self.overflowX > 0 ? 0 : withinOffsets.right - self.initOffsetX - self.pin[2],
+		bottom: self.overflowY > 0 ? 0 : withinOffsets.bottom - self.initOffsetY - self.pin[3]
 	};
 
 	//preset inner offsets
@@ -622,8 +622,8 @@ proto.axis = {
 			if (this.repeat) {
 				var w = (limits.right - limits.left);
 				var h = (limits.bottom - limits.top);
-				var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0];
-				var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1];
+				var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0] - Math.max(0, this.overflowX);
+				var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1] - Math.max(0, this.overflowY);
 				if (this.repeat === 'x') {
 					x = loop(x - oX, w) + oX;
 				}
@@ -648,7 +648,7 @@ proto.axis = {
 
 			if (this.repeat) {
 				var w = (limits.right - limits.left);
-				var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0];
+				var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0] - Math.max(0, this.overflowX);
 				x = loop(x - oX, w) + oX;
 			} else {
 				x = between(x, limits.left, limits.right);
@@ -663,7 +663,7 @@ proto.axis = {
 
 			if (this.repeat) {
 				var h = (limits.bottom - limits.top);
-				var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1];
+				var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1] - Math.max(0, this.overflowY);
 				y = loop(y - oY, h) + oY;
 			} else {
 				y = between(y, limits.top, limits.bottom);

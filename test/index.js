@@ -76,7 +76,8 @@ describe("Functionality", function () {
 	it("carousel", function () {
 		var d = createDraggyCase("carousel", {
 			axis: 'x',
-			within: 'parent'
+			within: 'parent',
+			repeat: true
 		});
 		d.classList.add('carousel');
 		d.parentNode.classList.add('carousel-case');
