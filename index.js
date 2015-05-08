@@ -244,40 +244,7 @@ proto.state = {
 
 			//move via transform
 			on(doc, 'touchmove' + self._ns + ' mousemove' + self._ns, function (e) {
-				e.preventDefault();
-
-				var mouseX = getClientX(e, self.touchIdx),
-					mouseY = getClientY(e, self.touchIdx);
-
-				//calc mouse movement diff
-				var diffMouseX = mouseX - self.prevMouseX,
-					diffMouseY = mouseY - self.prevMouseY;
-
-				//absolute mouse coordinate
-				var mouseAbsX = mouseX + win.pageXOffset,
-					mouseAbsY = mouseY + win.pageYOffset;
-
-				//calc sniper offset, if any
-				if (e.ctrlKey || e.metaKey) {
-					self.sniperOffsetX += diffMouseX * self.sniperSlowdown;
-					self.sniperOffsetY += diffMouseY * self.sniperSlowdown;
-				}
-
-				//calc movement x and y
-				//take absolute placing as it is the only reliable way (2x proved)
-				var x = (mouseAbsX - self.initOffsetX) - self.innerOffsetX - self.sniperOffsetX,
-					y = (mouseAbsY - self.initOffsetY) - self.innerOffsetY - self.sniperOffsetY;
-
-				//move element
-				self.move(x, y);
-
-				//save prevClientXY for calculating diff
-				self.prevMouseX = mouseX;
-				self.prevMouseY = mouseY;
-
-				//emit drag
-				self.emit('drag');
-				emit(self.element, 'drag', null, true);
+				self.drag(e);
 			});
 		},
 
@@ -317,6 +284,47 @@ proto.state = {
 			self.state = 'idle';
 		}
 	}
+};
+
+
+/** Drag handler. Needed to provide drag movement emulation via API */
+proto.drag = function (e) {
+	var self = this;
+
+	e.preventDefault();
+
+	var mouseX = getClientX(e, self.touchIdx),
+		mouseY = getClientY(e, self.touchIdx);
+
+	//calc mouse movement diff
+	var diffMouseX = mouseX - self.prevMouseX,
+		diffMouseY = mouseY - self.prevMouseY;
+
+	//absolute mouse coordinate
+	var mouseAbsX = mouseX + win.pageXOffset,
+		mouseAbsY = mouseY + win.pageYOffset;
+
+	//calc sniper offset, if any
+	if (e.ctrlKey || e.metaKey) {
+		self.sniperOffsetX += diffMouseX * self.sniperSlowdown;
+		self.sniperOffsetY += diffMouseY * self.sniperSlowdown;
+	}
+
+	//calc movement x and y
+	//take absolute placing as it is the only reliable way (2x proved)
+	var x = (mouseAbsX - self.initOffsetX) - self.innerOffsetX - self.sniperOffsetX,
+		y = (mouseAbsY - self.initOffsetY) - self.innerOffsetY - self.sniperOffsetY;
+
+	//move element
+	self.move(x, y);
+
+	//save prevClientXY for calculating diff
+	self.prevMouseX = mouseX;
+	self.prevMouseY = mouseY;
+
+	//emit drag
+	self.emit('drag');
+	emit(self.element, 'drag', null, true);
 };
 
 
