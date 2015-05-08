@@ -405,15 +405,13 @@ proto.update = function (e) {
 	self.withinOffsets = withinOffsets;
 
 	//calculate movement limits - pin width might be wider than constraints
-	var pinW = self.pin[2] - self.pin[0];
-	var pinH = self.pin[3] - self.pin[1];
-	var dW = Math.max(pinW - withinOffsets.width, 0);
-	var dH = Math.max(pinH - withinOffsets.height, 0);
+	var dW = Math.max(self.pin.width - withinOffsets.width, 0);
+	var dH = Math.max(self.pin.height - withinOffsets.height, 0);
 	self.limits = {
 		left: withinOffsets.left - self.initOffsetX - self.pin[0] - dW,
 		top: withinOffsets.top - self.initOffsetY - self.pin[1] - dH,
-		right: pinW > withinOffsets.width ? 0 : (withinOffsets.right - self.initOffsetX - self.pin[2]),
-		bottom: pinH > withinOffsets.height ? 0 : (withinOffsets.bottom - self.initOffsetY - self.pin[3])
+		right: self.pin.width > withinOffsets.width ? 0 : (withinOffsets.right - self.initOffsetX - self.pin[2]),
+		bottom: self.pin.height > withinOffsets.height ? 0 : (withinOffsets.bottom - self.initOffsetY - self.pin[3])
 	};
 
 	//preset inner offsets
@@ -421,8 +419,6 @@ proto.update = function (e) {
 	self.innerOffsetY = self.pin[1];
 
 	var selfClientRect = self.element.getBoundingClientRect();
-	var pinX = (self.pin[0] + self.pin[2] ) * .5;
-	var pinY = (self.pin[1] + self.pin[3] ) * .5;
 
 	//if event passed - update acc to event
 	if (e) {
@@ -437,6 +433,8 @@ proto.update = function (e) {
 	//if no event - suppose pin-centered event
 	else {
 		//take mouse position & inner offset as center of pin
+		var pinX = (self.pin[0] + self.pin[2] ) * 0.5;
+		var pinY = (self.pin[1] + self.pin[3] ) * 0.5;
 		self.prevMouseX = selfClientRect.left + pinX;
 		self.prevMouseY = selfClientRect.top + pinY;
 		self.innerOffsetX = pinX;
@@ -532,10 +530,20 @@ Object.defineProperties(proto, {
 			else {
 				this._pin = value;
 			}
+
+			//calc pin params
+			this._pin.width = this._pin[2] - this._pin[0];
+			this._pin.height = this._pin[3] - this._pin[1];
 		},
 
 		get: function () {
-			return this._pin || [0,0, this.offsets.width, this.offsets.height];
+			if (this._pin) return this._pin;
+
+			//returning autocalculated pin, if private pin is none
+			var pin = [0,0, this.offsets.width, this.offsets.height];
+			pin.width = this.offsets.width;
+			pin.height = this.offsets.height;
+			return pin;
 		}
 	},
 
