@@ -636,10 +636,8 @@ proto.axis = {
 				}
 			}
 
-			else {
-				x = between(x, limits.left, limits.right);
-				y = between(y, limits.top, limits.bottom);
-			}
+			x = between(x, limits.left, limits.right);
+			y = between(y, limits.top, limits.bottom);
 
 			this.setCoords(x, y);
 		};
