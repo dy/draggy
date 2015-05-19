@@ -3,7 +3,6 @@
 
 	Draggy
 
-	<a href="https://travis-ci.org/dfcreative/draggy"><img src="https://travis-ci.org/dfcreative/draggy.svg?branch=master"/></a>
 	<a href="/license"><img src="https://img.shields.io/npm/l/draggy.svg"/></a>
 	<img src="https://david-dm.org/dfcreative/draggy.svg"/>
 </h1>

@@ -22,7 +22,7 @@ var getClientY = require('get-client-xy').y;
 
 //utils
 var isArray = require('is-array');
-var isNumber = require('is-number');
+var isNumber = require('mutype/is-number');
 var isFn = require('is-function');
 var defineState = require('define-state');
 var extend = require('xtend/mutable');
