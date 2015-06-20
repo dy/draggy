@@ -9,7 +9,7 @@
 var css = require('mucss/css');
 var parseCSSValue = require('mucss/parse-value');
 var selection = require('mucss/selection');
-var offsets = require('mucss/offsets');
+var offsets = require('mucss/offset');
 var getTranslate = require('mucss/translate');
 
 //events
