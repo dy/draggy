@@ -19,9 +19,12 @@ describe("Functionality", function () {
 	});
 
 	it("within", function () {
+		var el = document.createElement('div');
+		el.innerHTML = '<textarea>Within</textarea>';
+
 		var a = createDraggyCase("within parent", {
 			within: 'parent'
-		});
+		}, el);
 	});
 
 	it("threshold", function () {
@@ -103,8 +106,15 @@ describe("Functionality", function () {
 		css(drEl, 'top', 100);
 	});
 
-	it.skip("handle", function () {
+	it("handle", function () {
+		var el = document.createElement('div');
+		el.innerHTML = '<div class="handle">HANDLE</div>';
 
+		var a = createDraggyCase("handle", {
+			handle: el.firstChild,
+			within: 'parent',
+			pin: [10,20,30,40]
+		}, el);
 	});
 
 	it.skip("grid", function () {
@@ -134,7 +144,7 @@ describe("Functionality", function () {
 
 
 	/** Create test case */
-	function createDraggyCase(name, opts) {
+	function createDraggyCase(name, opts, drEl) {
 		//create container
 		var el = document.createElement("div");
 		el.title = name;
@@ -142,8 +152,10 @@ describe("Functionality", function () {
 		body.appendChild(el);
 
 		//create mover
-		var drEl = document.createElement("div");
-		drEl.innerHTML = name;
+		if (!drEl) {
+			drEl = document.createElement("div");
+			drEl.innerHTML = name;
+		}
 		drEl.className = 'draggy';
 		el.appendChild(drEl);
 

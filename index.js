@@ -30,6 +30,7 @@ var round = require('mumath/round');
 var between = require('mumath/between');
 var loop = require('mumath/loop');
 var getUid = require('get-uid');
+var q = require('queried');
 
 
 var win = window, doc = document, root = doc.documentElement;
@@ -61,14 +62,16 @@ var draggableCache = Draggable.cache = new WeakMap;
  * @return {HTMLElement} Target element
  */
 function Draggable(target, options) {
-	if (!(this instanceof Draggable)) return new Draggable(target, options);
+	if (!(this instanceof Draggable)) {
+		return new Draggable(target, options);
+	}
 
 	var self = this;
 
 	//get unique id for instance
 	//needed to track event binders
-	self._id = getUid();
-	self._ns = '.draggy_' + self._id;
+	self.id = getUid();
+	self._ns = '.draggy_' + self.id;
 
 	//save element passed
 	self.element = target;
@@ -80,7 +83,6 @@ function Draggable(target, options) {
 
 	//define state behaviour
 	defineState(self, 'state', self.state);
-	self.state = 'idle';
 
 	//define axis behaviour
 	defineState(self, 'axis', self.axis);
@@ -91,6 +93,14 @@ function Draggable(target, options) {
 
 	//take over options
 	extend(self, options);
+
+	//define handle
+	if (!self.handle) {
+		self.handle = self.element;
+	}
+
+	//go to initial state
+	self.state = 'idle';
 
 	//try to calc out basic limits
 	self.update();
@@ -117,23 +127,30 @@ proto.state = {
 			self.emit('idle');
 
 			//bind start drag
-			on(self.element, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
-				e.preventDefault();
+			q.all(self.handle).forEach(function (el) {
+				on(el, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
+					//ignore not self element
+					if (e.target !== e.currentTarget) return;
 
-				//multitouch has multiple starts
-				self.setTouch(e);
+					e.preventDefault();
 
-				//update movement params
-				self.update(e);
+					//multitouch has multiple starts
+					self.setTouch(e);
 
-				//go to threshold state
-				self.state = 'threshold';
+					//update movement params
+					self.update(e);
+
+					//go to threshold state
+					self.state = 'threshold';
+				});
 			});
 		},
 		after: function () {
 			var self = this;
 
-			off(self.element, 'touchstart' + self._ns + ' mousedown' + self._ns);
+			q.all(self.handle).forEach(function (el) {
+				off(el, 'touchstart' + self._ns + ' mousedown' + self._ns);
+			});
 
 			//set up tracking
 			if (self.release) {
@@ -513,6 +530,9 @@ proto.css3 = {
  */
 proto.within = doc;
 
+
+/** Handle to drag */
+proto.handle;
 
 
 Object.defineProperties(proto, {

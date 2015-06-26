@@ -33,6 +33,7 @@
     "mucss": "^1.0",
     "mumath": "^1.0.0",
     "mutype": "^0.3.9",
+    "queried": "^1.4.1",
     "xtend": "^4.0.0"
   },
   "devDependencies": {
