@@ -23,6 +23,7 @@ var getClientY = require('get-client-xy').y;
 //utils
 var isArray = require('is-array');
 var isNumber = require('mutype/is-number');
+var isString = require('mutype/is-string');
 var isFn = require('is-function');
 var defineState = require('define-state');
 var extend = require('xtend/mutable');
@@ -127,7 +128,8 @@ proto.state = {
 			self.emit('idle');
 
 			//bind start drag
-			q.all(self.handle).forEach(function (el) {
+			var handles = isString(self.handle) ? q.all(self.handle, self.element) : q(self.handle);
+			handles.forEach(function (el) {
 				on(el, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
 					//ignore not self element
 					if (e.target !== e.currentTarget) return;
@@ -148,7 +150,8 @@ proto.state = {
 		after: function () {
 			var self = this;
 
-			q.all(self.handle).forEach(function (el) {
+			var handles = isString(self.handle) ? q.all(self.handle, self.element) : q(self.handle);
+			handles.forEach(function (el) {
 				off(el, 'touchstart' + self._ns + ' mousedown' + self._ns);
 			});
 
