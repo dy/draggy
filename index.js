@@ -490,6 +490,7 @@ proto.update = function (e) {
  */
 proto.css3 = {
 	_: function () {
+		css(this.element, 'position', 'absolute');
 		this.getCoords = function () {
 			// return [this.element.offsetLeft, this.element.offsetTop];
 			return [parseCSSValue(css(this.element,'left')), parseCSSValue(css(this.element, 'top'))];
@@ -509,6 +510,7 @@ proto.css3 = {
 
 	//undefined placing is treated as translate3d
 	true: function () {
+		css(this.element, 'position', null);
 		this.getCoords  = function () {
 			return getTranslate(this.element) || [0,0];
 		};
