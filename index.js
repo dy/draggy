@@ -89,9 +89,6 @@ function Draggable(target, options) {
 	defineState(self, 'axis', self.axis);
 	self.axis = null;
 
-	//define anim mode
-	defineState(self, 'isAnimated', self.isAnimated);
-
 	//take over options
 	extend(self, options);
 
@@ -123,6 +120,8 @@ proto.state = {
 		before: function () {
 			var self = this;
 
+			self.element.classList.add('draggy-idle');
+
 			//emit drag evts on element
 			emit(self.element, 'idle', null, true);
 			self.emit('idle');
@@ -148,6 +147,8 @@ proto.state = {
 		},
 		after: function () {
 			var self = this;
+
+			self.element.classList.remove('draggy-idle');
 
 			q.all(self.handle, self.element).forEach(function (el) {
 				off(el, 'touchstart' + self._ns + ' mousedown' + self._ns);
@@ -193,6 +194,8 @@ proto.state = {
 				return;
 			}
 
+			self.element.classList.add('draggy-threshold');
+
 			//emit drag evts on element
 			self.emit('threshold');
 
@@ -208,7 +211,6 @@ proto.state = {
 
 				if (difX < self.threshold[0] || difX > self.threshold[2] || difY < self.threshold[1] || difY > self.threshold[3]) {
 					self.update(e);
-
 					self.state = 'drag';
 				}
 			});
@@ -224,6 +226,9 @@ proto.state = {
 
 		after: function () {
 			var self = this;
+
+			self.element.classList.remove('draggy-threshold');
+
 			off(doc, 'touchmove' + self._ns + ' mousemove' + self._ns + ' mouseup' + self._ns + ' touchend' + self._ns);
 		}
 	},
@@ -234,6 +239,8 @@ proto.state = {
 
 			//reduce dragging clutter
 			selection.disable(root);
+
+			self.element.classList.add('draggy-drag');
 
 			//emit drag evts on element
 			self.emit('dragstart');
@@ -272,6 +279,8 @@ proto.state = {
 			//enable document interactivity
 			selection.enable(root);
 
+			self.element.classList.remove('draggy-drag');
+
 			//emit dragend on element, this
 			self.emit('dragend');
 			emit(self.element, 'dragend', null, true);
@@ -279,6 +288,7 @@ proto.state = {
 			//unbind drag events
 			off(doc, 'touchend' + self._ns + ' mouseup' + self._ns + ' mouseleave' + self._ns);
 			off(doc, 'touchmove' + self._ns + ' mousemove' + self._ns);
+
 			clearInterval(self._trackingInterval);
 		}
 	},
@@ -287,8 +297,21 @@ proto.state = {
 		before: function () {
 			var self = this;
 
+			self.element.classList.add('draggy-release');
+
 			//enter animation mode
-			self.isAnimated = true;
+			clearTimeout(self._animateTimeout);
+
+			//set proper transition
+			css(self.element, {
+				'transition': (self.releaseDuration) + 'ms ease-out ' + (self.css3 ? 'transform' : 'position')
+			});
+
+			//plan leaving anim mode
+			self._animateTimeout = setTimeout(function () {
+				self.state = 'idle';
+			}, self.releaseDuration);
+
 
 			//calc target point & animate to it
 			self.move(
@@ -298,8 +321,16 @@ proto.state = {
 
 			self.speed = 0;
 			self.emit('track');
+		},
 
-			self.state = 'idle';
+		after: function () {
+			var self = this;
+
+			self.element.classList.remove('draggy-release');
+
+			css(this.element, {
+				'transition': null
+			});
 		}
 	}
 };
@@ -367,34 +398,6 @@ proto.resetTouch = function () {
 };
 proto.isTouched = function () {
 	return this.touchIdx !== null;
-};
-
-
-/** Animation mode, automatically offed once onned */
-proto.isAnimated = {
-	true: {
-		before: function () {
-			var self = this;
-
-
-			clearTimeout(self._animateTimeout);
-
-			//set proper transition
-			css(self.element, {
-				'transition': (self.releaseDuration) + 'ms ease-out ' + (self.css3 ? 'transform' : 'position')
-			});
-
-			//plan leaving anim mode
-			self._animateTimeout = setTimeout(function () {
-				self.isAnimated = false;
-			}, self.releaseDuration);
-		},
-		after: function () {
-			css(this.element, {
-				'transition': null
-			});
-		}
-	}
 };
 
 
