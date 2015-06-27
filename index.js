@@ -128,11 +128,10 @@ proto.state = {
 			self.emit('idle');
 
 			//bind start drag
-			var handles = isString(self.handle) ? q.all(self.handle, self.element) : q(self.handle);
-			handles.forEach(function (el) {
+			q.all(self.handle, self.element).forEach(function (el) {
 				on(el, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
-					//ignore not self element
-					if (e.target !== e.currentTarget) return;
+					//if target is focused - ignore drag
+					if (doc.activeElement === e.target) return;
 
 					e.preventDefault();
 
@@ -150,8 +149,7 @@ proto.state = {
 		after: function () {
 			var self = this;
 
-			var handles = isString(self.handle) ? q.all(self.handle, self.element) : q(self.handle);
-			handles.forEach(function (el) {
+			q.all(self.handle, self.element).forEach(function (el) {
 				off(el, 'touchstart' + self._ns + ' mousedown' + self._ns);
 			});
 
