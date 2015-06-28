@@ -88,17 +88,26 @@
 
 <div id="mocha"></div>
 
-<script src="../node_modules/mocha/mocha.js"></script>
+
 
 <script src="./bundle.js"></script>
 
+
+<script src="../node_modules/mocha/mocha.js"></script>
 <script>
 	mocha.setup('bdd');
 </script>
-
 <script src="index.js"></script>
-
 <script>
 	mocha.checkLeaks();
 	mocha.run();
+</script>
+
+
+<script>
+	//test memory
+	// var Draggy = require('draggy');
+	// for (var i = 0; i < 9999; i++) {
+	// 	(new Draggy(document.createElement('div'))).destroy();
+	// }
 </script>

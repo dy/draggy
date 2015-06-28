@@ -332,6 +332,14 @@ proto.state = {
 				'transition': null
 			});
 		}
+	},
+
+	destroy: function () {
+		var self = this;
+		clearTimeout(self._animateTimeout);
+		var evts = ['touchstart', 'touchmove', 'mousedown', 'mousemove', 'mouseup', 'touchend', 'mouseleave', ''].join('.' + self._ns + ' ');
+		off(self.element, evts);
+		off(doc, evts);
 	}
 };
 
@@ -709,6 +717,18 @@ proto.repeat = false;
 function isZeroArray(arr) {
 	if (!arr[0] && !arr[1] && !arr[2] && !arr[3]) return true;
 }
+
+
+
+/** Clean all memory-related things */
+proto.destroy = function () {
+	var self = this;
+
+	self.state = 'destroy';
+
+	self.element = null;
+	self.within = null;
+};
 
 
 module.exports = Draggable;
