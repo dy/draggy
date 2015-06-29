@@ -14,6 +14,7 @@ var getTranslate = require('mucss/translate');
 
 //events
 var on = require('emmy/on');
+var delegate = require('emmy/delegate');
 var off = require('emmy/off');
 var emit = require('emmy/emit');
 var Emitter = require('events');
@@ -127,22 +128,20 @@ proto.state = {
 			self.emit('idle');
 
 			//bind start drag
-			q.all(self.handle, self.element).forEach(function (el) {
-				on(el, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
-					//if target is focused - ignore drag
-					if (doc.activeElement === e.target) return;
+			delegate(doc, 'mousedown' + self._ns + ' touchstart' + self._ns, self.handle, function (e) {
+				//if target is focused - ignore drag
+				if (doc.activeElement === e.target) return;
 
-					e.preventDefault();
+				e.preventDefault();
 
-					//multitouch has multiple starts
-					self.setTouch(e);
+				//multitouch has multiple starts
+				self.setTouch(e);
 
-					//update movement params
-					self.update(e);
+				//update movement params
+				self.update(e);
 
-					//go to threshold state
-					self.state = 'threshold';
-				});
+				//go to threshold state
+				self.state = 'threshold';
 			});
 		},
 		after: function () {
@@ -150,9 +149,7 @@ proto.state = {
 
 			self.element.classList.remove('draggy-idle');
 
-			q.all(self.handle, self.element).forEach(function (el) {
-				off(el, 'touchstart' + self._ns + ' mousedown' + self._ns);
-			});
+			off(doc, self._ns);
 
 			//set up tracking
 			if (self.release) {
@@ -229,7 +226,7 @@ proto.state = {
 
 			self.element.classList.remove('draggy-threshold');
 
-			off(doc, 'touchmove' + self._ns + ' mousemove' + self._ns + ' mouseup' + self._ns + ' touchend' + self._ns);
+			off(doc, self._ns);
 		}
 	},
 
@@ -286,8 +283,7 @@ proto.state = {
 			emit(self.element, 'dragend', null, true);
 
 			//unbind drag events
-			off(doc, 'touchend' + self._ns + ' mouseup' + self._ns + ' mouseleave' + self._ns);
-			off(doc, 'touchmove' + self._ns + ' mousemove' + self._ns);
+			off(doc, self._ns);
 
 			clearInterval(self._trackingInterval);
 		}
@@ -337,9 +333,7 @@ proto.state = {
 	destroy: function () {
 		var self = this;
 		clearTimeout(self._animateTimeout);
-		var evts = ['touchstart', 'touchmove', 'mousedown', 'mousemove', 'mouseup', 'touchend', 'mouseleave', ''].join('.' + self._ns + ' ');
-		off(self.element, evts);
-		off(doc, evts);
+		off(doc, self._ns);
 	}
 };
 
