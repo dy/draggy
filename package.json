@@ -28,6 +28,7 @@
     "emmy": ">=5.0.0",
     "get-client-xy": "^1.0.1",
     "get-uid": "^1.0.1",
+    "intersects": "^1.0.0",
     "is-array": "^1.0.1",
     "is-function": "^1.0.1",
     "mucss": "^1.0",

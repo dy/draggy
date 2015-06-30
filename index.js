@@ -11,6 +11,7 @@ var parseCSSValue = require('mucss/parse-value');
 var selection = require('mucss/selection');
 var offsets = require('mucss/offset');
 var getTranslate = require('mucss/translate');
+var intersect = require('intersects');
 
 //events
 var on = require('emmy/on');
@@ -98,6 +99,11 @@ function Draggable(target, options) {
 		self.handle = self.element;
 	}
 
+	//setup droppable
+	if (self.droppable) {
+		self.initDroppable();
+	}
+
 	//go to initial state
 	self.state = 'idle';
 
@@ -108,6 +114,66 @@ function Draggable(target, options) {
 
 /** Inherit draggable from Emitter */
 var proto = Draggable.prototype = Object.create(Emitter.prototype);
+
+
+/** Init droppable "plugin" */
+proto.initDroppable = function () {
+	var self = this;
+
+	on(self, 'dragstart', function () {
+		var self = this;
+		self.dropTargets = q.all(self.droppable);
+	});
+
+	on(self, 'drag', function () {
+		var self = this;
+
+		if (!self.dropTargets) {
+			return;
+		}
+
+		var selfRect = offsets(self.element);
+
+		self.dropTargets.forEach(function (dropTarget) {
+			var targetRect = offsets(dropTarget);
+
+			if (intersect(selfRect, targetRect, self.droppableTolerance)) {
+				if (self.droppableClass) {
+					dropTarget.classList.add(self.droppableClass);
+				}
+				if (!self.dropTarget) {
+					self.dropTarget = dropTarget;
+
+					emit(self, 'dragover', dropTarget);
+					emit(dropTarget, 'dragover', self);
+				}
+			}
+			else {
+				if (self.dropTarget) {
+					emit(self, 'dragout', dropTarget);
+					emit(dropTarget, 'dragout', self);
+
+					self.dropTarget = null;
+				}
+				if (self.droppableClass) {
+					dropTarget.classList.remove(self.droppableClass);
+				}
+			}
+		});
+	});
+
+	on(self, 'dragend', function () {
+		var self = this;
+
+		//emit drop, if any
+		if (self.dropTarget) {
+			emit(self.dropTarget, 'drop', self);
+			emit(self, 'drop', self.dropTarget);
+			self.dropTarget.classList.remove(self.droppableClass);
+			self.dropTarget = null;
+		}
+	});
+};
 
 
 /**
@@ -429,10 +495,13 @@ proto.update = function (e) {
 	self.offsets = selfOffsets;
 
 	//handle parent case
-	if (self.within === 'parent') self.within = self.element.parentNode || doc;
+	var within = self.within;
+	if (self.within === 'parent') {
+		within = self.element.parentNode || doc;
+	}
 
 	//absolute offsets of a container
-	var withinOffsets = offsets(self.within);
+	var withinOffsets = offsets(within);
 	self.withinOffsets = withinOffsets;
 
 	//calculate movement limits - pin width might be wider than constraints
@@ -518,8 +587,8 @@ proto.css3 = {
 		};
 
 		this.setCoords = function (x, y) {
-			x = round(x, this.precition);
-			y = round(y, this.precition);
+			x = round(x, this.precision);
+			y = round(y, this.precision);
 
 			css(this.element, 'transform', ['translate3d(', x, 'px,', y, 'px, 0)'].join(''));
 
@@ -626,6 +695,12 @@ proto.framerate = 50;
 
 /** To what extent round position */
 proto.precision = 1;
+
+
+/** Droppable params */
+proto.droppable = null;
+proto.droppableTolerance = 0.5;
+proto.droppableClass = null;
 
 
 /** Slow down movement by pressing ctrl/cmd */

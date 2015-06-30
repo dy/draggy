@@ -8,12 +8,12 @@
 </h1>
 
 
-Simple draggable behaviour for elements. [Tests](TODO).
+Draggable behaviour for elements.
 
 
 ## Use
 
-`$ npm install draggy`
+[![npm install draggy](https://nodei.co/npm/draggy.png?mini=true)](https://npmjs.org/package/draggy)
 
 ```js
 var Draggable = require('draggy');
@@ -47,6 +47,7 @@ draggy.on('drag', function () {
 | `threshold` | `0` | A movement threshold required to start drag - whether array, number or function. |
 | `within` | `document` | Restrict movement within the container. Pass `'parent'` to take parent node. |
 | `handle` | `self.element` | Use the passed element or selector as a handle for drag. Clicking not on the handle will be ignored. |
+| `droppable` | `undefined` | Selector, element or list of elements to detect droppable areas. Drop element will be invoked `drop, `dragover` and `dragout`. |
 
 
 ## Events
@@ -59,6 +60,9 @@ draggy.on('drag', function () {
 | `track` | Track movement. Called on controller. |
 | `release` | User released drag. Called on controller. |
 | `dragend` | Drag has completely finished. Called both on element/controller. |
+| `dragover` |  Called on self and on drop target. |
+| `dragout` |  Called on self and on drop target. |
+| `drop` |  Called on self and on drop target. |
 
 
 ## API

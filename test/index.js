@@ -125,8 +125,23 @@ describe("Functionality", function () {
 		// createDraggyCase("circular")
 	});
 
-	it.skip("drop areas", function () {
+	it("droppable", function () {
+		var containerEl = createDraggyContainer('droppable');
+		var dropEl = document.createElement('div');
+		dropEl.className = 'droppable';
+		containerEl.appendChild(dropEl);
 
+		var dragEl = createDraggyElement('droppable');
+		containerEl.appendChild(dragEl);
+		css(dragEl, 'left', 200);
+
+		var draggy = new Draggy(dragEl, {
+			within: containerEl,
+			droppable: '.droppable',
+			droppableClass: 'active'
+		});
+
+		bindHelpers(draggy);
 	});
 
 	it.skip("loose limits", function () {
@@ -145,27 +160,46 @@ describe("Functionality", function () {
 
 	/** Create test case */
 	function createDraggyCase(name, opts, drEl) {
-		//create container
-		var el = document.createElement("div");
-		el.title = name;
-		el.className = "draggy-case";
-		body.appendChild(el);
+		var el = createDraggyContainer(name);
 
+		drEl = createDraggyElement(name, drEl);
+
+		var draggy = new Draggy(drEl, opts);
+
+		bindHelpers(draggy);
+
+		el.appendChild(drEl);
+
+		return drEl;
+	}
+
+	function createDraggyElement (name, drEl) {
 		//create mover
 		if (!drEl) {
 			drEl = document.createElement("div");
 			drEl.innerHTML = name;
 		}
 		drEl.className = 'draggy';
-		el.appendChild(drEl);
-
-		var draggy = new Draggy(drEl, opts);
 
 		//create direction arrow
 		var arr = document.createElement('div');
 		arr.className = 'draggy-arrow';
 		drEl.appendChild(arr);
 
+		return drEl;
+	}
+
+	/** Container for draggable */
+	function createDraggyContainer (name) {
+		var el = document.createElement("div");
+		el.title = name;
+		el.className = "draggy-case";
+		body.appendChild(el);
+
+		return el;
+	}
+
+	function bindHelpers (draggy) {
 		//bind listeners
 		draggy.on('threshold', paintThreshold);
 		draggy.on('dragstart', renderHelpers);
@@ -173,8 +207,6 @@ describe("Functionality", function () {
 		draggy.on('dragend', clear);
 		draggy.on('idle', clear);
 		draggy.on('track', renderDirection);
-
-		return drEl;
 	}
 
 	//canvas painters
@@ -192,6 +224,9 @@ describe("Functionality", function () {
 		var within = el.within;
 
 		if (!within || within === document) return;
+		if (within === 'parent') {
+			within = el.element.parentNode;
+		}
 
 		var pos = within.getBoundingClientRect(),
 			pads = new css.Rect//css.paddings(within);
