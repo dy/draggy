@@ -1,6 +1,6 @@
 {
   "name": "draggy",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Draggable behaviour provider",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,9 @@
     "build": "browserify -r ./index:draggy -r mucss -o test/bundle.js",
     "test": "mochify"
   },
-  "files": ["index.js"],
+  "files": [
+    "index.js"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/dfcreative/draggy"
