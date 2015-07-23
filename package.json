@@ -8,6 +8,7 @@
     "build": "browserify -r ./index:draggy -r mucss -o test/bundle.js",
     "test": "mochify"
   },
+  "files": ["index.js"],
   "repository": {
     "type": "git",
     "url": "https://github.com/dfcreative/draggy"

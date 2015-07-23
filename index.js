@@ -453,6 +453,7 @@ var touches = 0;
 proto.setTouch = function (e) {
 	if (!e.touches || this.isTouched()) return this;
 
+	//current touch index
 	this.touchIdx = touches;
 	touches++;
 
@@ -497,12 +498,14 @@ proto.update = function (e) {
 	//handle parent case
 	var within = self.within;
 	if (self.within === 'parent') {
-		within = self.element.parentNode || doc;
+		within = self.element.parentNode;
 	}
+	within = within || doc;
 
 	//absolute offsets of a container
 	var withinOffsets = offsets(within);
 	self.withinOffsets = withinOffsets;
+
 
 	//calculate movement limits - pin width might be wider than constraints
 	self.overflowX = self.pin.width - withinOffsets.width;
