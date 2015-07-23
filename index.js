@@ -584,7 +584,6 @@ proto.css3 = {
 
 	//undefined placing is treated as translate3d
 	true: function () {
-		css(this.element, 'position', null);
 		this.getCoords  = function () {
 			return getTranslate(this.element) || [0,0];
 		};
