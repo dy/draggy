@@ -1,6 +1,6 @@
 {
   "name": "draggy",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Draggable behaviour provider",
   "main": "index.js",
   "scripts": {
