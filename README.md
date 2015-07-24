@@ -47,7 +47,7 @@ draggy.on('drag', function () {
 | `threshold` | `0` | A movement threshold required to start drag - whether array, number or function. |
 | `within` | `document` | Restrict movement within the container. Pass `'parent'` to take parent node. |
 | `handle` | `self.element` | Use the passed element or selector as a handle for drag. Clicking not on the handle will be ignored. |
-| `droppable` | `undefined` | Selector, element or list of elements to detect droppable areas. Drop element will be invoked `drop, `dragover` and `dragout`. |
+| `droppable` | `undefined` | Selector, element or list of elements to detect droppable areas. For each drop element will be invoked `drop, `dragover` and `dragout` events. |
 
 
 ## Events
@@ -69,11 +69,9 @@ draggy.on('drag', function () {
 
 | Name | Description |
 |---|---|
-| `Draggy.cache` | WeakMap containing draggy instances for elements. `Draggy.cache.get(element)`  |
+| `Draggy.cache` | WeakMap containing draggy instances for elements. `Draggy.cache.get(element)` - return draggy instance for the element. |
 | `Draggy.prototype.move(x, y)` | Move to a new position, taking into account axis and limits. You can redefine this method to implement custom kinds of movement restrictions, like circular movement. But who dares? |
-| `Draggy.prototype.drag(e)` | Apply event, as if it is happened during drag. |
-| `Draggy.prototype.state` | Current drag state: `'idle'`, `'threshold'`, `'drag'`, `'release'`.  |
-| `Draggy.prototype.isAnimated` | Trigger animation mode. It is automatically offed after `releaseDuration` ms. Any movement during `isAnimated === true` is going to be animated. Interestingly, this property is both method/flag. |
+| `Draggy.prototype.state` | Current drag state: `'idle'`, `'threshold'`, `'drag'`, `'release'`. |
 | `Draggy.prototype.update(event?)` | Update movement limits. `event` is optional. |
 
 

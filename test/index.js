@@ -1,4 +1,4 @@
-var Draggy = require('draggy');
+var Draggable = require('draggy');
 var css = require('mucss');
 
 var body = document.body;
@@ -14,7 +14,7 @@ describe("Functionality", function () {
 
 
 	it("plain", function () {
-		var a = createDraggyCase("plain", {
+		var a = createDraggableCase("plain", {
 		});
 	});
 
@@ -22,34 +22,34 @@ describe("Functionality", function () {
 		var el = document.createElement('div');
 		el.innerHTML = '<textarea>Within</textarea>';
 
-		var a = createDraggyCase("within parent", {
+		var a = createDraggableCase("within parent", {
 			within: 'parent'
 		}, el);
 	});
 
 	it("threshold", function () {
-		var d = createDraggyCase("threshold", {
+		var d = createDraggableCase("threshold", {
 			threshold: 20,
 			within: 'parent'
 		});
 	});
 
 	it("release", function () {
-		var a = createDraggyCase("release", {
+		var a = createDraggableCase("release", {
 			release: true,
 			within: 'parent'
 		});
 	});
 
 	it("pin area", function () {
-		var a = createDraggyCase("pin area", {
+		var a = createDraggableCase("pin area", {
 			pin: [20,20,50,50],
 			within: 'parent'
 		});
 	});
 
 	it("point picker", function () {
-		var a = createDraggyCase("point picker", {
+		var a = createDraggableCase("point picker", {
 			pin: [30,30],
 			threshold: 0,
 			within: 'parent'
@@ -57,7 +57,7 @@ describe("Functionality", function () {
 	});
 
 	it("repeat", function () {
-		var a = createDraggyCase("repeat", {
+		var a = createDraggableCase("repeat", {
 			repeat: true,
 			within: 'parent',
 			pin: [10,20,30,40]
@@ -65,19 +65,19 @@ describe("Functionality", function () {
 	});
 
 	it("x", function () {
-		createDraggyCase("x", {
+		createDraggableCase("x", {
 			axis: 'x'
 		});
 	});
 
 	it("y", function () {
-		createDraggyCase("y", {
+		createDraggableCase("y", {
 			axis: 'y'
 		});
 	});
 
 	it("carousel", function () {
-		var d = createDraggyCase("carousel", {
+		var d = createDraggableCase("carousel", {
 			axis: 'x',
 			within: 'parent',
 			repeat: true
@@ -87,7 +87,7 @@ describe("Functionality", function () {
 	});
 
 	it("multitouch", function () {
-		var d = createDraggyCase("multi", {
+		var d = createDraggableCase("multi", {
 			within: 'parent',
 			release: true
 		});
@@ -99,7 +99,7 @@ describe("Functionality", function () {
 		drEl.className = 'draggy';
 		d.parentNode.appendChild(drEl);
 
-		var draggy = new Draggy(drEl, {
+		var draggy = new Draggable(drEl, {
 			within: d.parentNode,
 			release: true
 		});
@@ -110,7 +110,7 @@ describe("Functionality", function () {
 		var el = document.createElement('div');
 		el.innerHTML = '<div class="handle">HANDLE</div>';
 
-		var a = createDraggyCase("handle", {
+		var a = createDraggableCase("handle", {
 			handle: el.firstChild,
 			within: 'parent',
 			pin: [10,20,30,40]
@@ -122,20 +122,21 @@ describe("Functionality", function () {
 	});
 
 	it.skip("circular", function () {
-		// createDraggyCase("circular")
+		// createDraggableCase("circular")
 	});
 
+
 	it("droppable", function () {
-		var containerEl = createDraggyContainer('droppable');
+		var containerEl = createDraggableContainer('droppable');
 		var dropEl = document.createElement('div');
 		dropEl.className = 'droppable';
 		containerEl.appendChild(dropEl);
 
-		var dragEl = createDraggyElement('droppable');
+		var dragEl = createDraggableElement('droppable');
 		containerEl.appendChild(dragEl);
 		css(dragEl, 'left', 200);
 
-		var draggy = new Draggy(dragEl, {
+		var draggy = new Draggable(dragEl, {
 			within: containerEl,
 			droppable: '.droppable',
 			droppableClass: 'active'
@@ -156,15 +157,29 @@ describe("Functionality", function () {
 
 	});
 
+	it('draggable within draggable', function () {
+		var el = document.createElement('div');
+		el.innerHTML = '<div class="inner-draggable">Inner</div>';
+
+		var a = createDraggableCase("inner", {
+			within: 'parent'
+		}, el);
+
+		//create inner draggable
+		var b = Draggable(el.firstChild, {
+			within: 'parent'
+		});
+	});
+
 
 
 	/** Create test case */
-	function createDraggyCase(name, opts, drEl) {
-		var el = createDraggyContainer(name);
+	function createDraggableCase(name, opts, drEl) {
+		var el = createDraggableContainer(name);
 
-		drEl = createDraggyElement(name, drEl);
+		drEl = createDraggableElement(name, drEl);
 
-		var draggy = new Draggy(drEl, opts);
+		var draggy = new Draggable(drEl, opts);
 
 		bindHelpers(draggy);
 
@@ -173,7 +188,7 @@ describe("Functionality", function () {
 		return drEl;
 	}
 
-	function createDraggyElement (name, drEl) {
+	function createDraggableElement (name, drEl) {
 		//create mover
 		if (!drEl) {
 			drEl = document.createElement("div");
@@ -190,7 +205,7 @@ describe("Functionality", function () {
 	}
 
 	/** Container for draggable */
-	function createDraggyContainer (name) {
+	function createDraggableContainer (name) {
 		var el = document.createElement("div");
 		el.title = name;
 		el.className = "draggy-case";

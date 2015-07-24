@@ -15,7 +15,6 @@ var intersect = require('intersects');
 
 //events
 var on = require('emmy/on');
-var delegate = require('emmy/delegate');
 var off = require('emmy/off');
 var emit = require('emmy/emit');
 var Emitter = require('events');
@@ -78,6 +77,7 @@ function Draggable(target, options) {
 
 	//save element passed
 	self.element = target;
+
 	draggableCache.set(target, self);
 
 	//define mode of drag
@@ -193,8 +193,20 @@ proto.state = {
 			emit(self.element, 'idle', null, true);
 			self.emit('idle');
 
-			//bind start drag
-			delegate(doc, 'mousedown' + self._ns + ' touchstart' + self._ns, self.handle, function (e) {
+			self.currentHandles = q.all(self.handle);
+			self.currentHandles.forEach(function (handle) {
+				on(handle, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
+					//mark event as belonging to the draggy
+					if (!e.draggy) {
+						e.draggy = self;
+					}
+				});
+			});
+			//bind start drag to each handle
+			on(doc, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
+				//ignore not the self draggies
+				if (e.draggy !== self) return;
+
 				//if target is focused - ignore drag
 				if (doc.activeElement === e.target) return;
 
@@ -216,6 +228,10 @@ proto.state = {
 			self.element.classList.remove('draggy-idle');
 
 			off(doc, self._ns);
+			self.currentHandles.forEach(function (handle) {
+				off(handle, self._ns);
+			});
+			self.currentHandles = null;
 
 			//set up tracking
 			if (self.release) {
@@ -261,6 +277,7 @@ proto.state = {
 
 			//emit drag evts on element
 			self.emit('threshold');
+			emit(self.element, 'threshold');
 
 			//listen to doc movement
 			on(doc, 'touchmove' + self._ns + ' mousemove' + self._ns, function (e) {
@@ -800,6 +817,7 @@ proto.destroy = function () {
 	self.element = null;
 	self.within = null;
 };
+
 
 
 module.exports = Draggable;
