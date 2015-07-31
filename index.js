@@ -193,10 +193,6 @@ proto.state = {
 			emit(self.element, 'idle', null, true);
 			self.emit('idle');
 
-			//target to dragstart
-			off(self.dragTarget, 'focus' + self._ns);
-			self.dragTarget = null;
-
 			self.currentHandles = q.all(self.handle);
 			self.currentHandles.forEach(function (handle) {
 				on(handle, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
@@ -210,14 +206,6 @@ proto.state = {
 					})) {
 						return;
 					}
-
-					//abort drag if target being focused
-					self.dragTarget = e.target;
-					on(self.dragTarget, 'focus' + self._ns, function () {
-						self.state = 'idle';
-						off(self.dragTarget, 'focus' + self._ns);
-						self.dragTarget = null;
-					});
 
 					//register draggy
 					e.draggies.push(self);
