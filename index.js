@@ -194,18 +194,20 @@ proto.state = {
 			self.emit('idle');
 
 			self.currentHandles = q.all(self.handle);
+
 			self.currentHandles.forEach(function (handle) {
 				on(handle, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
 					//mark event as belonging to the draggy
 					if (!e.draggy) {
-						e.draggy = self;
+						e.draggy = [];
 					}
+					e.draggy.push(self);
 				});
 			});
 			//bind start drag to each handle
 			on(doc, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
 				//ignore not the self draggies
-				if (e.draggy !== self) return;
+				if (e.draggy && e.draggy.indexOf(self) < 0) return;
 
 				//if target is focused - ignore drag
 				if (doc.activeElement === e.target) return;
