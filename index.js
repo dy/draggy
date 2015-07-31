@@ -193,8 +193,11 @@ proto.state = {
 			emit(self.element, 'idle', null, true);
 			self.emit('idle');
 
-			self.currentHandles = q.all(self.handle);
+			//target to dragstart
+			off(self.dragTarget, 'focus' + self._ns);
+			self.dragTarget = null;
 
+			self.currentHandles = q.all(self.handle);
 			self.currentHandles.forEach(function (handle) {
 				on(handle, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
 					//mark event as belonging to the draggy
@@ -208,11 +211,18 @@ proto.state = {
 						return;
 					}
 
+					//abort drag if target being focused
+					self.dragTarget = e.target;
+					on(self.dragTarget, 'focus' + self._ns, function () {
+						self.state = 'idle';
+						off(self.dragTarget, 'focus' + self._ns);
+						self.dragTarget = null;
+					});
+
 					//register draggy
 					e.draggies.push(self);
 				});
 			});
-			//bind start drag to each handle
 			on(doc, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
 				//ignore non-draggy events
 				if (!e.draggies) {
@@ -225,9 +235,11 @@ proto.state = {
 				}
 
 				//if target is focused - ignore drag
-				if (doc.activeElement === e.target) return;
+				if (doc.activeElement === e.target) {
+					return;
+				}
 
-				e.preventDefault();
+				// e.preventDefault();
 
 				//multitouch has multiple starts
 				self.setTouch(e);
