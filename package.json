@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "watch": "watchify -r ./index.js:draggy -r mucss -d -o test/bundle.js",
-    "build": "browserify -r ./index:draggy -r mucss -o test/bundle.js",
-    "test": "mochify"
+    "build": "browserify -r ./index:draggy -r mucss -o test/bundle.js"
   },
   "files": [
     "index.js"

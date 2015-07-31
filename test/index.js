@@ -171,6 +171,26 @@ describe("Functionality", function () {
 		});
 	});
 
+	it("shared handle", function () {
+		var d = createDraggableCase("item1", {
+			within: 'parent',
+			release: true
+		});
+
+		//create second mover
+		var drEl = document.createElement("div");
+		drEl.innerHTML = 'item2';
+		drEl.className = 'draggy';
+		d.parentNode.appendChild(drEl);
+
+		var draggy = new Draggable(drEl, {
+			within: d.parentNode,
+			release: true,
+			handle: [drEl, d]
+		});
+		css(drEl, 'left', 100);
+	});
+
 
 
 	/** Create test case */

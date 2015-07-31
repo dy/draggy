@@ -8,10 +8,8 @@
 </h1>
 
 
-Draggable behaviour for elements.
+Draggable behaviour for elements. [Demo](https://dfcreative.github.io/draggy).
 
-
-## Use
 
 [![npm install draggy](https://nodei.co/npm/draggy.png?mini=true)](https://npmjs.org/package/draggy)
 
@@ -82,7 +80,3 @@ draggy.on('drag', function () {
 * It doesn’t do mouse hiding on drag, as it is implementable externally via callbacks.
 * It doesn’t init itself automatically on elements as it is due to user to decide when to create/init draggable elements.
 * It doesn’t polyfill native draggable, as it targets to complete simple task of visual placement of element.
-
-
-
-[![NPM](https://nodei.co/npm/draggy.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/draggy/)
