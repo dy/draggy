@@ -1,0 +1,125 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Draggy tests</title>
+<link rel="stylesheet" href="mocha.css" />
+
+<style>
+	* {
+		box-sizing: border-box;
+	}
+
+	body{
+		margin: 20px;
+	}
+
+	textarea {
+		min-width: 0;
+		max-width: 100%;
+	}
+
+
+	/* Painter layer */
+	.painter-canvas{
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 999;
+		pointer-events: none;
+	}
+
+	.draggy-case{
+		/*position: relative;*/
+		padding:2vh 2vw;
+		background: #f3f3f3;
+		/*min-height: 300px;*/
+		margin: 2vh 0;
+		position: relative;
+	}
+	.carousel-case{
+		padding-left: 0;
+		padding-right: 0;
+		overflow: hidden;
+	}
+	.droppable {
+		width: 15vh;
+		height: 15vh;
+		border: 2px dashed rgba(0,0,0,.2);
+	}
+	.droppable.active {
+		background: rgba(0,128,0,.2);
+	}
+
+	.draggy{
+		background: rgba(120,130,140,1);
+		width: 10vh;
+		/*width: 100px;*/
+		height: 10vh;
+		color: white;
+		font-size: 13px;
+		padding: 1vh 1vw;
+		position: relative;
+		cursor: move;
+
+		font-family: sans-serif;
+		font-size: 9px;
+		letter-spacing: 1px;
+		line-height: 1.5;
+		text-transform: uppercase;
+		border-radius: 3px;
+	}
+	.multitouch{
+		height: 400px;
+	}
+
+	.draggy-arrow {
+		width: 0;
+		height: 1px;
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		background: rgba(40,50,40,1);
+		display: block;
+		transition: .2s linear width;
+		transform-origin: 0% 0%;
+	}
+	.carousel{
+		width: 650px;
+		background: linear-gradient(to left, white 0%, black 100%);
+	}
+
+	.handle {
+		border: 1px dotted white;
+	}
+	.inner-draggable {
+		min-height: 40px;
+		border: 1px dotted white;
+	}
+</style>
+
+<div id="mocha"></div>
+
+
+
+<script src="bundle.js"></script>
+
+
+<script src="mocha.js"></script>
+<script>
+	mocha.setup('bdd');
+</script>
+<script src="index.js"></script>
+<script>
+	mocha.checkLeaks();
+	mocha.run();
+</script>
+
+
+<script>
+	//test memory
+	// var Draggy = require('draggy');
+	// for (var i = 0; i < 9999; i++) {
+	// 	(new Draggy(document.createElement('div'))).destroy();
+	// }
+</script>
