@@ -198,16 +198,31 @@ proto.state = {
 			self.currentHandles.forEach(function (handle) {
 				on(handle, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
 					//mark event as belonging to the draggy
-					if (!e.draggy) {
-						e.draggy = [];
+					if (!e.draggies) {
+						e.draggies = [];
 					}
-					e.draggy.push(self);
+					//ignore draggies containing other draggies
+					if (e.draggies.some(function (draggy) {
+						return self.element.contains(draggy.element);
+					})) {
+						return;
+					}
+
+					//register draggy
+					e.draggies.push(self);
 				});
 			});
 			//bind start drag to each handle
 			on(doc, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
-				//ignore not the self draggies
-				if (e.draggy && e.draggy.indexOf(self) < 0) return;
+				//ignore non-draggy events
+				if (!e.draggies) {
+					return;
+				}
+
+				//ignore dragstart for not registered draggies
+				if (e.draggies.indexOf(self) < 0) {
+					return;
+				}
 
 				//if target is focused - ignore drag
 				if (doc.activeElement === e.target) return;
