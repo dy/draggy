@@ -112,8 +112,18 @@ describe("Functionality", function () {
 
 		var a = createDraggableCase("handle", {
 			handle: el.firstChild,
+			within: 'parent'
+		}, el);
+	});
+
+	it("cancel", function () {
+		var el = document.createElement('div');
+		el.innerHTML = '<div class="handle">HANDLE <em><span>CANCEL</span></em></div>';
+
+		var a = createDraggableCase("cancel", {
+			handle: '.handle',
 			within: 'parent',
-			pin: [10,20,30,40]
+			cancel: ['em']
 		}, el);
 	});
 
@@ -204,6 +214,8 @@ describe("Functionality", function () {
 		bindHelpers(draggy);
 
 		el.appendChild(drEl);
+
+		draggy.update();
 
 		return drEl;
 	}

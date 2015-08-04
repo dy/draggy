@@ -91,6 +91,9 @@ function Draggable(target, options) {
 	defineState(self, 'axis', self.axis);
 	self.axis = null;
 
+	//preset handles
+	self.currentHandles = [];
+
 	//take over options
 	extend(self, options);
 
@@ -104,11 +107,11 @@ function Draggable(target, options) {
 		self.initDroppable();
 	}
 
-	//go to initial state
-	self.state = 'idle';
-
 	//try to calc out basic limits
 	self.update();
+
+	//go to initial state
+	self.state = 'idle';
 }
 
 
@@ -193,24 +196,6 @@ proto.state = {
 			emit(self.element, 'idle', null, true);
 			self.emit('idle');
 
-			self.currentHandles = q.all(self.handle);
-			self.currentHandles.forEach(function (handle) {
-				on(handle, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
-					//mark event as belonging to the draggy
-					if (!e.draggies) {
-						e.draggies = [];
-					}
-					//ignore draggies containing other draggies
-					if (e.draggies.some(function (draggy) {
-						return self.element.contains(draggy.element);
-					})) {
-						return;
-					}
-
-					//register draggy
-					e.draggies.push(self);
-				});
-			});
 			on(doc, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
 				//ignore non-draggy events
 				if (!e.draggies) {
@@ -245,10 +230,6 @@ proto.state = {
 			self.element.classList.remove('draggy-idle');
 
 			off(doc, self._ns);
-			self.currentHandles.forEach(function (handle) {
-				off(handle, self._ns);
-			});
-			self.currentHandles = null;
 
 			//set up tracking
 			if (self.release) {
@@ -432,8 +413,6 @@ proto.state = {
 
 	destroy: function () {
 		var self = this;
-		clearTimeout(self._animateTimeout);
-		off(doc, self._ns);
 	}
 };
 
@@ -514,6 +493,40 @@ proto.touchIdx = null;
  */
 proto.update = function (e) {
 	var self = this;
+
+	//update handles
+	self.currentHandles.forEach(function (handle) {
+		off(handle, self._ns);
+	});
+
+	var cancelEls = q.all(self.cancel);
+
+	self.currentHandles = q.all(self.handle);
+
+	self.currentHandles.forEach(function (handle) {
+		on(handle, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
+			//mark event as belonging to the draggy
+			if (!e.draggies) {
+				e.draggies = [];
+			}
+			//ignore draggies containing other draggies
+			if (e.draggies.some(function (draggy) {
+				return self.element.contains(draggy.element);
+			})) {
+				return;
+			}
+			//ignore events happened within cancelEls
+			if (cancelEls.some(function (cancelEl) {
+				return cancelEl.contains(e.target);
+			})) {
+				return;
+			}
+
+			//register draggy
+			e.draggies.push(self);
+		});
+	});
+
 
 	//initial translation offsets
 	var initXY = self.getCoords();
@@ -829,7 +842,17 @@ function isZeroArray(arr) {
 proto.destroy = function () {
 	var self = this;
 
+	self.currentHandles.forEach(function (handle) {
+		off(handle, self._ns);
+	});
+
 	self.state = 'destroy';
+
+	clearTimeout(self._animateTimeout);
+
+	off(doc, self._ns);
+	off(self.element, self._ns);
+
 
 	self.element = null;
 	self.within = null;

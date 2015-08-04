@@ -45,6 +45,7 @@ draggy.on('drag', function () {
 | `threshold` | `0` | A movement threshold required to start drag - whether array, number or function. |
 | `within` | `document` | Restrict movement within the container. Pass `'parent'` to take parent node. |
 | `handle` | `self.element` | Use the passed element or selector as a handle for drag. Clicking not on the handle will be ignored. |
+| `cancel` | `undefined` | Ignore dragging started on the elements matching the selector. |
 | `droppable` | `undefined` | Selector, element or list of elements to detect droppable areas. For each drop element will be invoked `drop, `dragover` and `dragout` events. |
 
 
