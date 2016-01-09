@@ -22,15 +22,15 @@ var getClientX = require('get-client-xy').x;
 var getClientY = require('get-client-xy').y;
 
 //utils
-var isArray = require('is-array');
+var isArray = require('mutype/is-array');
 var isNumber = require('mutype/is-number');
 var isString = require('mutype/is-string');
-var isFn = require('is-function');
+var isFn = require('mutype/is-fn');
 var defineState = require('define-state');
 var extend = require('xtend/mutable');
 var round = require('mumath/round');
-var between = require('mumath/between');
-var loop = require('mumath/loop');
+var between = require('mumath/clamp');
+var loop = require('mumath/mod');
 var getUid = require('get-uid');
 var q = require('queried');
 
