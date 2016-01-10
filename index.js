@@ -70,6 +70,9 @@ function Draggable(target, options) {
 
 	var self = this;
 
+	//ignore existing instance
+	if (draggableCache.get(target)) return draggableCache.get(target);
+
 	//get unique id for instance
 	//needed to track event binders
 	self.id = getUid();
@@ -98,7 +101,7 @@ function Draggable(target, options) {
 	extend(self, options);
 
 	//define handle
-	if (!self.handle) {
+	if (self.handle === undefined) {
 		self.handle = self.element;
 	}
 
@@ -464,11 +467,6 @@ proto.drag = function (e) {
 	self.prevMouseX = mouseX;
 	self.prevMouseY = mouseY;
 
-	//provide movement delta from initial state
-	var coords = self.getCoords();
-	self.movementX = coords[0] - self.initX;
-	self.movementY = coords[1] - self.initY;
-
 	//emit drag
 	self.emit('drag');
 	emit(self.element, 'drag', null, true);
@@ -555,6 +553,8 @@ proto.update = function (e) {
 	self.initY = initXY[1];
 	self.movementX = 0;
 	self.movementY = 0;
+	self.deltaX = 0;
+	self.deltaY = 0;
 
 	//container rect might be outside the vp, so calc absolute offsets
 	//zero-position offsets, with translation(0,0)
@@ -626,6 +626,27 @@ proto.update = function (e) {
 
 
 /**
+ * Update info regarding of movement
+ */
+proto.updateInfo = function (x, y) {
+	var self = this;
+
+	//provide delta from prev state
+	self.deltaX = x - self.prevX;
+	self.deltaY = y - self.prevY;
+
+	//save prev coords to use as a start point next time
+	self.prevX = x;
+	self.prevY = y;
+
+	//provide movement delta from initial state
+	self.movementX = x - self.initX;
+	self.movementY = y - self.initY;
+
+}
+
+
+/**
  * Way of placement:
  * - position === false (slower but more precise and cross-browser)
  * - translate3d === true (faster but may cause blurs on linux systems)
@@ -639,32 +660,38 @@ proto.css3 = {
 		};
 
 		this.setCoords = function (x, y) {
+			if (x == null) x = this.prevX;
+			if (y == null) y = this.prevY;
+
+			x = round(x, this.precision);
+			y = round(y, this.precision);
+
 			css(this.element, {
 				left: x,
 				top: y
 			});
 
-			//save prev coords to use as a start point next time
-			this.prevX = x;
-			this.prevY = y;
+			//update movement info
+			this.updateInfo(x, y);
 		};
 	},
 
 	//undefined placing is treated as translate3d
 	true: function () {
 		this.getCoords  = function () {
-			return getTranslate(this.element) || [0,0];
+			return getTranslate(this.element).slice(0, 2) || [0,0];
 		};
 
 		this.setCoords = function (x, y) {
+			if (x == null) x = this.prevX;
+			if (y == null) y = this.prevY;
+
 			x = round(x, this.precision);
 			y = round(y, this.precision);
 
 			css(this.element, 'transform', ['translate3d(', x, 'px,', y, 'px, 0)'].join(''));
 
-			//save prev coords to use as a start point next time
-			this.prevX = x;
-			this.prevY = y;
+			this.updateInfo(x, y);
 		};
 	}
 };
@@ -827,7 +854,7 @@ proto.axis = {
 				x = between(x, limits.left, limits.right);
 			}
 
-			this.setCoords(x, this.prevY);
+			this.setCoords(x);
 		};
 	},
 	y: function () {
@@ -842,7 +869,7 @@ proto.axis = {
 				y = between(y, limits.top, limits.bottom);
 			}
 
-			this.setCoords(this.prevX, y);
+			this.setCoords(null, y);
 		};
 	}
 };
