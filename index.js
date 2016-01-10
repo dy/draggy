@@ -71,7 +71,13 @@ function Draggable(target, options) {
 	var self = this;
 
 	//ignore existing instance
-	if (draggableCache.get(target)) return draggableCache.get(target);
+	var instance = draggableCache.get(target);
+	if (instance) {
+		//take over options
+		extend(instance, options);
+
+		return instance;
+	}
 
 	//get unique id for instance
 	//needed to track event binders
@@ -223,11 +229,10 @@ proto.state = {
 				}
 
 				//if target is focused - ignore drag
-				if (doc.activeElement === e.target) {
+				//FIXME: detect focused by whitelist of tags, name supposition may be wrong (idk, form elements have names, so likely to be focused by click)
+				if (e.target.name !== undefined) {
 					return;
 				}
-
-				// e.preventDefault();
 
 				//multitouch has multiple starts
 				self.setTouch(e);
