@@ -205,6 +205,12 @@ proto.state = {
 			self.metaKey = false;
 			self.altKey = false;
 
+			//reset movement params
+			self.movementX = 0;
+			self.movementY = 0;
+			self.deltaX = 0;
+			self.deltaY = 0;
+
 			on(doc, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
 				//ignore non-draggy events
 				if (!e.draggies) {
@@ -542,48 +548,8 @@ proto.update = function (e) {
 		});
 	});
 
-
-	//initial translation offsets
-	var initXY = self.getCoords();
-
-	//calc initial coords
-	self.prevX = initXY[0];
-	self.prevY = initXY[1];
-	self.initX = initXY[0];
-	self.initY = initXY[1];
-	self.movementX = 0;
-	self.movementY = 0;
-	self.deltaX = 0;
-	self.deltaY = 0;
-
-	//container rect might be outside the vp, so calc absolute offsets
-	//zero-position offsets, with translation(0,0)
-	var selfOffsets = offsets(self.element);
-	self.initOffsetX = selfOffsets.left - self.prevX;
-	self.initOffsetY = selfOffsets.top - self.prevY;
-	self.offsets = selfOffsets;
-
-	//handle parent case
-	var within = self.within;
-	if (self.within === 'parent') {
-		within = self.element.parentNode;
-	}
-	within = within || doc;
-
-	//absolute offsets of a container
-	var withinOffsets = offsets(within);
-	self.withinOffsets = withinOffsets;
-
-
-	//calculate movement limits - pin width might be wider than constraints
-	self.overflowX = self.pin.width - withinOffsets.width;
-	self.overflowY = self.pin.height - withinOffsets.height;
-	self.limits = {
-		left: withinOffsets.left - self.initOffsetX - self.pin[0] - (self.overflowX < 0 ? 0 : self.overflowX),
-		top: withinOffsets.top - self.initOffsetY - self.pin[1] - (self.overflowY < 0 ? 0 : self.overflowY),
-		right: self.overflowX > 0 ? 0 : withinOffsets.right - self.initOffsetX - self.pin[2],
-		bottom: self.overflowY > 0 ? 0 : withinOffsets.bottom - self.initOffsetY - self.pin[3]
-	};
+	//update limits
+	self.updateLimits();
 
 	//preset inner offsets
 	self.innerOffsetX = self.pin[0];
@@ -622,6 +588,50 @@ proto.update = function (e) {
 	//set sniper offset
 	self.sniperOffsetX = 0;
 	self.sniperOffsetY = 0;
+};
+
+/**
+ * Update limits only from current position
+ */
+proto.updateLimits = function () {
+	var self = this;
+
+	//initial translation offsets
+	var initXY = self.getCoords();
+
+	//calc initial coords
+	self.prevX = initXY[0];
+	self.prevY = initXY[1];
+	self.initX = initXY[0];
+	self.initY = initXY[1];
+
+	//container rect might be outside the vp, so calc absolute offsets
+	//zero-position offsets, with translation(0,0)
+	var selfOffsets = offsets(self.element);
+	self.initOffsetX = selfOffsets.left - self.prevX;
+	self.initOffsetY = selfOffsets.top - self.prevY;
+	self.offsets = selfOffsets;
+
+	//handle parent case
+	var within = self.within;
+	if (self.within === 'parent') {
+		within = self.element.parentNode;
+	}
+	within = within || doc;
+
+	//absolute offsets of a container
+	var withinOffsets = offsets(within);
+	self.withinOffsets = withinOffsets;
+
+	//calculate movement limits - pin width might be wider than constraints
+	self.overflowX = self.pin.width - withinOffsets.width;
+	self.overflowY = self.pin.height - withinOffsets.height;
+	self.limits = {
+		left: withinOffsets.left - self.initOffsetX - self.pin[0] - (self.overflowX < 0 ? 0 : self.overflowX),
+		top: withinOffsets.top - self.initOffsetY - self.pin[1] - (self.overflowY < 0 ? 0 : self.overflowY),
+		right: self.overflowX > 0 ? 0 : withinOffsets.right - self.initOffsetX - self.pin[2],
+		bottom: self.overflowY > 0 ? 0 : withinOffsets.bottom - self.initOffsetY - self.pin[3]
+	};
 };
 
 
@@ -817,6 +827,9 @@ proto.sniperSlowdown = .85;
 proto.axis = {
 	_: function () {
 		this.move = function (x, y) {
+			if (x == null) x = this.prevX;
+			if (y == null) y = this.prevY;
+
 			var limits = this.limits;
 
 			if (this.repeat) {
@@ -844,6 +857,9 @@ proto.axis = {
 	},
 	x: function () {
 		this.move = function (x, y) {
+			if (x == null) x = this.prevX;
+			if (y == null) y = this.prevY;
+
 			var limits = this.limits;
 
 			if (this.repeat) {
@@ -859,6 +875,9 @@ proto.axis = {
 	},
 	y: function () {
 		this.move = function (x, y) {
+			if (x == null) x = this.prevX;
+			if (y == null) y = this.prevY;
+
 			var limits = this.limits;
 
 			if (this.repeat) {
