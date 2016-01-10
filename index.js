@@ -196,6 +196,12 @@ proto.state = {
 			emit(self.element, 'idle', null, true);
 			self.emit('idle');
 
+			//reset keys
+			self.ctrlKey = false;
+			self.shiftKey = false;
+			self.metaKey = false;
+			self.altKey = false;
+
 			on(doc, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
 				//ignore non-draggy events
 				if (!e.draggies) {
@@ -439,6 +445,12 @@ proto.drag = function (e) {
 		self.sniperOffsetX += diffMouseX * self.sniperSlowdown;
 		self.sniperOffsetY += diffMouseY * self.sniperSlowdown;
 	}
+
+	//save refs to the meta keys
+	self.ctrlKey = e.ctrlKey;
+	self.shiftKey = e.shiftKey;
+	self.metaKey = e.metaKey;
+	self.altKey = e.altKey;
 
 	//calc movement x and y
 	//take absolute placing as it is the only reliable way (2x proved)
