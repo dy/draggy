@@ -464,6 +464,11 @@ proto.drag = function (e) {
 	self.prevMouseX = mouseX;
 	self.prevMouseY = mouseY;
 
+	//provide movement delta from initial state
+	var coords = self.getCoords();
+	self.movementX = coords[0] - self.initX;
+	self.movementY = coords[1] - self.initY;
+
 	//emit drag
 	self.emit('drag');
 	emit(self.element, 'drag', null, true);
@@ -546,6 +551,10 @@ proto.update = function (e) {
 	//calc initial coords
 	self.prevX = initXY[0];
 	self.prevY = initXY[1];
+	self.initX = initXY[0];
+	self.initY = initXY[1];
+	self.movementX = 0;
+	self.movementY = 0;
 
 	//container rect might be outside the vp, so calc absolute offsets
 	//zero-position offsets, with translation(0,0)
