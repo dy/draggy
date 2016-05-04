@@ -9,7 +9,7 @@
     "test": "budo --css test/index.css test/index.js"
   },
   "files": [
-    "index.js"
+    "./index.js"
   ],
   "repository": {
     "type": "git",
