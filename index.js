@@ -73,21 +73,27 @@ function Draggable(target, options) {
 	//ignore existing instance
 	var instance = draggableCache.get(target);
 	if (instance) {
+		instance.state = 'reset';
+
 		//take over options
 		extend(instance, options);
+
+		instance.update();
 
 		return instance;
 	}
 
-	//get unique id for instance
-	//needed to track event binders
-	self.id = getUid();
-	self._ns = '.draggy_' + self.id;
+	else {
+		//get unique id for instance
+		//needed to track event binders
+		self.id = getUid();
+		self._ns = '.draggy_' + self.id;
 
-	//save element passed
-	self.element = target;
+		//save element passed
+		self.element = target;
 
-	draggableCache.set(target, self);
+		draggableCache.set(target, self);
+	}
 
 	//define mode of drag
 	defineState(self, 'css3', self.css3);
@@ -433,6 +439,21 @@ proto.state = {
 
 	destroy: function () {
 		var self = this;
+	},
+
+	reset: function () {
+		var self = this;
+
+		self.currentHandles.forEach(function (handle) {
+			off(handle, self._ns);
+		});
+
+		clearTimeout(self._animateTimeout);
+
+		off(doc, self._ns);
+		off(self.element, self._ns);
+
+		return '_';
 	}
 };
 
