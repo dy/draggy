@@ -1,6 +1,6 @@
 {
   "name": "draggy",
-  "version": "1.6.3",
+  "version": "1.6.4",
   "description": "Make element draggable and stuff, you know",
   "main": "index.js",
   "scripts": {
