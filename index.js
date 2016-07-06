@@ -6,36 +6,37 @@
 
 
 //work with css
-var css = require('mucss/css');
-var parseCSSValue = require('mucss/parse-value');
-var selection = require('mucss/selection');
-var offsets = require('mucss/offset');
-var getTranslate = require('mucss/translate');
-var intersect = require('intersects');
+const css = require('mucss/css');
+const parseCSSValue = require('mucss/parse-value');
+const selection = require('mucss/selection');
+const offsets = require('mucss/offset');
+const getTranslate = require('mucss/translate');
+const intersect = require('intersects');
+const isFixed = require('mucss/is-fixed');
 
 //events
-var on = require('emmy/on');
-var off = require('emmy/off');
-var emit = require('emmy/emit');
-var Emitter = require('events');
-var getClientX = require('get-client-xy').x;
-var getClientY = require('get-client-xy').y;
+const on = require('emmy/on');
+const off = require('emmy/off');
+const emit = require('emmy/emit');
+const Emitter = require('events');
+const getClientX = require('get-client-xy').x;
+const getClientY = require('get-client-xy').y;
 
 //utils
-var isArray = require('mutype/is-array');
-var isNumber = require('mutype/is-number');
-var isString = require('mutype/is-string');
-var isFn = require('mutype/is-fn');
-var defineState = require('define-state');
-var extend = require('xtend/mutable');
-var round = require('mumath/round');
-var between = require('mumath/clamp');
-var loop = require('mumath/mod');
-var getUid = require('get-uid');
-var q = require('queried');
+const isArray = require('mutype/is-array');
+const isNumber = require('mutype/is-number');
+const isString = require('mutype/is-string');
+const isFn = require('mutype/is-fn');
+const defineState = require('define-state');
+const extend = require('xtend/mutable');
+const round = require('mumath/round');
+const between = require('mumath/clamp');
+const loop = require('mumath/mod');
+const getUid = require('get-uid');
+const inherits =  require('inherits');
 
 
-var win = window, doc = document, root = doc.documentElement;
+const win = window, doc = document, root = doc.documentElement;
 
 
 /**
@@ -49,7 +50,7 @@ var win = window, doc = document, root = doc.documentElement;
  *
  * That is why weakmap.
  */
-var draggableCache = Draggable.cache = new WeakMap;
+const draggableCache = Draggable.cache = new WeakMap;
 
 
 
@@ -95,16 +96,8 @@ function Draggable(target, options) {
 		draggableCache.set(target, self);
 	}
 
-	//define mode of drag
-	defineState(self, 'css3', self.css3);
-	self.css3 = true;
-
 	//define state behaviour
 	defineState(self, 'state', self.state);
-
-	//define axis behaviour
-	defineState(self, 'axis', self.axis);
-	self.axis = null;
 
 	//preset handles
 	self.currentHandles = [];
@@ -131,16 +124,23 @@ function Draggable(target, options) {
 
 
 /** Inherit draggable from Emitter */
-var proto = Draggable.prototype = Object.create(Emitter.prototype);
+inherits(Draggable, Emitter);
+
+
+//enable css3 by default
+Draggable.prototype.css3 = true;
+
+//both axes by default
+Draggable.prototype.axis = null;
 
 
 /** Init droppable "plugin" */
-proto.initDroppable = function () {
+Draggable.prototype.initDroppable = function () {
 	var self = this;
 
 	on(self, 'dragstart', function () {
 		var self = this;
-		self.dropTargets = q.all(self.droppable);
+		self.dropTargets = q(self.droppable);
 	});
 
 	on(self, 'drag', function () {
@@ -199,7 +199,7 @@ proto.initDroppable = function () {
  * @enum {string}
  * @default is 'idle'
  */
-proto.state = {
+Draggable.prototype.state = {
 	//idle
 	_: {
 		before: function () {
@@ -437,10 +437,6 @@ proto.state = {
 		}
 	},
 
-	destroy: function () {
-		var self = this;
-	},
-
 	reset: function () {
 		var self = this;
 
@@ -459,7 +455,7 @@ proto.state = {
 
 
 /** Drag handler. Needed to provide drag movement emulation via API */
-proto.drag = function (e) {
+Draggable.prototype.drag = function (e) {
 	var self = this;
 
 	e.preventDefault();
@@ -472,8 +468,14 @@ proto.drag = function (e) {
 		diffMouseY = mouseY - self.prevMouseY;
 
 	//absolute mouse coordinate
-	var mouseAbsX = mouseX + win.pageXOffset,
-		mouseAbsY = mouseY + win.pageYOffset;
+	var mouseAbsX = mouseX,
+		mouseAbsY = mouseY;
+
+	//if we are not fixed, our absolute position is relative to the doc
+	if (!self._isFixed) {
+		mouseAbsX += win.pageXOffset;
+		mouseAbsY += win.pageYOffset;
+	}
 
 	//calc sniper offset, if any
 	if (e.ctrlKey || e.metaKey) {
@@ -510,7 +512,7 @@ var touches = 0;
 
 
 /** Manage touches */
-proto.setTouch = function (e) {
+Draggable.prototype.setTouch = function (e) {
 	if (!e.touches || this.isTouched()) return this;
 
 	//current touch index
@@ -519,36 +521,43 @@ proto.setTouch = function (e) {
 
 	return this;
 };
-proto.resetTouch = function () {
+Draggable.prototype.resetTouch = function () {
 	touches = 0;
 	this.touchIdx = null;
 
 	return this;
 };
-proto.isTouched = function () {
+Draggable.prototype.isTouched = function () {
 	return this.touchIdx !== null;
 };
 
 
 /** Index to fetch touch number from event */
-proto.touchIdx = null;
+Draggable.prototype.touchIdx = null;
 
 
 /**
  * Update movement limits.
  * Refresh self.withinOffsets and self.limits.
  */
-proto.update = function (e) {
+Draggable.prototype.update = function (e) {
 	var self = this;
+
+	self._isFixed = isFixed(self.element);
+
+	//enforce abs position
+	if (!self.css3) {
+		css(this.element, 'position', 'absolute');
+	}
 
 	//update handles
 	self.currentHandles.forEach(function (handle) {
 		off(handle, self._ns);
 	});
 
-	var cancelEls = q.all(self.cancel);
+	var cancelEls = q(self.cancel);
 
-	self.currentHandles = q.all(self.handle);
+	self.currentHandles = q(self.handle);
 
 	self.currentHandles.forEach(function (handle) {
 		on(handle, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
@@ -556,6 +565,7 @@ proto.update = function (e) {
 			if (!e.draggies) {
 				e.draggies = [];
 			}
+
 			//ignore draggies containing other draggies
 			if (e.draggies.some(function (draggy) {
 				return self.element.contains(draggy.element);
@@ -619,7 +629,7 @@ proto.update = function (e) {
 /**
  * Update limits only from current position
  */
-proto.updateLimits = function () {
+Draggable.prototype.updateLimits = function () {
 	var self = this;
 
 	//initial translation offsets
@@ -634,6 +644,7 @@ proto.updateLimits = function () {
 	//container rect might be outside the vp, so calc absolute offsets
 	//zero-position offsets, with translation(0,0)
 	var selfOffsets = offsets(self.element);
+
 	self.initOffsetX = selfOffsets.left - self.prevX;
 	self.initOffsetY = selfOffsets.top - self.prevY;
 	self.offsets = selfOffsets;
@@ -647,6 +658,12 @@ proto.updateLimits = function () {
 
 	//absolute offsets of a container
 	var withinOffsets = offsets(within);
+	if (within === win && self._isFixed) {
+		withinOffsets.top -= win.pageYOffset;
+		withinOffsets.left -= win.pageXOffset;
+		withinOffsets.bottom -= win.pageYOffset;
+		withinOffsets.right -= win.pageXOffset;
+	}
 	self.withinOffsets = withinOffsets;
 
 	//calculate movement limits - pin width might be wider than constraints
@@ -660,11 +677,10 @@ proto.updateLimits = function () {
 	};
 };
 
-
 /**
  * Update info regarding of movement
  */
-proto.updateInfo = function (x, y) {
+Draggable.prototype.updateInfo = function (x, y) {
 	var self = this;
 
 	//provide delta from prev state
@@ -684,51 +700,44 @@ proto.updateInfo = function (x, y) {
 
 /**
  * Way of placement:
- * - position === false (slower but more precise and cross-browser)
- * - translate3d === true (faster but may cause blurs on linux systems)
+ * - css3 === false (slower but more precise and cross-browser)
+ * - css3 === true (faster but may cause blurs on linux systems)
  */
-proto.css3 = {
-	_: function () {
-		css(this.element, 'position', 'absolute');
-		this.getCoords = function () {
-			// return [this.element.offsetLeft, this.element.offsetTop];
-			return [parseCSSValue(css(this.element,'left')), parseCSSValue(css(this.element, 'top'))];
-		};
+Draggable.prototype.getCoords = function () {
+	if (!this.css3) {
+		// return [this.element.offsetLeft, this.element.offsetTop];
+		return [parseCSSValue(css(this.element,'left')), parseCSSValue(css(this.element, 'top'))];
+	}
+	else {
+		return getTranslate(this.element).slice(0, 2) || [0,0];
+	}
+};
+Draggable.prototype.setCoords = function (x, y) {
+	if (this.css3) {
+		if (x == null) x = this.prevX;
+		if (y == null) y = this.prevY;
 
-		this.setCoords = function (x, y) {
-			if (x == null) x = this.prevX;
-			if (y == null) y = this.prevY;
+		x = round(x, this.precision);
+		y = round(y, this.precision);
 
-			x = round(x, this.precision);
-			y = round(y, this.precision);
+		css(this.element, 'transform', ['translate3d(', x, 'px,', y, 'px, 0)'].join(''));
 
-			css(this.element, {
-				left: x,
-				top: y
-			});
+		this.updateInfo(x, y);
+	}
+	else {
+		if (x == null) x = this.prevX;
+		if (y == null) y = this.prevY;
 
-			//update movement info
-			this.updateInfo(x, y);
-		};
-	},
+		x = round(x, this.precision);
+		y = round(y, this.precision);
 
-	//undefined placing is treated as translate3d
-	true: function () {
-		this.getCoords  = function () {
-			return getTranslate(this.element).slice(0, 2) || [0,0];
-		};
+		css(this.element, {
+			left: x,
+			top: y
+		});
 
-		this.setCoords = function (x, y) {
-			if (x == null) x = this.prevX;
-			if (y == null) y = this.prevY;
-
-			x = round(x, this.precision);
-			y = round(y, this.precision);
-
-			css(this.element, 'transform', ['translate3d(', x, 'px,', y, 'px, 0)'].join(''));
-
-			this.updateInfo(x, y);
-		};
+		//update movement info
+		this.updateInfo(x, y);
 	}
 };
 
@@ -738,14 +747,14 @@ proto.css3 = {
  * @type {Element|object}
  * @default doc.documentElement
  */
-proto.within = doc;
+Draggable.prototype.within = doc;
 
 
 /** Handle to drag */
-proto.handle;
+Draggable.prototype.handle;
 
 
-Object.defineProperties(proto, {
+Object.defineProperties(Draggable.prototype, {
 	/**
 	 * Which area of draggable should not be outside the restriction area.
 	 * @type {(Array|number)}
@@ -819,29 +828,29 @@ Object.defineProperties(proto, {
  * @default false
  * @todo
  */
-proto.release = false;
-proto.releaseDuration = 500;
-proto.velocity = 1000;
-proto.maxSpeed = 250;
-proto.framerate = 50;
+Draggable.prototype.release = false;
+Draggable.prototype.releaseDuration = 500;
+Draggable.prototype.velocity = 1000;
+Draggable.prototype.maxSpeed = 250;
+Draggable.prototype.framerate = 50;
 
 
 /** To what extent round position */
-proto.precision = 1;
+Draggable.prototype.precision = 1;
 
 
 /** Droppable params */
-proto.droppable = null;
-proto.droppableTolerance = 0.5;
-proto.droppableClass = null;
+Draggable.prototype.droppable = null;
+Draggable.prototype.droppableTolerance = 0.5;
+Draggable.prototype.droppableClass = null;
 
 
 /** Slow down movement by pressing ctrl/cmd */
-proto.sniper = true;
+Draggable.prototype.sniper = true;
 
 
 /** How much to slow sniper drag */
-proto.sniperSlowdown = .85;
+Draggable.prototype.sniperSlowdown = .85;
 
 
 /**
@@ -850,78 +859,72 @@ proto.sniperSlowdown = .85;
  * @default undefined
  * @enum {string}
  */
-proto.axis = {
-	_: function () {
-		this.move = function (x, y) {
-			if (x == null) x = this.prevX;
-			if (y == null) y = this.prevY;
+Draggable.prototype.move = function (x, y) {
+	if (this.axis === 'x') {
+		if (x == null) x = this.prevX;
+		if (y == null) y = this.prevY;
 
-			var limits = this.limits;
+		var limits = this.limits;
 
-			if (this.repeat) {
-				var w = (limits.right - limits.left);
-				var h = (limits.bottom - limits.top);
-				var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0] - Math.max(0, this.overflowX);
-				var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1] - Math.max(0, this.overflowY);
-				if (this.repeat === 'x') {
-					x = loop(x - oX, w) + oX;
-				}
-				else if (this.repeat === 'y') {
-					y = loop(y - oY, h) + oY;
-				}
-				else {
-					x = loop(x - oX, w) + oX;
-					y = loop(y - oY, h) + oY;
-				}
-			}
-
+		if (this.repeat) {
+			var w = (limits.right - limits.left);
+			var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0] - Math.max(0, this.overflowX);
+			x = loop(x - oX, w) + oX;
+		} else {
 			x = between(x, limits.left, limits.right);
+		}
+
+		this.setCoords(x);
+	}
+	else if (this.axis === 'y') {
+		if (x == null) x = this.prevX;
+		if (y == null) y = this.prevY;
+
+		var limits = this.limits;
+
+		if (this.repeat) {
+			var h = (limits.bottom - limits.top);
+			var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1] - Math.max(0, this.overflowY);
+			y = loop(y - oY, h) + oY;
+		} else {
 			y = between(y, limits.top, limits.bottom);
+		}
 
-			this.setCoords(x, y);
-		};
-	},
-	x: function () {
-		this.move = function (x, y) {
-			if (x == null) x = this.prevX;
-			if (y == null) y = this.prevY;
+		this.setCoords(null, y);
+	}
+	else {
+		if (x == null) x = this.prevX;
+		if (y == null) y = this.prevY;
 
-			var limits = this.limits;
+		var limits = this.limits;
 
-			if (this.repeat) {
-				var w = (limits.right - limits.left);
-				var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0] - Math.max(0, this.overflowX);
+		if (this.repeat) {
+			var w = (limits.right - limits.left);
+			var h = (limits.bottom - limits.top);
+			var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0] - Math.max(0, this.overflowX);
+			var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1] - Math.max(0, this.overflowY);
+			if (this.repeat === 'x') {
 				x = loop(x - oX, w) + oX;
-			} else {
-				x = between(x, limits.left, limits.right);
 			}
-
-			this.setCoords(x);
-		};
-	},
-	y: function () {
-		this.move = function (x, y) {
-			if (x == null) x = this.prevX;
-			if (y == null) y = this.prevY;
-
-			var limits = this.limits;
-
-			if (this.repeat) {
-				var h = (limits.bottom - limits.top);
-				var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1] - Math.max(0, this.overflowY);
+			else if (this.repeat === 'y') {
 				y = loop(y - oY, h) + oY;
-			} else {
-				y = between(y, limits.top, limits.bottom);
 			}
+			else {
+				x = loop(x - oX, w) + oX;
+				y = loop(y - oY, h) + oY;
+			}
+		}
 
-			this.setCoords(null, y);
-		};
+		x = between(x, limits.left, limits.right);
+		y = between(y, limits.top, limits.bottom);
+
+		this.setCoords(x, y);
 	}
 };
 
 
 /** Repeat movement by one of axises */
-proto.repeat = false;
+Draggable.prototype.repeat = false;
 
 
 /** Check whether arr is filled with zeros */
@@ -932,7 +935,7 @@ function isZeroArray(arr) {
 
 
 /** Clean all memory-related things */
-proto.destroy = function () {
+Draggable.prototype.destroy = function () {
 	var self = this;
 
 	self.currentHandles.forEach(function (handle) {
@@ -951,6 +954,21 @@ proto.destroy = function () {
 	self.within = null;
 };
 
+
+
+//little helpers
+
+function q (str) {
+	if (Array.isArray(str)) {
+		return str.map(q).reduce( (prev, curr) => prev.concat(curr), [] );
+	}
+	else if (str instanceof HTMLElement) {
+		return [str];
+	}
+	else {
+		return [].slice.call(document.querySelectorAll(str));
+	}
+}
 
 
 module.exports = Draggable;

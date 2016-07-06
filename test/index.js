@@ -35,6 +35,7 @@ test("threshold", function () {
 });
 
 test("release", function () {
+	//FIXME: css3:false shits the bed here
 	var a = createDraggableCase("release", {
 		release: true,
 		within: 'parent'
@@ -168,6 +169,7 @@ test.skip("autoscroll", function () {
 });
 
 test('draggable within draggable', function () {
+	//FIXME: css3:false shits the bed in this case
 	var el = document.createElement('div');
 	el.innerHTML = '<div class="inner-draggable">Inner</div>';
 
