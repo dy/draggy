@@ -1,6 +1,8 @@
 var Draggable = require('../');
 var css = require('mucss');
 var test = require('tst');
+const dgbl = require('draggabilly');
+
 
 var body = document.body;
 
@@ -14,8 +16,40 @@ canvas.height = window.innerHeight;
 
 
 test("plain", function () {
-	var a = createDraggableCase("plain", {
+	//container
+	var container = document.createElement("div");
+	container.title = name;
+	container.className = "draggy-case";
+	body.appendChild(container);
+
+	//create mover
+	var drEl;
+	if (!drEl) {
+		drEl = document.createElement("div");
+		drEl.innerHTML = name;
+	}
+	drEl.className = 'draggy';
+	container.appendChild(drEl);
+
+	//create direction arrow
+	var arrow = document.createElement('div');
+	arrow.className = 'draggy-arrow';
+	drEl.appendChild(arrow);
+
+	var dragman = new Draggable(drEl, {
+		within: 'parent'
 	});
+
+	//bind helpers
+	// dragman.on('threshold', paintThreshold);
+	// dragman.on('dragstart', renderHelpers);
+	// dragman.on('drag', renderHelpers);
+	// dragman.on('dragend', clear);
+	// dragman.on('idle', clear);
+	// dragman.on('track', renderDirection);
+
+	// dragman.update();
+
 });
 
 test("within", function () {

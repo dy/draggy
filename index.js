@@ -69,7 +69,7 @@ function Draggable(target, options) {
 		return new Draggable(target, options);
 	}
 
-	var self = this;
+	var that = this;
 
 	//ignore existing instance
 	var instance = draggableCache.get(target);
@@ -87,39 +87,39 @@ function Draggable(target, options) {
 	else {
 		//get unique id for instance
 		//needed to track event binders
-		self.id = getUid();
-		self._ns = '.draggy_' + self.id;
+		that.id = getUid();
+		that._ns = '.draggy_' + that.id;
 
 		//save element passed
-		self.element = target;
+		that.element = target;
 
-		draggableCache.set(target, self);
+		draggableCache.set(target, that);
 	}
 
 	//define state behaviour
-	defineState(self, 'state', self.state);
+	defineState(that, 'state', that.state);
 
 	//preset handles
-	self.currentHandles = [];
+	that.currentHandles = [];
 
 	//take over options
-	extend(self, options);
+	extend(that, options);
 
 	//define handle
-	if (self.handle === undefined) {
-		self.handle = self.element;
+	if (that.handle === undefined) {
+		that.handle = that.element;
 	}
 
 	//setup droppable
-	if (self.droppable) {
-		self.initDroppable();
+	if (that.droppable) {
+		that.initDroppable();
 	}
 
 	//try to calc out basic limits
-	self.update();
+	that.update();
 
 	//go to initial state
-	self.state = 'idle';
+	that.state = 'idle';
 }
 
 
@@ -136,59 +136,59 @@ Draggable.prototype.axis = null;
 
 /** Init droppable "plugin" */
 Draggable.prototype.initDroppable = function () {
-	var self = this;
+	var that = this;
 
-	on(self, 'dragstart', function () {
-		var self = this;
-		self.dropTargets = q(self.droppable);
+	on(that, 'dragstart', function () {
+		var that = this;
+		that.dropTargets = q(that.droppable);
 	});
 
-	on(self, 'drag', function () {
-		var self = this;
+	on(that, 'drag', function () {
+		var that = this;
 
-		if (!self.dropTargets) {
+		if (!that.dropTargets) {
 			return;
 		}
 
-		var selfRect = offsets(self.element);
+		var thatRect = offsets(that.element);
 
-		self.dropTargets.forEach(function (dropTarget) {
+		that.dropTargets.forEach(function (dropTarget) {
 			var targetRect = offsets(dropTarget);
 
-			if (intersect(selfRect, targetRect, self.droppableTolerance)) {
-				if (self.droppableClass) {
-					dropTarget.classList.add(self.droppableClass);
+			if (intersect(thatRect, targetRect, that.droppableTolerance)) {
+				if (that.droppableClass) {
+					dropTarget.classList.add(that.droppableClass);
 				}
-				if (!self.dropTarget) {
-					self.dropTarget = dropTarget;
+				if (!that.dropTarget) {
+					that.dropTarget = dropTarget;
 
-					emit(self, 'dragover', dropTarget);
-					emit(dropTarget, 'dragover', self);
+					emit(that, 'dragover', dropTarget);
+					emit(dropTarget, 'dragover', that);
 				}
 			}
 			else {
-				if (self.dropTarget) {
-					emit(self, 'dragout', dropTarget);
-					emit(dropTarget, 'dragout', self);
+				if (that.dropTarget) {
+					emit(that, 'dragout', dropTarget);
+					emit(dropTarget, 'dragout', that);
 
-					self.dropTarget = null;
+					that.dropTarget = null;
 				}
-				if (self.droppableClass) {
-					dropTarget.classList.remove(self.droppableClass);
+				if (that.droppableClass) {
+					dropTarget.classList.remove(that.droppableClass);
 				}
 			}
 		});
 	});
 
-	on(self, 'dragend', function () {
-		var self = this;
+	on(that, 'dragend', function () {
+		var that = this;
 
 		//emit drop, if any
-		if (self.dropTarget) {
-			emit(self.dropTarget, 'drop', self);
-			emit(self, 'drop', self.dropTarget);
-			self.dropTarget.classList.remove(self.droppableClass);
-			self.dropTarget = null;
+		if (that.dropTarget) {
+			emit(that.dropTarget, 'drop', that);
+			emit(that, 'drop', that.dropTarget);
+			that.dropTarget.classList.remove(that.droppableClass);
+			that.dropTarget = null;
 		}
 	});
 };
@@ -203,34 +203,34 @@ Draggable.prototype.state = {
 	//idle
 	_: {
 		before: function () {
-			var self = this;
+			var that = this;
 
-			self.element.classList.add('draggy-idle');
+			that.element.classList.add('draggy-idle');
 
 			//emit drag evts on element
-			emit(self.element, 'idle', null, true);
-			self.emit('idle');
+			emit(that.element, 'idle', null, true);
+			that.emit('idle');
 
 			//reset keys
-			self.ctrlKey = false;
-			self.shiftKey = false;
-			self.metaKey = false;
-			self.altKey = false;
+			that.ctrlKey = false;
+			that.shiftKey = false;
+			that.metaKey = false;
+			that.altKey = false;
 
 			//reset movement params
-			self.movementX = 0;
-			self.movementY = 0;
-			self.deltaX = 0;
-			self.deltaY = 0;
+			that.movementX = 0;
+			that.movementY = 0;
+			that.deltaX = 0;
+			that.deltaY = 0;
 
-			on(doc, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
+			on(doc, 'mousedown' + that._ns + ' touchstart' + that._ns, function (e) {
 				//ignore non-draggy events
 				if (!e.draggies) {
 					return;
 				}
 
 				//ignore dragstart for not registered draggies
-				if (e.draggies.indexOf(self) < 0) {
+				if (e.draggies.indexOf(that) < 0) {
 					return;
 				}
 
@@ -241,195 +241,195 @@ Draggable.prototype.state = {
 				}
 
 				//multitouch has multiple starts
-				self.setTouch(e);
+				that.setTouch(e);
 
 				//update movement params
-				self.update(e);
+				that.update(e);
 
 				//go to threshold state
-				self.state = 'threshold';
+				that.state = 'threshold';
 			});
 		},
 		after: function () {
-			var self = this;
+			var that = this;
 
-			self.element.classList.remove('draggy-idle');
+			that.element.classList.remove('draggy-idle');
 
-			off(doc, self._ns);
+			off(doc, that._ns);
 
 			//set up tracking
-			if (self.release) {
-				self._trackingInterval = setInterval(function (e) {
+			if (that.release) {
+				that._trackingInterval = setInterval(function (e) {
 					var now = Date.now();
-					var elapsed = now - self.timestamp;
+					var elapsed = now - that.timestamp;
 
 					//get delta movement since the last track
-					var dX = self.prevX - self.frame[0];
-					var dY = self.prevY - self.frame[1];
-					self.frame[0] = self.prevX;
-					self.frame[1] = self.prevY;
+					var dX = that.prevX - that.frame[0];
+					var dY = that.prevY - that.frame[1];
+					that.frame[0] = that.prevX;
+					that.frame[1] = that.prevY;
 
 					var delta = Math.sqrt(dX * dX + dY * dY);
 
 					//get speed as average of prev and current (prevent div by zero)
-					var v = Math.min(self.velocity * delta / (1 + elapsed), self.maxSpeed);
-					self.speed = 0.8 * v + 0.2 * self.speed;
+					var v = Math.min(that.velocity * delta / (1 + elapsed), that.maxSpeed);
+					that.speed = 0.8 * v + 0.2 * that.speed;
 
 					//get new angle as a last diff
 					//NOTE: vector average isn’t the same as speed scalar average
-					self.angle = Math.atan2(dY, dX);
+					that.angle = Math.atan2(dY, dX);
 
-					self.emit('track');
+					that.emit('track');
 
-					return self;
-				}, self.framerate);
+					return that;
+				}, that.framerate);
 			}
 		}
 	},
 
 	threshold: {
 		before: function () {
-			var self = this;
+			var that = this;
 
 			//ignore threshold state, if threshold is none
-			if (isZeroArray(self.threshold)) {
-				self.state = 'drag';
+			if (isZeroArray(that.threshold)) {
+				that.state = 'drag';
 				return;
 			}
 
-			self.element.classList.add('draggy-threshold');
+			that.element.classList.add('draggy-threshold');
 
 			//emit drag evts on element
-			self.emit('threshold');
-			emit(self.element, 'threshold');
+			that.emit('threshold');
+			emit(that.element, 'threshold');
 
 			//listen to doc movement
-			on(doc, 'touchmove' + self._ns + ' mousemove' + self._ns, function (e) {
+			on(doc, 'touchmove' + that._ns + ' mousemove' + that._ns, function (e) {
 				e.preventDefault();
 
 				//compare movement to the threshold
-				var clientX = getClientX(e, self.touchIdx);
-				var clientY = getClientY(e, self.touchIdx);
-				var difX = self.prevMouseX - clientX;
-				var difY = self.prevMouseY - clientY;
+				var clientX = getClientX(e, that.touchIdx);
+				var clientY = getClientY(e, that.touchIdx);
+				var difX = that.prevMouseX - clientX;
+				var difY = that.prevMouseY - clientY;
 
-				if (difX < self.threshold[0] || difX > self.threshold[2] || difY < self.threshold[1] || difY > self.threshold[3]) {
-					self.update(e);
-					self.state = 'drag';
+				if (difX < that.threshold[0] || difX > that.threshold[2] || difY < that.threshold[1] || difY > that.threshold[3]) {
+					that.update(e);
+					that.state = 'drag';
 				}
 			});
-			on(doc, 'mouseup' + self._ns + ' touchend' + self._ns + '', function (e) {
+			on(doc, 'mouseup' + that._ns + ' touchend' + that._ns + '', function (e) {
 				e.preventDefault();
 
 				//forget touches
-				self.resetTouch();
+				that.resetTouch();
 
-				self.state = 'idle';
+				that.state = 'idle';
 			});
 		},
 
 		after: function () {
-			var self = this;
+			var that = this;
 
-			self.element.classList.remove('draggy-threshold');
+			that.element.classList.remove('draggy-threshold');
 
-			off(doc, self._ns);
+			off(doc, that._ns);
 		}
 	},
 
 	drag: {
 		before: function () {
-			var self = this;
+			var that = this;
 
 			//reduce dragging clutter
 			selection.disable(root);
 
-			self.element.classList.add('draggy-drag');
+			that.element.classList.add('draggy-drag');
 
 			//emit drag evts on element
-			self.emit('dragstart');
-			emit(self.element, 'dragstart', null, true);
+			that.emit('dragstart');
+			emit(that.element, 'dragstart', null, true);
 
-			//emit drag events on self
-			self.emit('drag');
-			emit(self.element, 'drag', null, true);
+			//emit drag events on that
+			that.emit('drag');
+			emit(that.element, 'drag', null, true);
 
 			//stop drag on leave
-			on(doc, 'touchend' + self._ns + ' mouseup' + self._ns + ' mouseleave' + self._ns, function (e) {
+			on(doc, 'touchend' + that._ns + ' mouseup' + that._ns + ' mouseleave' + that._ns, function (e) {
 				e.preventDefault();
 
 				//forget touches - dragend is called once
-				self.resetTouch();
+				that.resetTouch();
 
 				//manage release movement
-				if (self.speed > 1) {
-					self.state = 'release';
+				if (that.speed > 1) {
+					that.state = 'release';
 				}
 
 				else {
-					self.state = 'idle';
+					that.state = 'idle';
 				}
 			});
 
 			//move via transform
-			on(doc, 'touchmove' + self._ns + ' mousemove' + self._ns, function (e) {
-				self.drag(e);
+			on(doc, 'touchmove' + that._ns + ' mousemove' + that._ns, function (e) {
+				that.drag(e);
 			});
 		},
 
 		after: function () {
-			var self = this;
+			var that = this;
 
 			//enable document interactivity
 			selection.enable(root);
 
-			self.element.classList.remove('draggy-drag');
+			that.element.classList.remove('draggy-drag');
 
 			//emit dragend on element, this
-			self.emit('dragend');
-			emit(self.element, 'dragend', null, true);
+			that.emit('dragend');
+			emit(that.element, 'dragend', null, true);
 
 			//unbind drag events
-			off(doc, self._ns);
+			off(doc, that._ns);
 
-			clearInterval(self._trackingInterval);
+			clearInterval(that._trackingInterval);
 		}
 	},
 
 	release: {
 		before: function () {
-			var self = this;
+			var that = this;
 
-			self.element.classList.add('draggy-release');
+			that.element.classList.add('draggy-release');
 
 			//enter animation mode
-			clearTimeout(self._animateTimeout);
+			clearTimeout(that._animateTimeout);
 
 			//set proper transition
-			css(self.element, {
-				'transition': (self.releaseDuration) + 'ms ease-out ' + (self.css3 ? 'transform' : 'position')
+			css(that.element, {
+				'transition': (that.releaseDuration) + 'ms ease-out ' + (that.css3 ? 'transform' : 'position')
 			});
 
 			//plan leaving anim mode
-			self._animateTimeout = setTimeout(function () {
-				self.state = 'idle';
-			}, self.releaseDuration);
+			that._animateTimeout = setTimeout(function () {
+				that.state = 'idle';
+			}, that.releaseDuration);
 
 
 			//calc target point & animate to it
-			self.move(
-				self.prevX + self.speed * Math.cos(self.angle),
-				self.prevY + self.speed * Math.sin(self.angle)
+			that.move(
+				that.prevX + that.speed * Math.cos(that.angle),
+				that.prevY + that.speed * Math.sin(that.angle)
 			);
 
-			self.speed = 0;
-			self.emit('track');
+			that.speed = 0;
+			that.emit('track');
 		},
 
 		after: function () {
-			var self = this;
+			var that = this;
 
-			self.element.classList.remove('draggy-release');
+			that.element.classList.remove('draggy-release');
 
 			css(this.element, {
 				'transition': null
@@ -438,16 +438,16 @@ Draggable.prototype.state = {
 	},
 
 	reset: function () {
-		var self = this;
+		var that = this;
 
-		self.currentHandles.forEach(function (handle) {
-			off(handle, self._ns);
+		that.currentHandles.forEach(function (handle) {
+			off(handle, that._ns);
 		});
 
-		clearTimeout(self._animateTimeout);
+		clearTimeout(that._animateTimeout);
 
-		off(doc, self._ns);
-		off(self.element, self._ns);
+		off(doc, that._ns);
+		off(that.element, that._ns);
 
 		return '_';
 	}
@@ -456,54 +456,54 @@ Draggable.prototype.state = {
 
 /** Drag handler. Needed to provide drag movement emulation via API */
 Draggable.prototype.drag = function (e) {
-	var self = this;
+	var that = this;
 
 	e.preventDefault();
 
-	var mouseX = getClientX(e, self.touchIdx),
-		mouseY = getClientY(e, self.touchIdx);
+	var mouseX = getClientX(e, that.touchIdx),
+		mouseY = getClientY(e, that.touchIdx);
 
 	//calc mouse movement diff
-	var diffMouseX = mouseX - self.prevMouseX,
-		diffMouseY = mouseY - self.prevMouseY;
+	var diffMouseX = mouseX - that.prevMouseX,
+		diffMouseY = mouseY - that.prevMouseY;
 
 	//absolute mouse coordinate
 	var mouseAbsX = mouseX,
 		mouseAbsY = mouseY;
 
 	//if we are not fixed, our absolute position is relative to the doc
-	if (!self._isFixed) {
+	if (!that._isFixed) {
 		mouseAbsX += win.pageXOffset;
 		mouseAbsY += win.pageYOffset;
 	}
 
 	//calc sniper offset, if any
 	if (e.ctrlKey || e.metaKey) {
-		self.sniperOffsetX += diffMouseX * self.sniperSlowdown;
-		self.sniperOffsetY += diffMouseY * self.sniperSlowdown;
+		that.sniperOffsetX += diffMouseX * that.sniperSlowdown;
+		that.sniperOffsetY += diffMouseY * that.sniperSlowdown;
 	}
 
 	//save refs to the meta keys
-	self.ctrlKey = e.ctrlKey;
-	self.shiftKey = e.shiftKey;
-	self.metaKey = e.metaKey;
-	self.altKey = e.altKey;
+	that.ctrlKey = e.ctrlKey;
+	that.shiftKey = e.shiftKey;
+	that.metaKey = e.metaKey;
+	that.altKey = e.altKey;
 
 	//calc movement x and y
 	//take absolute placing as it is the only reliable way (2x proved)
-	var x = (mouseAbsX - self.initOffsetX) - self.innerOffsetX - self.sniperOffsetX,
-		y = (mouseAbsY - self.initOffsetY) - self.innerOffsetY - self.sniperOffsetY;
+	var x = (mouseAbsX - that.initOffsetX) - that.innerOffsetX - that.sniperOffsetX,
+		y = (mouseAbsY - that.initOffsetY) - that.innerOffsetY - that.sniperOffsetY;
 
 	//move element
-	self.move(x, y);
+	that.move(x, y);
 
 	//save prevClientXY for calculating diff
-	self.prevMouseX = mouseX;
-	self.prevMouseY = mouseY;
+	that.prevMouseX = mouseX;
+	that.prevMouseY = mouseY;
 
 	//emit drag
-	self.emit('drag');
-	emit(self.element, 'drag', null, true);
+	that.emit('drag');
+	emit(that.element, 'drag', null, true);
 };
 
 
@@ -538,29 +538,29 @@ Draggable.prototype.touchIdx = null;
 
 /**
  * Update movement limits.
- * Refresh self.withinOffsets and self.limits.
+ * Refresh that.withinOffsets and that.limits.
  */
 Draggable.prototype.update = function (e) {
-	var self = this;
+	var that = this;
 
-	self._isFixed = isFixed(self.element);
+	that._isFixed = isFixed(that.element);
 
 	//enforce abs position
-	if (!self.css3) {
+	if (!that.css3) {
 		css(this.element, 'position', 'absolute');
 	}
 
 	//update handles
-	self.currentHandles.forEach(function (handle) {
-		off(handle, self._ns);
+	that.currentHandles.forEach(function (handle) {
+		off(handle, that._ns);
 	});
 
-	var cancelEls = q(self.cancel);
+	var cancelEls = q(that.cancel);
 
-	self.currentHandles = q(self.handle);
+	that.currentHandles = q(that.handle);
 
-	self.currentHandles.forEach(function (handle) {
-		on(handle, 'mousedown' + self._ns + ' touchstart' + self._ns, function (e) {
+	that.currentHandles.forEach(function (handle) {
+		on(handle, 'mousedown' + that._ns + ' touchstart' + that._ns, function (e) {
 			//mark event as belonging to the draggy
 			if (!e.draggies) {
 				e.draggies = [];
@@ -568,7 +568,7 @@ Draggable.prototype.update = function (e) {
 
 			//ignore draggies containing other draggies
 			if (e.draggies.some(function (draggy) {
-				return self.element.contains(draggy.element);
+				return that.element.contains(draggy.element);
 			})) {
 				return;
 			}
@@ -580,100 +580,102 @@ Draggable.prototype.update = function (e) {
 			}
 
 			//register draggy
-			e.draggies.push(self);
+			e.draggies.push(that);
 		});
 	});
 
 	//update limits
-	self.updateLimits();
+	that.updateLimits();
 
 	//preset inner offsets
-	self.innerOffsetX = self.pin[0];
-	self.innerOffsetY = self.pin[1];
+	that.innerOffsetX = that.pin[0];
+	that.innerOffsetY = that.pin[1];
 
-	var selfClientRect = self.element.getBoundingClientRect();
+	var thatClientRect = that.element.getBoundingClientRect();
 
 	//if event passed - update acc to event
 	if (e) {
 		//take last mouse position from the event
-		self.prevMouseX = getClientX(e, self.touchIdx);
-		self.prevMouseY = getClientY(e, self.touchIdx);
+		that.prevMouseX = getClientX(e, that.touchIdx);
+		that.prevMouseY = getClientY(e, that.touchIdx);
 
 		//if mouse is within the element - take offset normally as rel displacement
-		self.innerOffsetX = -selfClientRect.left + getClientX(e, self.touchIdx);
-		self.innerOffsetY = -selfClientRect.top + getClientY(e, self.touchIdx);
+		that.innerOffsetX = -thatClientRect.left + getClientX(e, that.touchIdx);
+		that.innerOffsetY = -thatClientRect.top + getClientY(e, that.touchIdx);
 	}
 	//if no event - suppose pin-centered event
 	else {
 		//take mouse position & inner offset as center of pin
-		var pinX = (self.pin[0] + self.pin[2] ) * 0.5;
-		var pinY = (self.pin[1] + self.pin[3] ) * 0.5;
-		self.prevMouseX = selfClientRect.left + pinX;
-		self.prevMouseY = selfClientRect.top + pinY;
-		self.innerOffsetX = pinX;
-		self.innerOffsetY = pinY;
+		var pinX = (that.pin[0] + that.pin[2] ) * 0.5;
+		var pinY = (that.pin[1] + that.pin[3] ) * 0.5;
+		that.prevMouseX = thatClientRect.left + pinX;
+		that.prevMouseY = thatClientRect.top + pinY;
+		that.innerOffsetX = pinX;
+		that.innerOffsetY = pinY;
 	}
 
 	//set initial kinetic props
-	self.speed = 0;
-	self.amplitude = 0;
-	self.angle = 0;
-	self.timestamp = +new Date();
-	self.frame = [self.prevX, self.prevY];
+	that.speed = 0;
+	that.amplitude = 0;
+	that.angle = 0;
+	that.timestamp = +new Date();
+	that.frame = [that.prevX, that.prevY];
 
 	//set sniper offset
-	self.sniperOffsetX = 0;
-	self.sniperOffsetY = 0;
+	that.sniperOffsetX = 0;
+	that.sniperOffsetY = 0;
 };
 
 /**
  * Update limits only from current position
  */
 Draggable.prototype.updateLimits = function () {
-	var self = this;
+	var that = this;
 
 	//initial translation offsets
-	var initXY = self.getCoords();
+	var initXY = that.getCoords();
 
 	//calc initial coords
-	self.prevX = initXY[0];
-	self.prevY = initXY[1];
-	self.initX = initXY[0];
-	self.initY = initXY[1];
+	that.prevX = initXY[0];
+	that.prevY = initXY[1];
+	that.initX = initXY[0];
+	that.initY = initXY[1];
 
 	//container rect might be outside the vp, so calc absolute offsets
 	//zero-position offsets, with translation(0,0)
-	var selfOffsets = offsets(self.element);
+	var thatOffsets = offsets(that.element);
 
-	self.initOffsetX = selfOffsets.left - self.prevX;
-	self.initOffsetY = selfOffsets.top - self.prevY;
-	self.offsets = selfOffsets;
+	that.initOffsetX = thatOffsets.left - that.prevX;
+	that.initOffsetY = thatOffsets.top - that.prevY;
+	that.offsets = thatOffsets;
 
 	//handle parent case
-	var within = self.within;
-	if (self.within === 'parent') {
-		within = self.element.parentNode;
+	var within = that.within;
+	if (that.within === 'parent' || that.within === true) {
+		within = that.element.parentNode;
 	}
 	within = within || doc;
 
 	//absolute offsets of a container
 	var withinOffsets = offsets(within);
-	if (within === win && self._isFixed) {
+
+	if (within === win && that._isFixed) {
 		withinOffsets.top -= win.pageYOffset;
 		withinOffsets.left -= win.pageXOffset;
 		withinOffsets.bottom -= win.pageYOffset;
 		withinOffsets.right -= win.pageXOffset;
 	}
-	self.withinOffsets = withinOffsets;
+	that.withinOffsets = withinOffsets;
 
 	//calculate movement limits - pin width might be wider than constraints
-	self.overflowX = self.pin.width - withinOffsets.width;
-	self.overflowY = self.pin.height - withinOffsets.height;
-	self.limits = {
-		left: withinOffsets.left - self.initOffsetX - self.pin[0] - (self.overflowX < 0 ? 0 : self.overflowX),
-		top: withinOffsets.top - self.initOffsetY - self.pin[1] - (self.overflowY < 0 ? 0 : self.overflowY),
-		right: self.overflowX > 0 ? 0 : withinOffsets.right - self.initOffsetX - self.pin[2],
-		bottom: self.overflowY > 0 ? 0 : withinOffsets.bottom - self.initOffsetY - self.pin[3]
+	that.overflowX = that.pin.width - withinOffsets.width;
+	that.overflowY = that.pin.height - withinOffsets.height;
+
+	that.limits = {
+		left: withinOffsets.left - that.initOffsetX - that.pin[0] - (that.overflowX < 0 ? 0 : that.overflowX),
+		top: withinOffsets.top - that.initOffsetY - that.pin[1] - (that.overflowY < 0 ? 0 : that.overflowY),
+		right: that.overflowX > 0 ? 0 : withinOffsets.right - that.initOffsetX - that.pin[2],
+		bottom: (that.overflowY > 0 ? 0 : withinOffsets.bottom - that.initOffsetY - that.pin[3])
 	};
 };
 
@@ -681,19 +683,19 @@ Draggable.prototype.updateLimits = function () {
  * Update info regarding of movement
  */
 Draggable.prototype.updateInfo = function (x, y) {
-	var self = this;
+	var that = this;
 
 	//provide delta from prev state
-	self.deltaX = x - self.prevX;
-	self.deltaY = y - self.prevY;
+	that.deltaX = x - that.prevX;
+	that.deltaY = y - that.prevY;
 
 	//save prev coords to use as a start point next time
-	self.prevX = x;
-	self.prevY = y;
+	that.prevX = x;
+	that.prevY = y;
 
 	//provide movement delta from initial state
-	self.movementX = x - self.initX;
-	self.movementY = y - self.initY;
+	that.movementX = x - that.initX;
+	that.movementY = y - that.initY;
 
 }
 
@@ -936,22 +938,22 @@ function isZeroArray(arr) {
 
 /** Clean all memory-related things */
 Draggable.prototype.destroy = function () {
-	var self = this;
+	var that = this;
 
-	self.currentHandles.forEach(function (handle) {
-		off(handle, self._ns);
+	that.currentHandles.forEach(function (handle) {
+		off(handle, that._ns);
 	});
 
-	self.state = 'destroy';
+	that.state = 'destroy';
 
-	clearTimeout(self._animateTimeout);
+	clearTimeout(that._animateTimeout);
 
-	off(doc, self._ns);
-	off(self.element, self._ns);
+	off(doc, that._ns);
+	off(that.element, that._ns);
 
 
-	self.element = null;
-	self.within = null;
+	that.element = null;
+	that.within = null;
 };
 
 
