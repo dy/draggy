@@ -962,7 +962,7 @@ Draggable.prototype.destroy = function () {
 
 function q (str) {
 	if (Array.isArray(str)) {
-		return str.map(q).reduce( (prev, curr) => prev.concat(curr), [] );
+		return str.map(q).reduce(function(prev, curr) { return prev.concat(curr); }, [] );
 	}
 	else if (str instanceof HTMLElement) {
 		return [str];
