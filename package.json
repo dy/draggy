@@ -32,6 +32,7 @@
     "emmy": ">=5.0.0",
     "get-client-xy": "^1.0.1",
     "get-uid": "^1.0.1",
+    "inherits": "^2.0.1",
     "intersects": "^1.0.0",
     "mucss": "^1.0",
     "mumath": "^2.0.0",
