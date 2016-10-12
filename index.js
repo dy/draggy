@@ -6,37 +6,37 @@
 
 
 //work with css
-const css = require('mucss/css');
-const parseCSSValue = require('mucss/parse-value');
-const selection = require('mucss/selection');
-const offsets = require('mucss/offset');
-const getTranslate = require('mucss/translate');
-const intersect = require('intersects');
-const isFixed = require('mucss/is-fixed');
+var css = require('mucss/css');
+var parseCSSValue = require('mucss/parse-value');
+var selection = require('mucss/selection');
+var offsets = require('mucss/offset');
+var getTranslate = require('mucss/translate');
+var intersect = require('intersects');
+var isFixed = require('mucss/is-fixed');
 
 //events
-const on = require('emmy/on');
-const off = require('emmy/off');
-const emit = require('emmy/emit');
-const Emitter = require('events');
-const getClientX = require('get-client-xy').x;
-const getClientY = require('get-client-xy').y;
+var on = require('emmy/on');
+var off = require('emmy/off');
+var emit = require('emmy/emit');
+var Emitter = require('events');
+var getClientX = require('get-client-xy').x;
+var getClientY = require('get-client-xy').y;
 
 //utils
-const isArray = require('mutype/is-array');
-const isNumber = require('mutype/is-number');
-const isString = require('mutype/is-string');
-const isFn = require('mutype/is-fn');
-const defineState = require('define-state');
-const extend = require('xtend/mutable');
-const round = require('mumath/round');
-const between = require('mumath/clamp');
-const loop = require('mumath/mod');
-const getUid = require('get-uid');
-const inherits =  require('inherits');
+var isArray = require('mutype/is-array');
+var isNumber = require('mutype/is-number');
+var isString = require('mutype/is-string');
+var isFn = require('mutype/is-fn');
+var defineState = require('define-state');
+var extend = require('xtend/mutable');
+var round = require('mumath/round');
+var between = require('mumath/clamp');
+var loop = require('mumath/mod');
+var getUid = require('get-uid');
+var inherits =  require('inherits');
 
 
-const win = window, doc = document, root = doc.documentElement;
+var win = window, doc = document, root = doc.documentElement;
 
 
 /**
@@ -50,7 +50,7 @@ const win = window, doc = document, root = doc.documentElement;
  *
  * That is why weakmap.
  */
-const draggableCache = Draggable.cache = new WeakMap;
+var draggableCache = Draggable.cache = new WeakMap;
 
 
 
