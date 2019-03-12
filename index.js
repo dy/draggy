@@ -202,7 +202,7 @@ Draggable.prototype.initDroppable = function () {
 Draggable.prototype.state = {
 	//idle
 	_: {
-		before: function () {
+		enter: function () {
 			var that = this;
 
 			that.element.classList.add('draggy-idle');
@@ -250,7 +250,7 @@ Draggable.prototype.state = {
 				that.state = 'threshold';
 			});
 		},
-		after: function () {
+		exit: function () {
 			var that = this;
 
 			that.element.classList.remove('draggy-idle');
@@ -288,7 +288,7 @@ Draggable.prototype.state = {
 	},
 
 	threshold: {
-		before: function () {
+		enter: function () {
 			var that = this;
 
 			//ignore threshold state, if threshold is none
@@ -328,7 +328,7 @@ Draggable.prototype.state = {
 			});
 		},
 
-		after: function () {
+		exit: function () {
 			var that = this;
 
 			that.element.classList.remove('draggy-threshold');
@@ -338,7 +338,7 @@ Draggable.prototype.state = {
 	},
 
 	drag: {
-		before: function () {
+		enter: function () {
 			var that = this;
 
 			//reduce dragging clutter
@@ -377,7 +377,7 @@ Draggable.prototype.state = {
 			});
 		},
 
-		after: function () {
+		exit: function () {
 			var that = this;
 
 			//enable document interactivity
@@ -397,7 +397,7 @@ Draggable.prototype.state = {
 	},
 
 	release: {
-		before: function () {
+		enter: function () {
 			var that = this;
 
 			that.element.classList.add('draggy-release');
@@ -426,7 +426,7 @@ Draggable.prototype.state = {
 			that.emit('track');
 		},
 
-		after: function () {
+		exit: function () {
 			var that = this;
 
 			that.element.classList.remove('draggy-release');
