@@ -1,5 +1,5 @@
 <h1>
-<img src="https://cdn.rawgit.com/dfcreative/draggy/design/logo.png"/>
+<img src="https://cdn.rawgit.com/dy/draggy/design/logo.png"/>
 
 Draggy
 
@@ -7,7 +7,7 @@ Draggy
 </h1>
 
 
-Draggable behaviour for elements. [Demo](https://dfcreative.github.io/draggy).
+Draggable behaviour for elements. [Demo](https://dy.github.io/draggy).
 
 
 [![npm install draggy](https://nodei.co/npm/draggy.png?mini=true)](https://npmjs.org/package/draggy)
