@@ -1,10 +1,9 @@
 <h1>
-	<img src="https://cdn.rawgit.com/dfcreative/draggy/design/logo.png"/><br/>
+<img src="https://cdn.rawgit.com/dfcreative/draggy/design/logo.png"/>
 
-	Draggy
+Draggy
 
-	<a href="/license"><img src="https://img.shields.io/npm/l/draggy.svg"/></a>
-	<img src="https://david-dm.org/dfcreative/draggy.svg"/>
+<a href="/license"><img src="https://img.shields.io/npm/l/draggy.svg"/></a>
 </h1>
 
 
