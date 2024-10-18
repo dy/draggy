@@ -1,8 +1,4 @@
-import parseCSSValue from 'mucss/parse-value';
-import selection from 'mucss/selection';
-import offsets from 'mucss/offset';
-import getTranslate from 'mucss/translate';
-import isFixed from 'mucss/is-fixed';
+import offsets from 'mucss/offset'
 import { on, off, emit } from 'emmy';
 import { x as getClientX, y as getClientY } from 'get-client-xy';
 import defineState from 'define-state';
@@ -605,7 +601,7 @@ class Draggable {
 	getCoords() {
 		if (!this.css3) {
 			// return [this.element.offsetLeft, this.element.offsetTop];
-			return [parseCSSValue(this.element.style.left), parseCSSValue(this.element.style.top)];
+			return [parseFloat(this.element.style.left), parseFloat(this.element.style.top)];
 		}
 		else {
 			return getTranslate(this.element).slice(0, 2) || [0, 0];
@@ -888,6 +884,55 @@ function precision(n) {
 		d = s.indexOf('.') + 1;
 
 	return !d ? 0 : s.length - d;
+}
+
+const selection = {
+	disable(el) {
+		el.style.userSelect = 'none';
+		el.style.userDrag = 'none';
+		el.style.touchCallout = 'none';
+		el.setAttribute('unselectable', 'on');
+		el.addEventListener('selectstart', e => e.preventDefault());
+	},
+
+	enable(el) {
+		el.style.userSelect = null;
+		el.style.userDrag = null;
+		el.style.touchCallout = null;
+		el.removeAttribute('unselectable');
+		el.removeEventListener('selectstart', e => e.preventDefault());
+	}
+}
+function getTranslate(el) {
+	var translateStr = el.style.transform;
+
+	//find translate token, retrieve comma-enclosed values
+	//translate3d(1px, 2px, 2) → 1px, 2px, 2
+	//FIXME: handle nested calcs
+	var match = /translate(?:3d)?\s*\(([^\)]*)\)/.exec(translateStr);
+
+	if (!match) return [0, 0];
+	var values = match[1].split(/\s*,\s*/);
+
+	//parse values
+	//FIXME: nested values are not necessarily pixels
+	return values.map((value) => parseValue(value));
+}
+
+function isFixed(el) {
+	var parentEl = el;
+
+	//window is fixed, btw
+	if (el === window) return true;
+
+	//unlike the doc
+	if (el === document) return false;
+
+	while (parentEl) {
+		if (getComputedStyle(parentEl).position === 'fixed') return true;
+		parentEl = parentEl.offsetParent;
+	}
+	return false;
 }
 
 
