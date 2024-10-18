@@ -2,14 +2,16 @@
   "name": "draggy",
   "version": "2.0.1",
   "description": "Make element draggable and stuff, you know",
-  "main": "index.js",
+  "main": "src/index.js",
+  "module": "src/index.js",
   "type": "module",
   "scripts": {
-    "watch": "esbuild index.js --bundle --outfile=draggy.js --global-name=draggy --watch --format=esm --sourcemap",
-    "build": "esbuild index.js --bundle --outfile=draggy.js --global-name=draggy --minify --format=esm --sourcemap"
+    "watch": "esbuild src/index.js --bundle --outfile=dist/draggy.js --watch --format=esm --sourcemap",
+    "build": "esbuild src/index.js --bundle --outfile=dist/draggy.js --minify --format=esm --sourcemap"
   },
   "files": [
-    "./index.js"
+    "dist",
+    "src"
   ],
   "repository": {
     "type": "git",
@@ -19,7 +21,10 @@
     "draggable",
     "drag-n-drop",
     "interact",
-    "draggy"
+    "draggy",
+    "drag",
+    "drop",
+    "drag-and-drop"
   ],
   "author": "Dmitry Iv",
   "license": "MIT",
