@@ -45,7 +45,7 @@ draggy.on('drag', function () {
 | `within` | `document` | Restrict movement within the container. Pass `'parent'` to use parent node. |
 | `handle` | `self.element` | Use element or selector as a handle for drag. Clicking outside the handle is ignored. |
 | `cancel` | `undefined` | Ignore dragging started on the elements matching the selector. |
-| `droppable` | `undefined` | Selector, element or list of elements to detect droppable areas. For each drop element will be invoked `drop, `dragover` and `dragout` events. |
+| `droppable` | `undefined` | Selector, element or list of elements to detect droppable areas. For each drop element will be invoked `drop`, `dragover` and `dragout` events. |
 
 
 ## Events
