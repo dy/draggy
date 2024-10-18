@@ -35,15 +35,15 @@ draggy.on('drag', function () {
 | Parameter | Default | Description |
 |---|:---:|---|
 | `axis` | `null` | Restrict movement by axis: `'x'`, `'y'` or `null`. |
-| `pin` | `[0,0, selfWidth, selfHeight]` | An area within draggable element which is surely resides within movement limits. Useful if you need draggable element to be restricted not by it’s own shape, but by some inner shape. |
+| `pin` | `[0,0, selfWidth, selfHeight]` | Defines a smaller area within the draggable element that stays within movement limits. Useful to restrict movement based on an inner shape rather than the full element. |
 | `precision` | `1` | Round position to that extent, in pixels. |
-| `css3` | `true` | Use `position` or `translate3d` to place element. The first is more precise and reliable, the second is faster. |
+| `css3` | `true` | Use `position` vs `translate3d` to place element. The first is more precise and reliable, the second is faster. |
 | `release` | `false` | Continue movement when user releases drag. |
-| `repeat` | `false` | Cycle movement by one of axis: `'x'`, `'y'` or `'both'`. |
+| `repeat` | `false` | Loop movement by one of axis: `'x'`, `'y'` or `'both'`. |
 | `sniper` | `true` | Slow down movement by pressing Ctrl/Cmd. |
-| `threshold` | `0` | A movement threshold required to start drag - whether array, number or function. |
-| `within` | `document` | Restrict movement within the container. Pass `'parent'` to take parent node. |
-| `handle` | `self.element` | Use the passed element or selector as a handle for drag. Clicking not on the handle will be ignored. Passing null will ignore handle. |
+| `threshold` | `0` | A movement threshold required to start drag - whether an array, number or function. |
+| `within` | `document` | Restrict movement within the container. Pass `'parent'` to use parent node. |
+| `handle` | `self.element` | Use element or selector as a handle for drag. Clicking outside the handle is ignored. |
 | `cancel` | `undefined` | Ignore dragging started on the elements matching the selector. |
 | `droppable` | `undefined` | Selector, element or list of elements to detect droppable areas. For each drop element will be invoked `drop, `dragover` and `dragout` events. |
 
