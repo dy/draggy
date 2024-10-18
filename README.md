@@ -71,6 +71,11 @@ draggy.on('drag', function () {
 * It doesn’t init itself automatically - it's up to you to decide when to create/init draggable.
 * It doesn’t polyfill native draggable, as it targets to complete simple task of visual placement of element.
 
+## Alternatives
+
+* [interactjs](https://www.npmjs.com/package/interactjs)
+* [shipify/draggable](https://www.npmjs.com/package/@shopify/draggable)
+* [draggabilly](https://www.npmjs.com/package/draggabilly)
 
 ## License
 
