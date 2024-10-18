@@ -7,13 +7,13 @@ Draggy
 </h1>
 
 
-Draggable behaviour for elements. [Demo](https://dy.github.io/draggy).
+Make any element draggable. [Demo](https://dy.github.io/draggy).
 
 
 [![npm install draggy](https://nodei.co/npm/draggy.png?mini=true)](https://npmjs.org/package/draggy)
 
 ```js
-var Draggable = require('draggy');
+import Draggable from 'draggy';
 
 //make an element draggable
 var el = document.querySelector('.my-element');
@@ -63,20 +63,15 @@ draggy.on('drag', function () {
 | `drop` |  Called on self and on drop target. |
 
 
-## API
-
-| Name | Description |
-|---|---|
-| `Draggy.cache` | WeakMap containing draggy instances for elements. `Draggy.cache.get(element)` - return draggy instance for the element. |
-| `Draggy.prototype.move(x, y)` | Move to a new position, taking into account axis and limits. You can redefine this method to implement custom kinds of movement restrictions, like circular movement. But who dares? |
-| `Draggy.prototype.state` | Current drag state: `'idle'`, `'threshold'`, `'drag'`, `'release'`. |
-| `Draggy.prototype.update(event?)` | Update movement limits. `event` is optional. |
-
-
 
 ## What draggy is not
 
-* It doesn’t do ghost move, as it is not draggable behaviour and can be implemented externally.
-* It doesn’t do mouse hiding on drag, as it is implementable externally via callbacks.
-* It doesn’t init itself automatically on elements as it is due to user to decide when to create/init draggable elements.
+* It doesn’t do ghost move, as it is not draggable behavior and can be implemented externally.
+* It doesn’t do mouse hiding on drag, as it can be done via callbacks.
+* It doesn’t init itself automatically - it's up to you to decide when to create/init draggable.
 * It doesn’t polyfill native draggable, as it targets to complete simple task of visual placement of element.
+
+
+## License
+
+MIT
