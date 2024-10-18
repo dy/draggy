@@ -1,13 +1,10 @@
-import css from 'mucss/css';
 import parseCSSValue from 'mucss/parse-value';
 import selection from 'mucss/selection';
 import offsets from 'mucss/offset';
 import getTranslate from 'mucss/translate';
 import isFixed from 'mucss/is-fixed';
-
 import { on, off, emit } from 'emmy';
 import { x as getClientX, y as getClientY } from 'get-client-xy';
-
 import defineState from 'define-state';
 
 
@@ -274,7 +271,9 @@ class Draggable {
 					e.preventDefault();
 
 					//forget touches
-					this.resetTouch();
+					touches = 0;
+					this.touchIdx = null;
+
 
 					this.state = 'idle';
 				});
@@ -306,7 +305,9 @@ class Draggable {
 					e.preventDefault();
 
 					//forget touches - dragend is called once
-					this.resetTouch();
+					touches = 0;
+					this.touchIdx = null;
+
 
 					//manage release movement
 					if (this.speed > 1) {
@@ -349,9 +350,7 @@ class Draggable {
 				clearTimeout(this._animateTimeout);
 
 				//set proper transition
-				css(this.element, {
-					'transition': (this.releaseDuration) + 'ms ease-out ' + (this.css3 ? 'transform' : 'position')
-				});
+				this.element.style.transition = (this.releaseDuration) + 'ms ease-out ' + (this.css3 ? 'transform' : 'position');
 
 				//plan leaving anim mode
 				this._animateTimeout = setTimeout(() => {
@@ -371,10 +370,7 @@ class Draggable {
 
 			after: function () {
 				this.element.classList.remove('draggy-release');
-
-				css(this.element, {
-					'transition': null
-				});
+				this.element.style.transition = null;
 			}
 		},
 
@@ -444,22 +440,11 @@ class Draggable {
 
 	// manage touches
 	setTouch(e) {
-		if (!e.touches || this.isTouched()) return this;
+		if (!e.touches || this.touchIdx !== null) return this;
 
 		//current touch index
 		this.touchIdx = touches;
 		touches++;
-
-		return this;
-	}
-	resetTouch() {
-		touches = 0;
-		this.touchIdx = null;
-
-		return this;
-	}
-	isTouched() {
-		return this.touchIdx !== null;
 	}
 
 	// index to fetch touch number from event
@@ -471,7 +456,7 @@ class Draggable {
 
 		//enforce abs position
 		if (!this.css3) {
-			css(this.element, 'position', 'absolute');
+			this.element.style.position = 'absolute';
 		}
 
 		//update handles
@@ -620,7 +605,7 @@ class Draggable {
 	getCoords() {
 		if (!this.css3) {
 			// return [this.element.offsetLeft, this.element.offsetTop];
-			return [parseCSSValue(css(this.element, 'left')), parseCSSValue(css(this.element, 'top'))];
+			return [parseCSSValue(this.element.style.left), parseCSSValue(this.element.style.top)];
 		}
 		else {
 			return getTranslate(this.element).slice(0, 2) || [0, 0];
@@ -634,7 +619,7 @@ class Draggable {
 			x = round(x, this.precision);
 			y = round(y, this.precision);
 
-			css(this.element, 'transform', ['translate3d(', x, 'px,', y, 'px, 0)'].join(''));
+			this.element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 
 			this.updateInfo(x, y);
 		}
@@ -645,10 +630,8 @@ class Draggable {
 			x = round(x, this.precision);
 			y = round(y, this.precision);
 
-			css(this.element, {
-				left: x,
-				top: y
-			});
+			this.element.style.left = x;
+			this.element.style.top = y;
 
 			//update movement info
 			this.updateInfo(x, y);
@@ -702,7 +685,7 @@ class Draggable {
 		return pin;
 	}
 
-	/** Avoid initial mousemove */
+	// Avoid initial mousemove
 	set threshold(val) {
 		if (typeof val === 'number') {
 			this._threshold = [-val * 0.5, -val * 0.5, val * 0.5, val * 0.5];
@@ -724,12 +707,7 @@ class Draggable {
 		return this._threshold || [0, 0, 0, 0];
 	}
 
-	/**
-	 * Movement release params
-	 *
-	 * @type {(number|false)}
-	 * @default false
-	 */
+	// Movement release params
 	release = false;
 	releaseDuration = 500;
 	velocity = 1000;
@@ -750,12 +728,7 @@ class Draggable {
 	// How much to slow sniper drag
 	sniperSlowdown = .85;
 
-	/**
-	 * Restrict movement by axis
-	 *
-	 * @default undefined
-	 * @enum {string}
-	 */
+	// Restrict movement by axis
 	move(x, y) {
 		if (this.axis === 'x') {
 			if (x == null) x = this.prevX;
@@ -819,10 +792,10 @@ class Draggable {
 		}
 	}
 
-	/** Repeat movement by one of axises */
+	// Repeat movement by one of axises
 	repeat = false;
 
-	/** Clean all memory-related things */
+	// Clean all memory-related things
 	destroy() {
 		this.currentHandles.forEach((handle) => {
 			off(handle, this._ns);
