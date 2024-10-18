@@ -74,7 +74,7 @@ draggy.on('drag', function () {
 ## Alternatives
 
 * [interactjs](https://www.npmjs.com/package/interactjs)
-* [shipify/draggable](https://www.npmjs.com/package/@shopify/draggable)
+* [@shopify/draggable](https://www.npmjs.com/package/@shopify/draggable)
 * [draggabilly](https://www.npmjs.com/package/draggabilly)
 
 ## License
