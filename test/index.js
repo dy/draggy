@@ -1,8 +1,5 @@
-var Draggable = require('../');
-var css = require('mucss');
-var test = require('tst');
-const dgbl = require('draggabilly');
-
+import Draggable from '../dist/draggy.js';
+import test from 'tst';
 
 var body = document.body;
 
@@ -11,7 +8,7 @@ var canvas = document.createElement('canvas');
 canvas.className = 'painter-canvas';
 body.appendChild(canvas);
 var ctx = canvas.getContext("2d");
-canvas.width  = window.innerWidth;
+canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 
@@ -78,14 +75,14 @@ test("release", function () {
 
 test("pin area", function () {
 	var a = createDraggableCase("pin area", {
-		pin: [20,20,50,50],
+		pin: [20, 20, 50, 50],
 		within: 'parent'
 	});
 });
 
 test("point picker", function () {
 	var a = createDraggableCase("point picker", {
-		pin: [30,30],
+		pin: [30, 30],
 		threshold: 0,
 		within: 'parent'
 	});
@@ -95,7 +92,7 @@ test("repeat", function () {
 	var a = createDraggableCase("repeat", {
 		repeat: true,
 		within: 'parent',
-		pin: [10,20,30,40]
+		pin: [10, 20, 30, 40]
 	});
 });
 
@@ -138,7 +135,7 @@ test("multitouch", function () {
 		within: d.parentNode,
 		release: true
 	});
-	css(drEl, 'top', 100);
+	drEl.style.top = '100px';
 });
 
 test("handle", function () {
@@ -179,7 +176,7 @@ test("droppable", function () {
 
 	var dragEl = createDraggableElement('droppable');
 	containerEl.appendChild(dragEl);
-	css(dragEl, 'left', 200);
+	dragEl.style.left = '200px';
 
 	var draggy = new Draggable(dragEl, {
 		within: containerEl,
@@ -234,7 +231,7 @@ test("shared handle", function () {
 		release: true,
 		handle: [drEl, d]
 	});
-	css(drEl, 'left', 100);
+	drEl.style.left = '100px';
 });
 
 
@@ -256,7 +253,7 @@ function createDraggableCase(name, opts, drEl) {
 	return drEl;
 }
 
-function createDraggableElement (name, drEl) {
+function createDraggableElement(name, drEl) {
 	//create mover
 	if (!drEl) {
 		drEl = document.createElement("div");
@@ -273,7 +270,7 @@ function createDraggableElement (name, drEl) {
 }
 
 /** Container for draggable */
-function createDraggableContainer (name) {
+function createDraggableContainer(name) {
 	var el = document.createElement("div");
 	el.title = name;
 	el.className = "draggy-case";
@@ -282,7 +279,7 @@ function createDraggableContainer (name) {
 	return el;
 }
 
-function bindHelpers (draggy) {
+function bindHelpers(draggy) {
 	//bind listeners
 	draggy.on('threshold', paintThreshold);
 	draggy.on('dragstart', renderHelpers);
@@ -295,9 +292,9 @@ function bindHelpers (draggy) {
 //canvas painters
 function renderHelpers() {
 	clear();
-	try{
-		ctx.setLineDash([7,4]);
-	} catch (e) {}
+	try {
+		ctx.setLineDash([7, 4]);
+	} catch (e) { }
 	paintRestrictionArea(this);
 	paintPinRect(this);
 }
@@ -312,7 +309,7 @@ function paintRestrictionArea(el) {
 	}
 
 	var pos = within.getBoundingClientRect(),
-		pads = new css.Rect//css.paddings(within);
+		pads = { left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 }
 
 	ctx.strokeStyle = 'rgba(60,60,60,1)';
 	ctx.lineWidth = 1;
@@ -338,11 +335,11 @@ function paintThreshold(e) {
 
 	if (typeof rect === "number") {
 		//number
-		rect = [-rect*.5, -rect*.5, rect*.5, rect*.5]
+		rect = [-rect * .5, -rect * .5, rect * .5, rect * .5]
 	} else if (rect.length === 2) {
 		//Array(w,h)
-		rect = [-rect[0] *.5, -rect[1] *.5, rect[0] *.5, rect[1] *.5]
-	} else if(rect.length === 4) {
+		rect = [-rect[0] * .5, -rect[1] * .5, rect[0] * .5, rect[1] * .5]
+	} else if (rect.length === 4) {
 		//Array(x1,y1,x2,y2)
 		rect = rect.slice();
 	} else if (typeof rect === "function") {
@@ -387,7 +384,7 @@ function paintPinRect(el) {
 	ctx.stroke();
 }
 
-function renderDirection (e) {
+function renderDirection(e) {
 	var el = this.element;
 	var arrEl = el.querySelector('.draggy-arrow');
 	arrEl.style.transform = 'rotate(' + this.angle + 'rad)';

@@ -1,32 +1,16 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Draggy tests</title>
-<link rel="stylesheet" href="mocha.css" />
 
 <link rel="stylesheet" type="text/css" href="./index.css">
 
-<div id="mocha"></div>
-
-
-
-<script src="bundle.js"></script>
-
-
-<script src="mocha.js"></script>
-<script>
-	mocha.setup('bdd');
-</script>
-<script src="index.js"></script>
-<script>
-	mocha.checkLeaks();
-	mocha.run();
+<script type="importmap">
+{
+  "imports": {
+    "tst": "../node_modules/tst/tst.js"
+  }
+}
 </script>
 
 
-<script>
-	//test memory
-	// var Draggy = require('draggy');
-	// for (var i = 0; i < 9999; i++) {
-	// 	(new Draggy(document.createElement('div'))).destroy();
-	// }
-</script>
+<script src="index.js" type="module"></script>

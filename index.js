@@ -5,36 +5,19 @@
  */
 
 
-//work with css
-const css = require('mucss/css');
-const parseCSSValue = require('mucss/parse-value');
-const selection = require('mucss/selection');
-const offsets = require('mucss/offset');
-const getTranslate = require('mucss/translate');
-const intersect = require('intersects');
-const isFixed = require('mucss/is-fixed');
+import css from 'mucss/css';
+import parseCSSValue from 'mucss/parse-value';
+import selection from 'mucss/selection';
+import offsets from 'mucss/offset';
+import getTranslate from 'mucss/translate';
+import isFixed from 'mucss/is-fixed';
 
-//events
-const on = require('emmy/on');
-const off = require('emmy/off');
-const emit = require('emmy/emit');
-const Emitter = require('events');
-const getClientX = require('get-client-xy').x;
-const getClientY = require('get-client-xy').y;
+import { on, off, emit } from 'emmy';
+import { x as getClientX, y as getClientY } from 'get-client-xy';
 
-//utils
-const isArray = require('mutype/is-array');
-const isNumber = require('mutype/is-number');
-const isString = require('mutype/is-string');
-const isFn = require('mutype/is-fn');
-const defineState = require('define-state');
-const extend = require('xtend/mutable');
-const round = require('mumath/round');
-const between = require('mumath/clamp');
-const loop = require('mumath/mod');
-const getUid = require('get-uid');
-const inherits =  require('inherits');
-
+import { isArray, isNumber, isFn } from 'mutype';
+import defineState from 'define-state';
+import { round, clamp as between, mod as loop } from 'mumath';
 
 const win = window, doc = document, root = doc.documentElement;
 
@@ -77,7 +60,7 @@ function Draggable(target, options) {
 		instance.state = 'reset';
 
 		//take over options
-		extend(instance, options);
+		Object.assign(instance, options);
 
 		instance.update();
 
@@ -87,7 +70,7 @@ function Draggable(target, options) {
 	else {
 		//get unique id for instance
 		//needed to track event binders
-		that.id = getUid();
+		that.id = Math.random().toString(36).substring(2, 15)
 		that._ns = '.draggy_' + that.id;
 
 		//save element passed
@@ -103,7 +86,7 @@ function Draggable(target, options) {
 	that.currentHandles = [];
 
 	//take over options
-	extend(that, options);
+	Object.assign(that, options);
 
 	//define handle
 	if (that.handle === undefined) {
@@ -122,9 +105,16 @@ function Draggable(target, options) {
 	that.state = 'idle';
 }
 
+/** Add event listener */
+Draggable.prototype.on = function (eventName, callback) {
+	return on(this, eventName, callback);
+};
 
-/** Inherit draggable from Emitter */
-inherits(Draggable, Emitter);
+/** Remove event listener */
+Draggable.prototype.off = function (eventName, callback) {
+	return off(this, eventName, callback);
+};
+
 
 
 //enable css3 by default
@@ -209,7 +199,7 @@ Draggable.prototype.state = {
 
 			//emit drag evts on element
 			emit(that.element, 'idle', null, true);
-			that.emit('idle');
+			emit(that, 'idle');
 
 			//reset keys
 			that.ctrlKey = false;
@@ -279,7 +269,7 @@ Draggable.prototype.state = {
 					//NOTE: vector average isn’t the same as speed scalar average
 					that.angle = Math.atan2(dY, dX);
 
-					that.emit('track');
+					emit(that, 'track');
 
 					return that;
 				}, that.framerate);
@@ -300,7 +290,7 @@ Draggable.prototype.state = {
 			that.element.classList.add('draggy-threshold');
 
 			//emit drag evts on element
-			that.emit('threshold');
+			emit(that, 'threshold');
 			emit(that.element, 'threshold');
 
 			//listen to doc movement
@@ -347,11 +337,11 @@ Draggable.prototype.state = {
 			that.element.classList.add('draggy-drag');
 
 			//emit drag evts on element
-			that.emit('dragstart');
+			emit(that, 'dragstart');
 			emit(that.element, 'dragstart', null, true);
 
 			//emit drag events on that
-			that.emit('drag');
+			emit(that, 'drag');
 			emit(that.element, 'drag', null, true);
 
 			//stop drag on leave
@@ -386,7 +376,7 @@ Draggable.prototype.state = {
 			that.element.classList.remove('draggy-drag');
 
 			//emit dragend on element, this
-			that.emit('dragend');
+			emit(that, 'dragend');
 			emit(that.element, 'dragend', null, true);
 
 			//unbind drag events
@@ -423,7 +413,7 @@ Draggable.prototype.state = {
 			);
 
 			that.speed = 0;
-			that.emit('track');
+			emit(that, 'track');
 		},
 
 		after: function () {
@@ -502,7 +492,7 @@ Draggable.prototype.drag = function (e) {
 	that.prevMouseY = mouseY;
 
 	//emit drag
-	that.emit('drag');
+	emit(that, 'drag');
 	emit(that.element, 'drag', null, true);
 };
 
@@ -606,8 +596,8 @@ Draggable.prototype.update = function (e) {
 	//if no event - suppose pin-centered event
 	else {
 		//take mouse position & inner offset as center of pin
-		var pinX = (that.pin[0] + that.pin[2] ) * 0.5;
-		var pinY = (that.pin[1] + that.pin[3] ) * 0.5;
+		var pinX = (that.pin[0] + that.pin[2]) * 0.5;
+		var pinY = (that.pin[1] + that.pin[3]) * 0.5;
 		that.prevMouseX = thatClientRect.left + pinX;
 		that.prevMouseY = thatClientRect.top + pinY;
 		that.innerOffsetX = pinX;
@@ -708,10 +698,10 @@ Draggable.prototype.updateInfo = function (x, y) {
 Draggable.prototype.getCoords = function () {
 	if (!this.css3) {
 		// return [this.element.offsetLeft, this.element.offsetTop];
-		return [parseCSSValue(css(this.element,'left')), parseCSSValue(css(this.element, 'top'))];
+		return [parseCSSValue(css(this.element, 'left')), parseCSSValue(css(this.element, 'top'))];
 	}
 	else {
-		return getTranslate(this.element).slice(0, 2) || [0,0];
+		return getTranslate(this.element).slice(0, 2) || [0, 0];
 	}
 };
 Draggable.prototype.setCoords = function (x, y) {
@@ -789,7 +779,7 @@ Object.defineProperties(Draggable.prototype, {
 			if (this._pin) return this._pin;
 
 			//returning autocalculated pin, if private pin is none
-			var pin = [0,0, this.offsets.width, this.offsets.height];
+			var pin = [0, 0, this.offsets.width, this.offsets.height];
 			pin.width = this.offsets.width;
 			pin.height = this.offsets.height;
 			return pin;
@@ -800,10 +790,10 @@ Object.defineProperties(Draggable.prototype, {
 	threshold: {
 		set: function (val) {
 			if (isNumber(val)) {
-				this._threshold = [-val*0.5, -val*0.5, val*0.5, val*0.5];
+				this._threshold = [-val * 0.5, -val * 0.5, val * 0.5, val * 0.5];
 			} else if (val.length === 2) {
 				//Array(w,h)
-				this._threshold = [-val[0]*0.5, -val[1]*0.5, val[0]*0.5, val[1]*0.5];
+				this._threshold = [-val[0] * 0.5, -val[1] * 0.5, val[0] * 0.5, val[1] * 0.5];
 			} else if (val.length === 4) {
 				//Array(x1,y1,x2,y2)
 				this._threshold = val;
@@ -811,12 +801,12 @@ Object.defineProperties(Draggable.prototype, {
 				//custom val funciton
 				this._threshold = val();
 			} else {
-				this._threshold = [0,0,0,0];
+				this._threshold = [0, 0, 0, 0];
 			}
 		},
 
 		get: function () {
-			return this._threshold || [0,0,0,0];
+			return this._threshold || [0, 0, 0, 0];
 		}
 	}
 });
@@ -960,9 +950,9 @@ Draggable.prototype.destroy = function () {
 
 //little helpers
 
-function q (str) {
+function q(str) {
 	if (Array.isArray(str)) {
-		return str.map(q).reduce(function(prev, curr) { return prev.concat(curr); }, [] );
+		return str.map(q).reduce(function (prev, curr) { return prev.concat(curr); }, []);
 	}
 	else if (str instanceof HTMLElement) {
 		return [str];
@@ -972,5 +962,18 @@ function q (str) {
 	}
 }
 
+// rect intersection function with tolerance
+function intersect(rect1, rect2, tolerance = 0) {
+	const overlapX = Math.max(0, Math.min(rect1.right, rect2.right) - Math.max(rect1.left, rect2.left));
+	const overlapY = Math.max(0, Math.min(rect1.bottom, rect2.bottom) - Math.max(rect1.top, rect2.top));
+	const overlapArea = overlapX * overlapY;
 
-module.exports = Draggable;
+	const rect1Area = (rect1.right - rect1.left) * (rect1.bottom - rect1.top);
+	const rect2Area = (rect2.right - rect2.left) * (rect2.bottom - rect2.top);
+	const smallerArea = Math.min(rect1Area, rect2Area);
+
+	return overlapArea >= tolerance * smallerArea;
+}
+
+
+export default Draggable;
