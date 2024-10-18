@@ -25,7 +25,7 @@ var draggy = new Draggable(el, {
 
 //bind event handler
 draggy.on('drag', function () {
-
+	// ...
 });
 ```
 

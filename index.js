@@ -1,10 +1,3 @@
-/**
- * Simple draggable component
- *
- * @module draggy
- */
-
-
 import css from 'mucss/css';
 import parseCSSValue from 'mucss/parse-value';
 import selection from 'mucss/selection';
@@ -17,8 +10,8 @@ import { x as getClientX, y as getClientY } from 'get-client-xy';
 
 import defineState from 'define-state';
 
-const win = window, doc = document, root = doc.documentElement;
 
+const win = window, doc = document, root = doc.documentElement;
 
 /**
  * Draggable controllers associated with elements.
@@ -34,7 +27,6 @@ const win = window, doc = document, root = doc.documentElement;
 const draggableCache = Draggable.cache = new WeakMap;
 
 
-
 /**
  * Make an element draggable.
  *
@@ -46,10 +38,6 @@ const draggableCache = Draggable.cache = new WeakMap;
  * @return {HTMLElement} Target element
  */
 function Draggable(target, options) {
-	if (!(this instanceof Draggable)) {
-		return new Draggable(target, options);
-	}
-
 	var that = this;
 
 	//ignore existing instance
@@ -113,14 +101,11 @@ Draggable.prototype.off = function (eventName, callback) {
 	return off(this, eventName, callback);
 };
 
-
-
 //enable css3 by default
 Draggable.prototype.css3 = true;
 
 //both axes by default
 Draggable.prototype.axis = null;
-
 
 /** Init droppable "plugin" */
 Draggable.prototype.initDroppable = function () {
@@ -180,7 +165,6 @@ Draggable.prototype.initDroppable = function () {
 		}
 	});
 };
-
 
 /**
  * Draggable behaviour
@@ -441,7 +425,6 @@ Draggable.prototype.state = {
 	}
 };
 
-
 /** Drag handler. Needed to provide drag movement emulation via API */
 Draggable.prototype.drag = function (e) {
 	var that = this;
@@ -494,10 +477,8 @@ Draggable.prototype.drag = function (e) {
 	emit(that.element, 'drag', null, true);
 };
 
-
 /** Current number of draggable touches */
 var touches = 0;
-
 
 /** Manage touches */
 Draggable.prototype.setTouch = function (e) {
@@ -519,10 +500,8 @@ Draggable.prototype.isTouched = function () {
 	return this.touchIdx !== null;
 };
 
-
 /** Index to fetch touch number from event */
 Draggable.prototype.touchIdx = null;
-
 
 /**
  * Update movement limits.
@@ -687,7 +666,6 @@ Draggable.prototype.updateInfo = function (x, y) {
 
 }
 
-
 /**
  * Way of placement:
  * - css3 === false (slower but more precise and cross-browser)
@@ -731,7 +709,6 @@ Draggable.prototype.setCoords = function (x, y) {
 	}
 };
 
-
 /**
  * Restricting container
  * @type {Element|object}
@@ -739,10 +716,8 @@ Draggable.prototype.setCoords = function (x, y) {
  */
 Draggable.prototype.within = doc;
 
-
 /** Handle to drag */
 Draggable.prototype.handle;
-
 
 Object.defineProperties(Draggable.prototype, {
 	/**
@@ -810,7 +785,6 @@ Object.defineProperties(Draggable.prototype, {
 });
 
 
-
 /**
  * For how long to release movement
  *
@@ -824,20 +798,16 @@ Draggable.prototype.velocity = 1000;
 Draggable.prototype.maxSpeed = 250;
 Draggable.prototype.framerate = 50;
 
-
 /** To what extent round position */
 Draggable.prototype.precision = 1;
-
 
 /** Droppable params */
 Draggable.prototype.droppable = null;
 Draggable.prototype.droppableTolerance = 0.5;
 Draggable.prototype.droppableClass = null;
 
-
 /** Slow down movement by pressing ctrl/cmd */
 Draggable.prototype.sniper = true;
-
 
 /** How much to slow sniper drag */
 Draggable.prototype.sniperSlowdown = .85;
@@ -912,17 +882,8 @@ Draggable.prototype.move = function (x, y) {
 	}
 };
 
-
 /** Repeat movement by one of axises */
 Draggable.prototype.repeat = false;
-
-
-/** Check whether arr is filled with zeros */
-function isZeroArray(arr) {
-	if (!arr[0] && !arr[1] && !arr[2] && !arr[3]) return true;
-}
-
-
 
 /** Clean all memory-related things */
 Draggable.prototype.destroy = function () {
@@ -946,8 +907,13 @@ Draggable.prototype.destroy = function () {
 
 
 
-//little helpers
+// helpers
+// Check whether arr is filled with zeros
+function isZeroArray(arr) {
+	if (!arr[0] && !arr[1] && !arr[2] && !arr[3]) return true;
+}
 
+// query els
 function q(str) {
 	if (Array.isArray(str)) {
 		return str.map(q).reduce(function (prev, curr) { return prev.concat(curr); }, []);
@@ -973,6 +939,7 @@ function intersect(rect1, rect2, tolerance = 0) {
 	return overlapArea >= tolerance * smallerArea;
 }
 
+// maths
 function loop(value, left, right) {
 	//detect single-arg case, like mod-loop or fmod
 	if (right === undefined) {
@@ -1007,6 +974,7 @@ function round(value, step) {
 	value = Math.round(value / step) * step;
 	return parseFloat(value.toFixed(precision(step)));
 }
+
 function precision(n) {
 	var s = n + '',
 		d = s.indexOf('.') + 1;

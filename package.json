@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "watch": "esbuild index.js --bundle --outfile=draggy.js --global-name=draggy --watch --format=esm",
-    "build": "esbuild index.js --bundle --outfile=draggy.js --global-name=draggy --minify --format=esm"
+    "watch": "esbuild index.js --bundle --outfile=draggy.js --global-name=draggy --watch --format=esm --sourcemap",
+    "build": "esbuild index.js --bundle --outfile=draggy.js --global-name=draggy --minify --format=esm --sourcemap"
   },
   "files": [
     "./index.js"

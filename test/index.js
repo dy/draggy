@@ -209,7 +209,7 @@ test('draggable within draggable', function () {
 	}, el);
 
 	//create inner draggable
-	var b = Draggable(el.firstChild, {
+	var b = new Draggable(el.firstChild, {
 		within: 'parent'
 	});
 });
