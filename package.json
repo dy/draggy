@@ -2,8 +2,8 @@
   "name": "draggy",
   "version": "2.0.4",
   "description": "Make element draggable",
-  "main": "src/index.js",
-  "module": "src/index.js",
+  "main": "draggy.js",
+  "module": "draggy.js",
   "type": "module",
   "scripts": {
     "watch": "esbuild draggy.js --bundle --outfile=draggy.min.js --watch --format=esm --sourcemap",
