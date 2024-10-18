@@ -1,4 +1,4 @@
-import Draggable from '../dist/draggy.js';
+import Draggable from 'draggy';
 import test from 'tst';
 
 var body = document.body;

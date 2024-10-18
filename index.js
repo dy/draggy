@@ -17,7 +17,6 @@ import { x as getClientX, y as getClientY } from 'get-client-xy';
 
 import { isArray, isNumber, isFn } from 'mutype';
 import defineState from 'define-state';
-import { round, clamp as between, mod as loop } from 'mumath';
 
 const win = window, doc = document, root = doc.documentElement;
 
@@ -863,7 +862,7 @@ Draggable.prototype.move = function (x, y) {
 			var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0] - Math.max(0, this.overflowX);
 			x = loop(x - oX, w) + oX;
 		} else {
-			x = between(x, limits.left, limits.right);
+			x = clamp(x, limits.left, limits.right);
 		}
 
 		this.setCoords(x);
@@ -879,7 +878,7 @@ Draggable.prototype.move = function (x, y) {
 			var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1] - Math.max(0, this.overflowY);
 			y = loop(y - oY, h) + oY;
 		} else {
-			y = between(y, limits.top, limits.bottom);
+			y = clamp(y, limits.top, limits.bottom);
 		}
 
 		this.setCoords(null, y);
@@ -907,8 +906,8 @@ Draggable.prototype.move = function (x, y) {
 			}
 		}
 
-		x = between(x, limits.left, limits.right);
-		y = between(y, limits.top, limits.bottom);
+		x = clamp(x, limits.left, limits.right);
+		y = clamp(y, limits.top, limits.bottom);
 
 		this.setCoords(x, y);
 	}
@@ -973,6 +972,47 @@ function intersect(rect1, rect2, tolerance = 0) {
 	const smallerArea = Math.min(rect1Area, rect2Area);
 
 	return overlapArea >= tolerance * smallerArea;
+}
+
+function loop(value, left, right) {
+	//detect single-arg case, like mod-loop or fmod
+	if (right === undefined) {
+		right = left;
+		left = 0;
+	}
+
+	//swap frame order
+	if (left > right) {
+		var tmp = right;
+		right = left;
+		left = tmp;
+	}
+
+	var frame = right - left;
+
+	value = ((value + left) % frame) - left;
+	if (value < left) value += frame;
+	if (value > right) value -= frame;
+
+	return value;
+};
+
+function clamp(value, min, max) {
+	return Math.max(min, Math.min(value, max));
+}
+
+function round(value, step) {
+	if (step === 0) return value;
+	if (!step) return Math.round(value);
+	step = parseFloat(step);
+	value = Math.round(value / step) * step;
+	return parseFloat(value.toFixed(precision(step)));
+}
+function precision(n) {
+	var s = n + '',
+		d = s.indexOf('.') + 1;
+
+	return !d ? 0 : s.length - d;
 }
 
 
