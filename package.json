@@ -1,6 +1,6 @@
 {
   "name": "draggy",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Make element draggable and stuff, you know",
   "main": "src/index.js",
   "module": "src/index.js",
