@@ -90,7 +90,54 @@ class Draggable {
 
 		//setup droppable
 		if (this.droppable) {
-			this.initDroppable();
+			on(this, 'dragstart', () => {
+				this.dropTargets = q(this.droppable);
+			});
+
+			on(this, 'drag', () => {
+				if (!this.dropTargets) {
+					return;
+				}
+
+				var rect = offsets(this.element);
+
+				this.dropTargets.forEach((dropTarget) => {
+					var targetRect = offsets(dropTarget);
+
+					if (intersect(rect, targetRect, this.droppableTolerance)) {
+						if (this.droppableClass) {
+							dropTarget.classList.add(this.droppableClass);
+						}
+						if (!this.dropTarget) {
+							this.dropTarget = dropTarget;
+
+							emit(this, 'dragover', dropTarget);
+							emit(dropTarget, 'dragover', this);
+						}
+					}
+					else {
+						if (this.dropTarget) {
+							emit(this, 'dragout', dropTarget);
+							emit(dropTarget, 'dragout', this);
+
+							this.dropTarget = null;
+						}
+						if (this.droppableClass) {
+							dropTarget.classList.remove(this.droppableClass);
+						}
+					}
+				});
+			});
+
+			on(this, 'dragend', () => {
+				//emit drop, if any
+				if (this.dropTarget) {
+					emit(this.dropTarget, 'drop', this);
+					emit(this, 'drop', this.dropTarget);
+					this.dropTarget.classList.remove(this.droppableClass);
+					this.dropTarget = null;
+				}
+			});
 		}
 
 		//try to calc out basic limits
@@ -107,58 +154,6 @@ class Draggable {
 
 	off(eventName, callback) {
 		return off(this, eventName, callback);
-	}
-
-	/// Init droppable "plugin"
-	initDroppable() {
-		on(this, 'dragstart', () => {
-			this.dropTargets = q(this.droppable);
-		});
-
-		on(this, 'drag', () => {
-			if (!this.dropTargets) {
-				return;
-			}
-
-			var rect = offsets(this.element);
-
-			this.dropTargets.forEach((dropTarget) => {
-				var targetRect = offsets(dropTarget);
-
-				if (intersect(rect, targetRect, this.droppableTolerance)) {
-					if (this.droppableClass) {
-						dropTarget.classList.add(this.droppableClass);
-					}
-					if (!this.dropTarget) {
-						this.dropTarget = dropTarget;
-
-						emit(this, 'dragover', dropTarget);
-						emit(dropTarget, 'dragover', this);
-					}
-				}
-				else {
-					if (this.dropTarget) {
-						emit(this, 'dragout', dropTarget);
-						emit(dropTarget, 'dragout', this);
-
-						this.dropTarget = null;
-					}
-					if (this.droppableClass) {
-						dropTarget.classList.remove(this.droppableClass);
-					}
-				}
-			});
-		});
-
-		on(this, 'dragend', () => {
-			//emit drop, if any
-			if (this.dropTarget) {
-				emit(this.dropTarget, 'drop', this);
-				emit(this, 'drop', this.dropTarget);
-				this.dropTarget.classList.remove(this.droppableClass);
-				this.dropTarget = null;
-			}
-		});
 	}
 
 	// draggable states
