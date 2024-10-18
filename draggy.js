@@ -917,7 +917,7 @@ function getTranslate(el) {
 
 	//parse values
 	//FIXME: nested values are not necessarily pixels
-	return values.map((value) => px(value));
+	return [px(values[0]), px(values[1])];
 }
 
 function isFixed(el) {
