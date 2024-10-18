@@ -150,10 +150,10 @@ test("handle", function () {
 
 test("cancel", function () {
 	var el = document.createElement('div');
-	el.innerHTML = '<div class="handle">HANDLE <em><span>CANCEL</span></em></div>';
+	el.innerHTML = '<div class="handle1">HANDLE <em><span>CANCEL</span></em></div>';
 
 	var a = createDraggableCase("cancel", {
-		handle: '.handle',
+		handle: '.handle1',
 		within: 'parent',
 		cancel: ['em']
 	}, el);
