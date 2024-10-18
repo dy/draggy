@@ -6,11 +6,11 @@
   "module": "src/index.js",
   "type": "module",
   "scripts": {
-    "watch": "esbuild src/index.js --bundle --outfile=dist/draggy.js --watch --format=esm --sourcemap",
-    "build": "esbuild src/index.js --bundle --outfile=dist/draggy.js --minify --format=esm --sourcemap"
+    "watch": "esbuild src/index.js --bundle --outfile=draggy.js --watch --format=esm --sourcemap",
+    "build": "esbuild src/index.js --bundle --outfile=draggy.js --minify --format=esm --sourcemap"
   },
   "files": [
-    "dist",
+    "draggy.js",
     "src"
   ],
   "repository": {
