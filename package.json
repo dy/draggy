@@ -1,6 +1,6 @@
 {
   "name": "draggy",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Make element draggable",
   "main": "draggy.js",
   "module": "draggy.js",
