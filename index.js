@@ -15,7 +15,6 @@ import isFixed from 'mucss/is-fixed';
 import { on, off, emit } from 'emmy';
 import { x as getClientX, y as getClientY } from 'get-client-xy';
 
-import { isArray, isNumber, isFn } from 'mutype';
 import defineState from 'define-state';
 
 const win = window, doc = document, root = doc.documentElement;
@@ -753,7 +752,7 @@ Object.defineProperties(Draggable.prototype, {
 	 */
 	pin: {
 		set: function (value) {
-			if (isArray(value)) {
+			if (Array.isArray(value)) {
 				if (value.length === 2) {
 					this._pin = [value[0], value[1], value[0], value[1]];
 				} else if (value.length === 4) {
@@ -761,7 +760,7 @@ Object.defineProperties(Draggable.prototype, {
 				}
 			}
 
-			else if (isNumber(value)) {
+			else if (typeof value === 'number') {
 				this._pin = [value, value, value, value];
 			}
 
@@ -788,7 +787,7 @@ Object.defineProperties(Draggable.prototype, {
 	/** Avoid initial mousemove */
 	threshold: {
 		set: function (val) {
-			if (isNumber(val)) {
+			if (typeof val === 'number') {
 				this._threshold = [-val * 0.5, -val * 0.5, val * 0.5, val * 0.5];
 			} else if (val.length === 2) {
 				//Array(w,h)
@@ -796,7 +795,7 @@ Object.defineProperties(Draggable.prototype, {
 			} else if (val.length === 4) {
 				//Array(x1,y1,x2,y2)
 				this._threshold = val;
-			} else if (isFn(val)) {
+			} else if (typeof (val) === 'function') {
 				//custom val funciton
 				this._threshold = val();
 			} else {
