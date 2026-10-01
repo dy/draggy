@@ -1,47 +1,42 @@
 {
   "name": "draggy",
   "version": "2.0.5",
-  "description": "Make element draggable",
+  "description": "A tiny, dependency-free draggable for the web",
+  "type": "module",
   "main": "draggy.js",
   "module": "draggy.js",
-  "type": "module",
-  "scripts": {
-    "watch": "esbuild draggy.js --bundle --outfile=draggy.min.js --watch --format=esm --sourcemap",
-    "build": "esbuild draggy.js --bundle --outfile=draggy.min.js --minify --format=esm --sourcemap"
+  "exports": {
+    ".": "./draggy.js"
   },
   "files": [
     "draggy.js",
-    "draggy.min.js"
+    "draggy.min.js",
+    "draggy.min.js.map"
   ],
+  "scripts": {
+    "build": "esbuild draggy.js --bundle --minify --format=esm --sourcemap --outfile=draggy.min.js",
+    "test": "node --test test/*.test.js",
+    "check": "npm test && npm run build",
+    "watch": "esbuild draggy.js --bundle --format=esm --sourcemap --outfile=draggy.min.js --watch"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dy/draggy"
+    "url": "git+https://github.com/dy/draggy.git"
   },
   "keywords": [
     "draggable",
-    "drag-n-drop",
-    "interact",
-    "draggy",
+    "drag-and-drop",
+    "pointer-events",
     "drag",
-    "drop",
-    "drag-and-drop"
+    "drop"
   ],
   "author": "Dmitry Iv",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/dy/draggy/issues"
   },
-  "homepage": "https://github.com/dy/draggy",
-  "dependencies": {
-    "define-state": "^1.0.0",
-    "emmy": "^7.1.1",
-    "get-client-xy": "^1.0.1",
-    "mucss": "^1.0",
-    "mutype": "^0.3.9",
-    "to-px": "^1.1.0"
-  },
+  "homepage": "https://dy.github.io/draggy/",
   "devDependencies": {
-    "esbuild": "^0.24.0",
-    "tst": "^7.3.0"
+    "esbuild": "^0.24.0"
   }
 }
