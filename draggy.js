@@ -1,940 +1,433 @@
-import offsets from 'mucss/offset'
-import { on, off, emit } from 'emmy';
-import { x as getClientX, y as getClientY } from 'get-client-xy';
-import defineState from 'define-state';
-import px from 'to-px';
-
-
-const win = window, doc = document, root = doc.documentElement;
-
-/** Current number of draggable touches */
-let touches = 0;
-
 /**
- * Make an element draggable.
+ * Draggy — a small, dependency-free draggable controller.
  *
- * @constructor
- *
- * @param {HTMLElement} target An element whether in/out of DOM
- * @param {Object} options An draggable options
- *
- * @return {HTMLElement} Target element
+ * The public API intentionally keeps the 2.x surface: `move`, `drag`,
+ * `update`, `getCoords`, `setCoords`, `on`, `off`, and `destroy`.
  */
-class Draggable {
-	/**
-	 * Draggable instances associated with elements.
-	 *
-	 * Storing them on elements is
-	 * - leak-prone,
-	 * - pollutes element’s namespace,
-	 * - requires some artificial key to store,
-	 * - unable to retrieve controller easily.
-	 *
-	 * That is why weakmap.
-	 */
-	static cache = new WeakMap;
 
+const defaults = {
+	axis: null,
+	cancel: null,
+	css3: true,
+	droppable: null,
+	droppableClass: null,
+	droppableTolerance: 0.5,
+	framerate: 50,
+	maxSpeed: 250,
+	precision: 1,
+	release: false,
+	releaseDuration: 500,
+	repeat: false,
+	sniper: true,
+	sniperSlowdown: 0.85,
+	threshold: 0,
+	velocity: 1000,
+	within: null
+};
 
-	//enable css3 by default
-	css3 = true;
+export default class Draggable {
+	static cache = new WeakMap();
 
-	//both axes by default
-	axis = null;
-
-
-	constructor(target, options) {
-		//ignore existing instance
-		var instance = Draggable.cache.get(target);
-		if (instance) {
-			instance.state = 'reset';
-
-			//take over options
-			Object.assign(instance, options);
-
-			instance.update();
-
-			return instance;
+	constructor(element, options = {}) {
+		if (!element || typeof element.addEventListener !== 'function') {
+			throw new TypeError('Draggy requires an Element');
 		}
 
-		else {
-			//get unique id for instance
-			//needed to track event binders
-			this.id = Math.random().toString(36).substring(2, 15)
-			this._ns = '.draggy_' + this.id;
-
-			//save element passed
-			this.element = target;
-
-			Draggable.cache.set(target, this);
+		const existing = Draggable.cache.get(element);
+		if (existing && !existing.destroyed) {
+			existing.configure(options);
+			return existing;
 		}
 
-		//define state behaviour
-		defineState(this, 'state', Draggable.state);
-
-		//preset handles
-		this.currentHandles = [];
-
-		//take over options
-		Object.assign(this, options);
-
-		//define handle
-		if (this.handle === undefined) {
-			this.handle = this.element;
-		}
-
-		//setup droppable
-		if (this.droppable) {
-			on(this, 'dragstart', () => {
-				this.dropTargets = q(this.droppable);
-			});
-
-			on(this, 'drag', () => {
-				if (!this.dropTargets) {
-					return;
-				}
-
-				var rect = offsets(this.element);
-
-				this.dropTargets.forEach((dropTarget) => {
-					var targetRect = offsets(dropTarget);
-
-					if (intersect(rect, targetRect, this.droppableTolerance)) {
-						if (this.droppableClass) {
-							dropTarget.classList.add(this.droppableClass);
-						}
-						if (!this.dropTarget) {
-							this.dropTarget = dropTarget;
-
-							emit(this, 'dragover', dropTarget);
-							emit(dropTarget, 'dragover', this);
-						}
-					}
-					else {
-						if (this.dropTarget) {
-							emit(this, 'dragout', dropTarget);
-							emit(dropTarget, 'dragout', this);
-
-							this.dropTarget = null;
-						}
-						if (this.droppableClass) {
-							dropTarget.classList.remove(this.droppableClass);
-						}
-					}
-				});
-			});
-
-			on(this, 'dragend', () => {
-				//emit drop, if any
-				if (this.dropTarget) {
-					emit(this.dropTarget, 'drop', this);
-					emit(this, 'drop', this.dropTarget);
-					this.dropTarget.classList.remove(this.droppableClass);
-					this.dropTarget = null;
-				}
-			});
-		}
-
-		//try to calc out basic limits
-		this.update();
-
-		//go to initial state
+		this.element = element;
+		this._events = new Map();
+		this._handleBindings = [];
+		this._documentBindings = [];
+		this._selection = '';
 		this.state = 'idle';
+		this.destroyed = false;
+		this.touchIdx = null;
+		this.dropTarget = null;
+		this._coords = readTranslate(element);
+		this.prevX = this._coords[0];
+		this.prevY = this._coords[1];
+		this.initX = this.prevX;
+		this.initY = this.prevY;
+		this.deltaX = 0;
+		this.deltaY = 0;
+		this.movementX = 0;
+		this.movementY = 0;
+
+		Object.assign(this, defaults);
+		this.configure(options, false);
+		Draggable.cache.set(element, this);
+		this.update();
+		this._setState('idle');
 	}
 
-	// Emitter API
-	on(eventName, callback) {
-		return on(this, eventName, callback);
+	configure(options = {}, update = true) {
+		Object.assign(this, options);
+		if (update && !this.destroyed) this.update();
+		return this;
 	}
 
-	off(eventName, callback) {
-		return off(this, eventName, callback);
+	on(name, callback) {
+		if (typeof callback !== 'function') throw new TypeError('Listener must be a function');
+		const listeners = this._events.get(name) || new Set();
+		listeners.add(callback);
+		this._events.set(name, listeners);
+		return this;
 	}
 
-	// draggable states
-	static state = {
-		//idle
-		_: {
-			before: function () {
-				this.element.classList.add('draggy-idle');
+	off(name, callback) {
+		if (name === undefined) this._events.clear();
+		else if (callback === undefined) this._events.delete(name);
+		else this._events.get(name)?.delete(callback);
+		return this;
+	}
 
-				//emit drag evts on element
-				emit(this.element, 'idle', null, true);
-				emit(this, 'idle');
-
-				//reset keys
-				this.ctrlKey = false;
-				this.shiftKey = false;
-				this.metaKey = false;
-				this.altKey = false;
-
-				//reset movement params
-				this.movementX = 0;
-				this.movementY = 0;
-				this.deltaX = 0;
-				this.deltaY = 0;
-
-				on(doc, 'mousedown' + this._ns + ' touchstart' + this._ns, (e) => {
-					//ignore non-draggy events
-					if (!e.draggies) {
-						return;
-					}
-
-					//ignore dragstart for not registered draggies
-					if (e.draggies.indexOf(this) < 0) {
-						return;
-					}
-
-					//if target is focused - ignore drag
-					//FIXME: detect focused by whitelist of tags, name supposition may be wrong (idk, form elements have names, so likely to be focused by click)
-					if (e.target.name !== undefined) {
-						return;
-					}
-
-					//multitouch has multiple starts
-					this.setTouch(e);
-
-					//update movement params
-					this.update(e);
-
-					//go to threshold state
-					this.state = 'threshold';
-				});
-			},
-			after: function () {
-				this.element.classList.remove('draggy-idle');
-
-				off(doc, this._ns);
-
-				//set up tracking
-				if (this.release) {
-					this._trackingInterval = setInterval((e) => {
-						var now = Date.now();
-						var elapsed = now - this.timestamp;
-
-						//get delta movement since the last track
-						var dX = this.prevX - this.frame[0];
-						var dY = this.prevY - this.frame[1];
-						this.frame[0] = this.prevX;
-						this.frame[1] = this.prevY;
-
-						var delta = Math.sqrt(dX * dX + dY * dY);
-
-						//get speed as average of prev and current (prevent div by zero)
-						var v = Math.min(this.velocity * delta / (1 + elapsed), this.maxSpeed);
-						this.speed = 0.8 * v + 0.2 * this.speed;
-
-						//get new angle as a last diff
-						//NOTE: vector average isn’t the same as speed scalar average
-						this.angle = Math.atan2(dY, dX);
-
-						emit(this, 'track');
-
-						return this;
-					}, this.framerate);
-				}
-			}
-		},
-
-		threshold: {
-			before: function () {
-				//ignore threshold state, if threshold is none
-				if (isZeroArray(this.threshold)) {
-					this.state = 'drag';
-					return;
-				}
-
-				this.element.classList.add('draggy-threshold');
-
-				//emit drag evts on element
-				emit(this, 'threshold');
-				emit(this.element, 'threshold');
-
-				//listen to doc movement
-				on(doc, 'touchmove' + this._ns + ' mousemove' + this._ns, (e) => {
-					e.preventDefault();
-
-					//compare movement to the threshold
-					var clientX = getClientX(e, this.touchIdx);
-					var clientY = getClientY(e, this.touchIdx);
-					var difX = this.prevMouseX - clientX;
-					var difY = this.prevMouseY - clientY;
-
-					if (difX < this.threshold[0] || difX > this.threshold[2] || difY < this.threshold[1] || difY > this.threshold[3]) {
-						this.update(e);
-						this.state = 'drag';
-					}
-				});
-				on(doc, 'mouseup' + this._ns + ' touchend' + this._ns + '', (e) => {
-					e.preventDefault();
-
-					//forget touches
-					touches = 0;
-					this.touchIdx = null;
-
-
-					this.state = 'idle';
-				});
-			},
-
-			after: function () {
-				this.element.classList.remove('draggy-threshold');
-				off(doc, this._ns);
-			}
-		},
-
-		drag: {
-			before: function () {
-				//reduce dragging clutter
-				selection.disable(root);
-
-				this.element.classList.add('draggy-drag');
-
-				//emit drag evts on element
-				emit(this, 'dragstart');
-				emit(this.element, 'dragstart', null, true);
-
-				//emit drag events on this
-				emit(this, 'drag');
-				emit(this.element, 'drag', null, true);
-
-				//stop drag on leave
-				on(doc, 'touchend' + this._ns + ' mouseup' + this._ns + ' mouseleave' + this._ns, (e) => {
-					e.preventDefault();
-
-					//forget touches - dragend is called once
-					touches = 0;
-					this.touchIdx = null;
-
-
-					//manage release movement
-					if (this.speed > 1) {
-						this.state = 'release';
-					}
-
-					else {
-						this.state = 'idle';
-					}
-				});
-
-				//move via transform
-				on(doc, 'touchmove' + this._ns + ' mousemove' + this._ns, (e) => {
-					this.drag(e);
-				});
-			},
-
-			after: function () {
-				//enable document interactivity
-				selection.enable(root);
-
-				this.element.classList.remove('draggy-drag');
-
-				//emit dragend on element, this
-				emit(this, 'dragend');
-				emit(this.element, 'dragend', null, true);
-
-				//unbind drag events
-				off(doc, this._ns);
-
-				clearInterval(this._trackingInterval);
-			}
-		},
-
-		release: {
-			before: function () {
-				this.element.classList.add('draggy-release');
-
-				//enter animation mode
-				clearTimeout(this._animateTimeout);
-
-				//set proper transition
-				this.element.style.transition = (this.releaseDuration) + 'ms ease-out ' + (this.css3 ? 'transform' : 'position');
-
-				//plan leaving anim mode
-				this._animateTimeout = setTimeout(() => {
-					this.state = 'idle';
-				}, this.releaseDuration);
-
-
-				//calc target point & animate to it
-				this.move(
-					this.prevX + this.speed * Math.cos(this.angle),
-					this.prevY + this.speed * Math.sin(this.angle)
-				);
-
-				this.speed = 0;
-				emit(this, 'track');
-			},
-
-			after: function () {
-				this.element.classList.remove('draggy-release');
-				this.element.style.transition = null;
-			}
-		},
-
-		reset: function () {
-			this.currentHandles.forEach((handle) => {
-				off(handle, this._ns);
-			});
-
-			clearTimeout(this._animateTimeout);
-
-			off(doc, this._ns);
-			off(this.element, this._ns);
-
-			return '_';
+	_emit(name, detail) {
+		for (const callback of this._events.get(name) || []) callback.call(this, detail);
+		if (this.element?.dispatchEvent && typeof CustomEvent !== 'undefined') {
+			this.element.dispatchEvent(new CustomEvent(name, { bubbles: true, detail }));
 		}
 	}
 
-	// drag handler. needed to provide drag movement emulation via API
-	drag(e) {
-		e.preventDefault();
-
-		var mouseX = getClientX(e, this.touchIdx),
-			mouseY = getClientY(e, this.touchIdx);
-
-		//calc mouse movement diff
-		var diffMouseX = mouseX - this.prevMouseX,
-			diffMouseY = mouseY - this.prevMouseY;
-
-		//absolute mouse coordinate
-		var mouseAbsX = mouseX,
-			mouseAbsY = mouseY;
-
-		//if we are not fixed, our absolute position is relative to the doc
-		if (!this._isFixed) {
-			mouseAbsX += win.pageXOffset;
-			mouseAbsY += win.pageYOffset;
+	_setState(state) {
+		if (!this.element || this.state === state && this.element.classList.contains(`draggy-${state}`)) return;
+		for (const name of ['idle', 'threshold', 'drag', 'release']) {
+			this.element.classList.toggle(`draggy-${name}`, name === state);
 		}
-
-		//calc sniper offset, if any
-		if (e.ctrlKey || e.metaKey) {
-			this.sniperOffsetX += diffMouseX * this.sniperSlowdown;
-			this.sniperOffsetY += diffMouseY * this.sniperSlowdown;
-		}
-
-		//save refs to the meta keys
-		this.ctrlKey = e.ctrlKey;
-		this.shiftKey = e.shiftKey;
-		this.metaKey = e.metaKey;
-		this.altKey = e.altKey;
-
-		//calc movement x and y
-		//take absolute placing as it is the only reliable way (2x proved)
-		var x = (mouseAbsX - this.initOffsetX) - this.innerOffsetX - this.sniperOffsetX,
-			y = (mouseAbsY - this.initOffsetY) - this.innerOffsetY - this.sniperOffsetY;
-
-		//move element
-		this.move(x, y);
-
-		//save prevClientXY for calculating diff
-		this.prevMouseX = mouseX;
-		this.prevMouseY = mouseY;
-
-		//emit drag
-		emit(this, 'drag');
-		emit(this.element, 'drag', null, true);
+		this.state = state;
+		if (state === 'idle') this._emit('idle');
 	}
 
-	// manage touches
-	setTouch(e) {
-		if (!e.touches || this.touchIdx !== null) return this;
-
-		//current touch index
-		this.touchIdx = touches;
-		touches++;
-	}
-
-	// index to fetch touch number from event
-	touchIdx = null;
-
-	// update movement limits. refresh this.withinOffsets and this.limits.
-	update(e) {
-		this._isFixed = isFixed(this.element);
-
-		//enforce abs position
-		if (!this.css3) {
-			this.element.style.position = 'absolute';
-		}
-
-		//update handles
-		this.currentHandles.forEach((handle) => {
-			off(handle, this._ns);
-		});
-
-		var cancelEls = q(this.cancel);
-
-		this.currentHandles = q(this.handle);
-
-		this.currentHandles.forEach((handle) => {
-			on(handle, 'mousedown' + this._ns + ' touchstart' + this._ns, (e) => {
-				//mark event as belonging to the draggy
-				if (!e.draggies) {
-					e.draggies = [];
-				}
-
-				//ignore draggies containing other draggies
-				if (e.draggies.some((draggy) => {
-					return this.element.contains(draggy.element);
-				})) {
-					return;
-				}
-				//ignore events happened within cancelEls
-				if (cancelEls.some((cancelEl) => {
-					return cancelEl.contains(e.target);
-				})) {
-					return;
-				}
-
-				//register draggy
-				e.draggies.push(this);
-			});
-		});
-
-		//update limits
-		this.updateLimits();
-
-		//preset inner offsets
-		this.innerOffsetX = this.pin[0];
-		this.innerOffsetY = this.pin[1];
-
-		var thisClientRect = this.element.getBoundingClientRect();
-
-		//if event passed - update acc to event
-		if (e) {
-			//take last mouse position from the event
-			this.prevMouseX = getClientX(e, this.touchIdx);
-			this.prevMouseY = getClientY(e, this.touchIdx);
-
-			//if mouse is within the element - take offset normally as rel displacement
-			this.innerOffsetX = -thisClientRect.left + getClientX(e, this.touchIdx);
-			this.innerOffsetY = -thisClientRect.top + getClientY(e, this.touchIdx);
-		}
-		//if no event - suppose pin-centered event
-		else {
-			//take mouse position & inner offset as center of pin
-			var pinX = (this.pin[0] + this.pin[2]) * 0.5;
-			var pinY = (this.pin[1] + this.pin[3]) * 0.5;
-			this.prevMouseX = thisClientRect.left + pinX;
-			this.prevMouseY = thisClientRect.top + pinY;
-			this.innerOffsetX = pinX;
-			this.innerOffsetY = pinY;
-		}
-
-		//set initial kinetic props
-		this.speed = 0;
-		this.amplitude = 0;
-		this.angle = 0;
-		this.timestamp = +new Date();
-		this.frame = [this.prevX, this.prevY];
-
-		//set sniper offset
-		this.sniperOffsetX = 0;
-		this.sniperOffsetY = 0;
-	};
-
-	// update limits only from current position
-	updateLimits() {
-		//initial translation offsets
-		var initXY = this.getCoords();
-
-		//calc initial coords
-		this.prevX = initXY[0];
-		this.prevY = initXY[1];
-		this.initX = initXY[0];
-		this.initY = initXY[1];
-
-		//container rect might be outside the vp, so calc absolute offsets
-		//zero-position offsets, with translation(0,0)
-		var curOffsets = offsets(this.element);
-
-		this.initOffsetX = curOffsets.left - this.prevX;
-		this.initOffsetY = curOffsets.top - this.prevY;
-		this.offsets = curOffsets;
-
-		//handle parent case
-		var within = this.within;
-		if (this.within === 'parent' || this.within === true) {
-			within = this.element.parentNode;
-		}
-		within = within || doc;
-
-		//absolute offsets of a container
-		var withinOffsets = offsets(within);
-
-		if (within === win && this._isFixed) {
-			withinOffsets.top -= win.pageYOffset;
-			withinOffsets.left -= win.pageXOffset;
-			withinOffsets.bottom -= win.pageYOffset;
-			withinOffsets.right -= win.pageXOffset;
-		}
-		this.withinOffsets = withinOffsets;
-
-		//calculate movement limits - pin width might be wider than constraints
-		this.overflowX = this.pin.width - withinOffsets.width;
-		this.overflowY = this.pin.height - withinOffsets.height;
-
-		this.limits = {
-			left: withinOffsets.left - this.initOffsetX - this.pin[0] - (this.overflowX < 0 ? 0 : this.overflowX),
-			top: withinOffsets.top - this.initOffsetY - this.pin[1] - (this.overflowY < 0 ? 0 : this.overflowY),
-			right: this.overflowX > 0 ? 0 : withinOffsets.right - this.initOffsetX - this.pin[2],
-			bottom: (this.overflowY > 0 ? 0 : withinOffsets.bottom - this.initOffsetY - this.pin[3])
-		};
-	};
-
-	// update info regarding of movement
-	updateInfo(x, y) {
-		//provide delta from prev state
-		this.deltaX = x - this.prevX;
-		this.deltaY = y - this.prevY;
-
-		//save prev coords to use as a start point next time
-		this.prevX = x;
-		this.prevY = y;
-
-		//provide movement delta from initial state
-		this.movementX = x - this.initX;
-		this.movementY = y - this.initY;
-	}
-
-	// way of placement:
-	// - css3 === false (slower but more precise and cross-browser)
-	// - css3 === true (faster but may cause blurs on linux systems)
-	getCoords() {
-		if (!this.css3) {
-			// return [this.element.offsetLeft, this.element.offsetTop];
-			return [px(this.element.style.left), px(this.element.style.top)];
-		}
-		else {
-			return getTranslate(this.element).slice(0, 2) || [0, 0];
-		}
-	};
-	setCoords(x, y) {
-		if (this.css3) {
-			if (x == null) x = this.prevX;
-			if (y == null) y = this.prevY;
-
-			x = round(x, this.precision);
-			y = round(y, this.precision);
-
-			this.element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-
-			this.updateInfo(x, y);
-		}
-		else {
-			if (x == null) x = this.prevX;
-			if (y == null) y = this.prevY;
-
-			x = round(x, this.precision);
-			y = round(y, this.precision);
-
-			this.element.style.left = x;
-			this.element.style.top = y;
-
-			//update movement info
-			this.updateInfo(x, y);
-		}
-	}
-
-	/**
-	 * Restricting container
-	 * @type {Element|object}
-	 * @default document.documentElement
-	 */
-	within = doc;
-
-	/** Handle to drag */
-	handle;
-
-	/**
-	 * Which area of draggable should not be outside the restriction area.
-	 * @type {(Array|number)}
-	 * @default [0,0,this.element.offsetWidth, this.element.offsetHeight]
-	 */
-	set pin(value) {
-		if (Array.isArray(value)) {
-			if (value.length === 2) {
-				this._pin = [value[0], value[1], value[0], value[1]];
-			} else if (value.length === 4) {
-				this._pin = value;
-			}
-		}
-
-		else if (typeof value === 'number') {
-			this._pin = [value, value, value, value];
-		}
-
-		else {
-			this._pin = value;
-		}
-
-		//calc pin params
-		this._pin.width = this._pin[2] - this._pin[0];
-		this._pin.height = this._pin[3] - this._pin[1];
+	get threshold() { return this._threshold || [0, 0, 0, 0]; }
+	set threshold(value) {
+		if (typeof value === 'function') value = value();
+		if (typeof value === 'number') this._threshold = [-value / 2, -value / 2, value / 2, value / 2];
+		else if (Array.isArray(value) && value.length === 2) this._threshold = [-value[0] / 2, -value[1] / 2, value[0] / 2, value[1] / 2];
+		else if (Array.isArray(value) && value.length === 4) this._threshold = value.slice();
+		else this._threshold = [0, 0, 0, 0];
 	}
 
 	get pin() {
 		if (this._pin) return this._pin;
-
-		//returning autocalculated pin, if private pin is none
-		var pin = [0, 0, this.offsets.width, this.offsets.height];
-		pin.width = this.offsets.width;
-		pin.height = this.offsets.height;
-		return pin;
+		const rect = this.offsets || rectOf(this.element);
+		return pinRect([0, 0, rect.width, rect.height]);
+	}
+	set pin(value) {
+		if (value == null) this._pin = null;
+		else if (typeof value === 'number') this._pin = pinRect([value, value, value, value]);
+		else if (Array.isArray(value) && value.length === 2) this._pin = pinRect([value[0], value[1], value[0], value[1]]);
+		else if (Array.isArray(value) && value.length === 4) this._pin = pinRect(value.slice());
+		else throw new TypeError('pin must be a number or a 2/4 item array');
 	}
 
-	// Avoid initial mousemove
-	set threshold(val) {
-		if (typeof val === 'number') {
-			this._threshold = [-val * 0.5, -val * 0.5, val * 0.5, val * 0.5];
-		} else if (val.length === 2) {
-			//Array(w,h)
-			this._threshold = [-val[0] * 0.5, -val[1] * 0.5, val[0] * 0.5, val[1] * 0.5];
-		} else if (val.length === 4) {
-			//Array(x1,y1,x2,y2)
-			this._threshold = val;
-		} else if (typeof (val) === 'function') {
-			//custom val funciton
-			this._threshold = val();
-		} else {
-			this._threshold = [0, 0, 0, 0];
-		}
+	_resolve(value, scope = this.element.ownerDocument) {
+		if (!value) return [];
+		if (typeof value === 'string') return [...scope.querySelectorAll(value)];
+		if (typeof value.addEventListener === 'function') return [value];
+		if (typeof value[Symbol.iterator] === 'function') return [...value].flatMap(item => this._resolve(item, scope));
+		return [];
 	}
 
-	get threshold() {
-		return this._threshold || [0, 0, 0, 0];
+	update(event) {
+		if (this.destroyed) return this;
+		for (const [handle, type, listener] of this._handleBindings) handle.removeEventListener(type, listener);
+		this._handleBindings = [];
+		const handles = this._resolve(this.handle || this.element);
+		for (const handle of handles) {
+			const listener = e => this._start(e);
+			handle.addEventListener('pointerdown', listener);
+			this._handleBindings.push([handle, 'pointerdown', listener]);
+		}
+		this.currentHandles = handles;
+		this.updateLimits();
+		if (event) this._prime(event);
+		return this;
 	}
 
-	// Movement release params
-	release = false;
-	releaseDuration = 500;
-	velocity = 1000;
-	maxSpeed = 250;
-	framerate = 50;
+	updateLimits() {
+		const [x, y] = this.getCoords();
+		this.prevX = x;
+		this.prevY = y;
+		const own = rectOf(this.element);
+		this.offsets = own;
+		const container = this.within === 'parent' || this.within === true
+			? this.element.parentElement
+			: this.within;
+		const boundary = container && container !== this.element.ownerDocument
+			? rectOf(container)
+			: viewportRect(this.element.ownerDocument);
+		this.withinOffsets = boundary;
+		const pin = this.pin;
+		const baseLeft = own.left - x;
+		const baseTop = own.top - y;
+		this.limits = {
+			left: boundary.left - baseLeft - pin[0],
+			top: boundary.top - baseTop - pin[1],
+			right: boundary.right - baseLeft - pin[2],
+			bottom: boundary.bottom - baseTop - pin[3]
+		};
+		return this;
+	}
 
-	// To what extent round position
-	precision = 1;
+	_start(event) {
+		if (this.destroyed || event.button > 0 || this._isCancelled(event.target)) return;
+		this._finishRelease();
+		this.updateLimits();
+		this._prime(event);
+		this.pointerId = event.pointerId;
+		this.element.setPointerCapture?.(event.pointerId);
+		this._bindDocument('pointermove', e => this._pointerMove(e));
+		this._bindDocument('pointerup', e => this._end(e));
+		this._bindDocument('pointercancel', e => this._end(e));
+		this._setState(isZero(this.threshold) ? 'drag' : 'threshold');
+		if (this.state === 'drag') this._beginDrag();
+		event.preventDefault?.();
+	}
 
-	// Droppable params
-	droppable = null;
-	droppableTolerance = 0.5;
-	droppableClass = null;
+	_prime(event) {
+		const point = eventPoint(event);
+		const rect = rectOf(this.element);
+		this.startClientX = this.prevMouseX = point.x;
+		this.startClientY = this.prevMouseY = point.y;
+		this.innerOffsetX = point.x - rect.left;
+		this.innerOffsetY = point.y - rect.top;
+		this.initX = this.prevX;
+		this.initY = this.prevY;
+		this.sniperOffsetX = 0;
+		this.sniperOffsetY = 0;
+		this.speed = 0;
+		this.angle = 0;
+		this.timestamp = Date.now();
+	}
 
-	// Slow down movement by pressing ctrl/cmd
-	sniper = true;
-
-	// How much to slow sniper drag
-	sniperSlowdown = .85;
-
-	// Restrict movement by axis
-	move(x, y) {
-		if (this.axis === 'x') {
-			if (x == null) x = this.prevX;
-			if (y == null) y = this.prevY;
-
-			var limits = this.limits;
-
-			if (this.repeat) {
-				var w = (limits.right - limits.left);
-				var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0] - Math.max(0, this.overflowX);
-				x = loop(x - oX, w) + oX;
-			} else {
-				x = clamp(x, limits.left, limits.right);
-			}
-
-			this.setCoords(x);
+	_pointerMove(event) {
+		if (event.pointerId !== undefined && this.pointerId !== undefined && event.pointerId !== this.pointerId) return;
+		const point = eventPoint(event);
+		if (this.state === 'threshold') {
+			const dx = point.x - this.startClientX;
+			const dy = point.y - this.startClientY;
+			const t = this.threshold;
+			if (dx >= t[0] && dx <= t[2] && dy >= t[1] && dy <= t[3]) return;
+			this._beginDrag();
 		}
-		else if (this.axis === 'y') {
-			if (x == null) x = this.prevX;
-			if (y == null) y = this.prevY;
+		if (this.state === 'drag') this.drag(event);
+	}
 
-			var limits = this.limits;
+	_beginDrag() {
+		this._setState('drag');
+		this._selection = this.element.ownerDocument.documentElement.style.userSelect;
+		this.element.ownerDocument.documentElement.style.userSelect = 'none';
+		this._emit('dragstart');
+	}
 
-			if (this.repeat) {
-				var h = (limits.bottom - limits.top);
-				var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1] - Math.max(0, this.overflowY);
-				y = loop(y - oY, h) + oY;
-			} else {
-				y = clamp(y, limits.top, limits.bottom);
-			}
-
-			this.setCoords(null, y);
+	drag(event) {
+		if (!event) return this;
+		const point = eventPoint(event);
+		const dx = point.x - this.prevMouseX;
+		const dy = point.y - this.prevMouseY;
+		if (this.sniper && (event.ctrlKey || event.metaKey)) {
+			this.sniperOffsetX += dx * this.sniperSlowdown;
+			this.sniperOffsetY += dy * this.sniperSlowdown;
 		}
+		const now = Date.now();
+		const elapsed = Math.max(1, now - this.timestamp);
+		this.speed = Math.min(Math.hypot(dx, dy) / elapsed * this.velocity, this.maxSpeed);
+		this.angle = Math.atan2(dy, dx);
+		this.timestamp = now;
+		this.prevMouseX = point.x;
+		this.prevMouseY = point.y;
+		this.ctrlKey = !!event.ctrlKey;
+		this.shiftKey = !!event.shiftKey;
+		this.metaKey = !!event.metaKey;
+		this.altKey = !!event.altKey;
+		this.move(
+			this.initX + point.x - this.startClientX - this.sniperOffsetX,
+			this.initY + point.y - this.startClientY - this.sniperOffsetY
+		);
+		this._checkDrops();
+		this._emit('drag');
+		event.preventDefault?.();
+		return this;
+	}
+
+	_end(event) {
+		if (event.pointerId !== undefined && this.pointerId !== undefined && event.pointerId !== this.pointerId) return;
+		this._unbindDocument();
+		this.element.ownerDocument.documentElement.style.userSelect = this._selection;
+		if (this.state === 'drag') {
+			this._emit('release');
+			this._finishDrop();
+			if (this.release && this.speed > 1) this._release();
+			else this._finishDrag();
+		} else this._setState('idle');
+		this.pointerId = undefined;
+	}
+
+	_release() {
+		this._setState('release');
+		this.element.style.transition = `${this.releaseDuration}ms ease-out ${this.css3 ? 'transform' : 'left, top'}`;
+		this.move(
+			this.prevX + this.speed * Math.cos(this.angle),
+			this.prevY + this.speed * Math.sin(this.angle)
+		);
+		this._emit('track');
+		this._releaseTimer = setTimeout(() => this._finishDrag(), this.releaseDuration);
+	}
+
+	_finishRelease() {
+		clearTimeout(this._releaseTimer);
+		if (this.element) this.element.style.transition = '';
+	}
+
+	_finishDrag() {
+		this._finishRelease();
+		this._emit('dragend');
+		this._setState('idle');
+	}
+
+	_bindDocument(type, listener) {
+		const document = this.element.ownerDocument;
+		document.addEventListener(type, listener, { passive: false });
+		this._documentBindings.push([type, listener]);
+	}
+
+	_unbindDocument() {
+		const document = this.element?.ownerDocument;
+		if (document) for (const [type, listener] of this._documentBindings) document.removeEventListener(type, listener);
+		this._documentBindings = [];
+	}
+
+	_isCancelled(target) {
+		return this._resolve(this.cancel).some(element => element === target || element.contains(target));
+	}
+
+	move(x = this.prevX, y = this.prevY) {
+		const limits = this.limits || { left: -Infinity, top: -Infinity, right: Infinity, bottom: Infinity };
+		if (this.axis === 'x') y = this.prevY;
+		if (this.axis === 'y') x = this.prevX;
+		if (this.repeat === true || this.repeat === 'both' || this.repeat === 'x') x = wrap(x, limits.left, limits.right);
+		else x = clamp(x, limits.left, limits.right);
+		if (this.repeat === true || this.repeat === 'both' || this.repeat === 'y') y = wrap(y, limits.top, limits.bottom);
+		else y = clamp(y, limits.top, limits.bottom);
+		this.setCoords(x, y);
+		return this;
+	}
+
+	getCoords() {
+		if (!this.css3) return [number(this.element.style.left), number(this.element.style.top)];
+		return readTranslate(this.element);
+	}
+
+	setCoords(x = this.prevX, y = this.prevY) {
+		x = round(x, this.precision);
+		y = round(y, this.precision);
+		this.deltaX = x - this.prevX;
+		this.deltaY = y - this.prevY;
+		this.prevX = x;
+		this.prevY = y;
+		this.movementX = x - this.initX;
+		this.movementY = y - this.initY;
+		this._coords = [x, y];
+		if (this.css3) this.element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 		else {
-			if (x == null) x = this.prevX;
-			if (y == null) y = this.prevY;
+			this.element.style.position = 'absolute';
+			this.element.style.left = `${x}px`;
+			this.element.style.top = `${y}px`;
+		}
+		return this;
+	}
 
-			var limits = this.limits;
-
-			if (this.repeat) {
-				var w = (limits.right - limits.left);
-				var h = (limits.bottom - limits.top);
-				var oX = - this.initOffsetX + this.withinOffsets.left - this.pin[0] - Math.max(0, this.overflowX);
-				var oY = - this.initOffsetY + this.withinOffsets.top - this.pin[1] - Math.max(0, this.overflowY);
-				if (this.repeat === 'x') {
-					x = loop(x - oX, w) + oX;
-				}
-				else if (this.repeat === 'y') {
-					y = loop(y - oY, h) + oY;
-				}
-				else {
-					x = loop(x - oX, w) + oX;
-					y = loop(y - oY, h) + oY;
-				}
-			}
-
-			x = clamp(x, limits.left, limits.right);
-			y = clamp(y, limits.top, limits.bottom);
-
-			this.setCoords(x, y);
+	_checkDrops() {
+		const targets = this._resolve(this.droppable);
+		const next = targets.find(target => intersects(rectOf(this.element), rectOf(target), this.droppableTolerance)) || null;
+		if (next === this.dropTarget) return;
+		if (this.dropTarget) {
+			if (this.droppableClass) this.dropTarget.classList.remove(this.droppableClass);
+			this._emit('dragout', this.dropTarget);
+			emitElement(this.dropTarget, 'dragout', this);
+		}
+		this.dropTarget = next;
+		if (next) {
+			if (this.droppableClass) next.classList.add(this.droppableClass);
+			this._emit('dragover', next);
+			emitElement(next, 'dragover', this);
 		}
 	}
 
-	// Repeat movement by one of axises
-	repeat = false;
+	_finishDrop() {
+		if (!this.dropTarget) return;
+		const target = this.dropTarget;
+		if (this.droppableClass) target.classList.remove(this.droppableClass);
+		this._emit('drop', target);
+		emitElement(target, 'drop', this);
+		this.dropTarget = null;
+	}
 
-	// Clean all memory-related things
 	destroy() {
-		this.currentHandles.forEach((handle) => {
-			off(handle, this._ns);
-		});
-
-		this.state = 'destroy';
-
-		clearTimeout(this._animateTimeout);
-
-		off(doc, this._ns);
-		off(this.element, this._ns);
-
-
-		this.element = null;
-		this.within = null;
-	};
-}
-
-
-// helpers
-// Check whether arr is filled with zeros
-function isZeroArray(arr) {
-	if (!arr[0] && !arr[1] && !arr[2] && !arr[3]) return true;
-}
-
-// query els
-function q(str) {
-	if (Array.isArray(str)) {
-		return str.map(q).reduce(function (prev, curr) { return prev.concat(curr); }, []);
-	}
-	else if (str instanceof HTMLElement) {
-		return [str];
-	}
-	else {
-		return [].slice.call(document.querySelectorAll(str));
+		if (this.destroyed) return;
+		this._unbindDocument();
+		for (const [handle, type, listener] of this._handleBindings) handle.removeEventListener(type, listener);
+		this._handleBindings = [];
+		this._finishRelease();
+		for (const name of ['idle', 'threshold', 'drag', 'release']) this.element.classList.remove(`draggy-${name}`);
+		Draggable.cache.delete(this.element);
+		this._events.clear();
+		this.destroyed = true;
 	}
 }
 
-// rect intersection function with tolerance
-function intersect(rect1, rect2, tolerance = 0) {
-	const overlapX = Math.max(0, Math.min(rect1.right, rect2.right) - Math.max(rect1.left, rect2.left));
-	const overlapY = Math.max(0, Math.min(rect1.bottom, rect2.bottom) - Math.max(rect1.top, rect2.top));
-	const overlapArea = overlapX * overlapY;
-
-	const rect1Area = (rect1.right - rect1.left) * (rect1.bottom - rect1.top);
-	const rect2Area = (rect2.right - rect2.left) * (rect2.bottom - rect2.top);
-	const smallerArea = Math.min(rect1Area, rect2Area);
-
-	return overlapArea >= tolerance * smallerArea;
+function eventPoint(event) {
+	const touch = event.touches?.[0] || event.changedTouches?.[0];
+	return { x: touch?.clientX ?? event.clientX ?? 0, y: touch?.clientY ?? event.clientY ?? 0 };
 }
 
-// maths
-function loop(value, left, right) {
-	//detect single-arg case, like mod-loop or fmod
-	if (right === undefined) {
-		right = left;
-		left = 0;
-	}
-
-	//swap frame order
-	if (left > right) {
-		var tmp = right;
-		right = left;
-		left = tmp;
-	}
-
-	var frame = right - left;
-
-	value = ((value + left) % frame) - left;
-	if (value < left) value += frame;
-	if (value > right) value -= frame;
-
-	return value;
-};
-
-function clamp(value, min, max) {
-	return Math.max(min, Math.min(value, max));
+function rectOf(element) {
+	const rect = element.getBoundingClientRect();
+	const width = rect.width ?? rect.right - rect.left;
+	const height = rect.height ?? rect.bottom - rect.top;
+	return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width, height };
 }
 
+function viewportRect(document) {
+	const width = document.documentElement.clientWidth || globalThis.innerWidth || 0;
+	const height = document.documentElement.clientHeight || globalThis.innerHeight || 0;
+	return { left: 0, top: 0, right: width, bottom: height, width, height };
+}
+
+function pinRect(values) {
+	values.width = values[2] - values[0];
+	values.height = values[3] - values[1];
+	return values;
+}
+
+function readTranslate(element) {
+	const match = /translate(?:3d)?\s*\(\s*(-?[\d.]+)px(?:\s*,|\s+)\s*(-?[\d.]+)px/.exec(element.style.transform || '');
+	return match ? [Number(match[1]), Number(match[2])] : [0, 0];
+}
+
+function number(value) { return Number.parseFloat(value) || 0; }
+function clamp(value, min, max) { return min > max ? (min + max) / 2 : Math.max(min, Math.min(value, max)); }
+function wrap(value, min, max) {
+	const size = max - min;
+	return Number.isFinite(size) && size > 0 ? ((value - min) % size + size) % size + min : min;
+}
 function round(value, step) {
 	if (step === 0) return value;
-	if (!step) return Math.round(value);
-	step = parseFloat(step);
-	value = Math.round(value / step) * step;
-	return parseFloat(value.toFixed(precision(step)));
+	step = Number(step) || 1;
+	return Number((Math.round(value / step) * step).toFixed(decimalPlaces(step)));
 }
-
-function precision(n) {
-	var s = n + '',
-		d = s.indexOf('.') + 1;
-
-	return !d ? 0 : s.length - d;
+function decimalPlaces(value) { return (String(value).split('.')[1] || '').length; }
+function isZero(values) { return values.every(value => value === 0); }
+function intersects(a, b, tolerance) {
+	const overlap = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
+		* Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+	const smaller = Math.min(a.width * a.height, b.width * b.height);
+	return smaller > 0 && overlap > 0 && overlap / smaller >= tolerance;
 }
-
-const selection = {
-	disable(el) {
-		el.style.userSelect = 'none';
-		el.style.userDrag = 'none';
-		el.style.touchCallout = 'none';
-		el.setAttribute('unselectable', 'on');
-		el.addEventListener('selectstart', e => e.preventDefault());
-	},
-
-	enable(el) {
-		el.style.userSelect = null;
-		el.style.userDrag = null;
-		el.style.touchCallout = null;
-		el.removeAttribute('unselectable');
-		el.removeEventListener('selectstart', e => e.preventDefault());
-	}
+function emitElement(element, name, detail) {
+	if (typeof CustomEvent !== 'undefined') element.dispatchEvent(new CustomEvent(name, { detail }));
 }
-function getTranslate(el) {
-	var translateStr = el.style.transform;
-
-	//find translate token, retrieve comma-enclosed values
-	//translate3d(1px, 2px, 2) → 1px, 2px, 2
-	//FIXME: handle nested calcs
-	var match = /translate(?:3d)?\s*\(([^\)]*)\)/.exec(translateStr);
-
-	if (!match) return [0, 0];
-	var values = match[1].split(/\s*,\s*/);
-
-	//parse values
-	//FIXME: nested values are not necessarily pixels
-	return [px(values[0]), px(values[1])];
-}
-
-function isFixed(el) {
-	var parentEl = el;
-
-	//window is fixed, btw
-	if (el === window) return true;
-
-	//unlike the doc
-	if (el === document) return false;
-
-	while (parentEl) {
-		if (getComputedStyle(parentEl).position === 'fixed') return true;
-		parentEl = parentEl.offsetParent;
-	}
-	return false;
-}
-
-
-export default Draggable;

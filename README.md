@@ -1,81 +1,83 @@
-<h1>
-<img src="https://cdn.rawgit.com/dy/draggy/design/logo.png"/>
+# Draggy
 
-Draggy
+A tiny, dependency-free draggable for the web. Draggy gives an element pointer-native movement, constraints, handles, thresholds, inertia, and drop targets without imposing a component system.
 
-<a href="/license"><img src="https://img.shields.io/npm/l/draggy.svg"/></a>
-</h1>
+[Demo](https://dy.github.io/draggy/) · [npm](https://www.npmjs.com/package/draggy) · [Issues](https://github.com/dy/draggy/issues)
 
+## Install
 
-Make any element draggable. [Demo](https://dy.github.io/draggy).
-
-
-[![npm install draggy](https://nodei.co/npm/draggy.png?mini=true)](https://npmjs.org/package/draggy)
-
-```js
-import Draggable from 'draggy';
-
-//make an element draggable
-var el = document.querySelector('.my-element');
-var draggy = new Draggable(el, {
-	release: true,
-	sniper: false,
-	axis: 'x'
-});
-
-//bind event handler
-draggy.on('drag', function () {
-	// ...
-});
+```sh
+npm install draggy
 ```
 
+```js
+import Draggable from 'draggy'
+
+const drag = new Draggable(document.querySelector('.card'), {
+  within: 'parent',
+  threshold: 4,
+  handle: '.card-handle'
+})
+
+drag.on('drag', function () {
+  console.log(this.movementX, this.movementY)
+})
+```
+
+Draggy uses Pointer Events, so the same setup works with mouse, touch, and pen input.
 
 ## Options
 
-| Parameter | Default | Description |
-|---|:---:|---|
-| `axis` | `null` | Restrict movement by axis: `'x'`, `'y'` or `null`. |
-| `pin` | `[0,0, selfWidth, selfHeight]` | Defines a smaller area within the draggable element that stays within movement limits. Useful to restrict movement based on an inner shape rather than the full element. |
-| `precision` | `1` | Round position to that extent, in pixels. |
-| `css3` | `true` | Use `position` vs `translate3d` to place element. The first is more precise and reliable, the second is faster. |
-| `release` | `false` | Continue movement when user releases drag. |
-| `repeat` | `false` | Loop movement by one of axis: `'x'`, `'y'` or `'both'`. |
-| `sniper` | `true` | Slow down movement by pressing Ctrl/Cmd. |
-| `threshold` | `0` | A movement threshold required to start drag - whether an array, number or function. |
-| `within` | `document` | Restrict movement within the container. Pass `'parent'` to use parent node. |
-| `handle` | `self.element` | Use element or selector as a handle for drag. Clicking outside the handle is ignored. |
-| `cancel` | `undefined` | Ignore dragging started on the elements matching the selector. |
-| `droppable` | `undefined` | Selector, element or list of elements to detect droppable areas. For each drop element will be invoked `drop`, `dragover` and `dragout` events. |
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `axis` | `null` | Restrict movement to `'x'` or `'y'`. |
+| `within` | viewport | Constrain movement to an element; use `'parent'` for the parent. |
+| `handle` | target | Element, selector, or iterable that starts dragging. |
+| `cancel` | `null` | Elements that must not start a drag. |
+| `threshold` | `0` | Distance before dragging starts; accepts a number or 2/4-value array. |
+| `precision` | `1` | Position rounding step in pixels; use `0` for no rounding. |
+| `pin` | target bounds | Portion of the target kept inside `within`. |
+| `repeat` | `false` | Wrap at bounds: `true`, `'both'`, `'x'`, or `'y'`. |
+| `release` | `false` | Continue briefly after release using measured pointer velocity. |
+| `sniper` | `true` | Move precisely while Ctrl or Command is held. |
+| `droppable` | `null` | Drop-target selector, element, or iterable. |
+| `droppableTolerance` | `0.5` | Required overlap, from `0` to `1`. |
+| `droppableClass` | `null` | Class applied to the active drop target. |
+| `css3` | `true` | Use transforms; `false` uses positioned `left` and `top`. |
 
+## API
 
-## Events
+### Methods
 
-| Name | Description |
-|---|---|
-| `dragstart` | Drag started. Called both on element/controller. |
-| `threshold` | Entered threshold mode. Called on controller. |
-| `drag` | Drag iteration. Called both on element/controller. |
-| `track` | Track movement. Called on controller. |
-| `release` | User released drag. Called on controller. |
-| `dragend` | Drag has completely finished. Called both on element/controller. |
-| `dragover` |  Called on self and on drop target. |
-| `dragout` |  Called on self and on drop target. |
-| `drop` |  Called on self and on drop target. |
+- `on(name, listener)` / `off(name, listener)` — manage controller events.
+- `move(x, y)` — move to a constrained position.
+- `getCoords()` / `setCoords(x, y)` — read or write coordinates directly.
+- `drag(pointerEvent)` — feed pointer movement programmatically.
+- `update()` — refresh handles, dimensions, and constraints after layout changes.
+- `configure(options)` — update options on an existing controller.
+- `destroy()` — remove listeners and release the element.
 
+Creating another `Draggable` for the same element returns and reconfigures its existing controller.
 
+### Events
 
-## What draggy is not
+`idle`, `threshold`, `dragstart`, `drag`, `release`, `track`, `dragend`, `dragover`, `dragout`, and `drop` are emitted on the controller. They are also dispatched as DOM `CustomEvent`s from the draggable element. Drop targets receive `dragover`, `dragout`, and `drop`.
 
-* It doesn’t do ghost move, as it is not draggable behavior and can be implemented externally.
-* It doesn’t do mouse hiding on drag, as it can be done via callbacks.
-* It doesn’t init itself automatically - it's up to you to decide when to create/init draggable.
-* It doesn’t polyfill native draggable, as it targets to complete simple task of visual placement of element.
+```js
+drag.on('drop', target => {
+  target.append(drag.element)
+})
+```
 
-## Alternatives
+The controller exposes `prevX`, `prevY`, `deltaX`, `deltaY`, `movementX`, `movementY`, `speed`, `angle`, and modifier-key state for interface logic.
 
-* [interactjs](https://www.npmjs.com/package/interactjs)
-* [@shopify/draggable](https://www.npmjs.com/package/@shopify/draggable)
-* [draggabilly](https://www.npmjs.com/package/draggabilly)
+## Development
+
+```sh
+npm test       # Node's built-in test runner
+npm run build  # generate the minified ESM build
+npm run check  # both
+```
 
 ## License
 

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Draggy is a tiny, dependency-free draggable for the web.">
+  <title>Draggy — dragging, distilled</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <a class="mark" href="#top" aria-label="Draggy home">d<span>↗</span></a>
+    <div><a href="#playground">Playground</a><a href="#api">API</a><a href="https://github.com/dy/draggy">GitHub</a></div>
+  </nav>
+
+  <main id="top">
+    <header class="hero">
+      <p class="eyebrow">2.8 kB · zero dependencies · pointer native</p>
+      <h1>Dragging,<br><em>distilled.</em></h1>
+      <p class="lede">A focused draggable primitive for interfaces that deserve less machinery.</p>
+      <div class="actions"><a class="button" href="#playground">Try it</a><button class="install" data-copy>npm i draggy <span>copy</span></button></div>
+    </header>
+
+    <section class="playground" id="playground" aria-labelledby="play-title">
+      <div class="section-head"><div><p class="eyebrow">Live playground</p><h2 id="play-title">Pick up anything.</h2></div><p>Pointer, touch, or pen.<br>Everything stays in bounds.</p></div>
+      <div class="stage" id="stage">
+        <div class="grid"></div>
+        <div class="dropzone" id="dropzone"><span>Drop here</span></div>
+        <button class="card drag-item" id="free"><span class="grip">⠿</span><strong>Free</strong><small>x <b>0</b> · y <b>0</b></small></button>
+        <button class="orb drag-item" id="axis" aria-label="Horizontal drag"><span>↔</span></button>
+        <p class="stage-note">The circle only moves horizontally</p>
+      </div>
+    </section>
+
+    <section class="principles">
+      <article><span>01</span><h3>Small surface</h3><p>One class, focused methods, useful options. Nothing else to learn.</p></article>
+      <article><span>02</span><h3>Native feel</h3><p>Unified Pointer Events, bounds, handles, thresholds, inertia, and drop targets.</p></article>
+      <article><span>03</span><h3>No entourage</h3><p>No runtime dependencies. Import it and get back to the interface.</p></article>
+    </section>
+
+    <section class="api" id="api">
+      <div><p class="eyebrow">Start in seconds</p><h2>One element.<br>One controller.</h2><p>Existing 2.x methods and options remain intact.</p></div>
+      <pre><code><span>import</span> Draggable <span>from</span> <i>'draggy'</i>
+
+<span>const</span> drag = <span>new</span> Draggable(element, {
+  within: <i>'parent'</i>,
+  threshold: <b>4</b>,
+  droppable: <i>'.dropzone'</i>
+})
+
+drag.on(<i>'drop'</i>, target => {
+  target.append(element)
+})</code></pre>
+    </section>
+  </main>
+
+  <footer><a class="mark" href="#top">d<span>↗</span></a><p>Do one thing. Do it well.</p><small>MIT · 2026</small></footer>
+  <script type="module" src="demo.js"></script>
+</body>
+</html>
